@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::path::PathBuf;
 
 /// Save a base64-encoded image to disk for a session.

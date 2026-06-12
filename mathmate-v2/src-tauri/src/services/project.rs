@@ -63,6 +63,7 @@ impl ProjectService {
             .map_err(|e| AppError::internal(format!("Failed to write project: {}", e)))
     }
 
+    #[allow(dead_code)] // used in tests
     fn read_file(&self, path: &PathBuf) -> Result<MathProject, AppError> {
         let data = std::fs::read_to_string(path)
             .map_err(|e| AppError::internal(format!("Failed to read project: {}", e)))?;
@@ -123,6 +124,7 @@ impl ProjectService {
     }
 
     /// Load a project by ID (searches active first, then archived).
+    #[allow(dead_code)] // used in tests
     pub fn load(&self, id: &str) -> Result<MathProject, AppError> {
         let active = self.project_path(id);
         if active.exists() {

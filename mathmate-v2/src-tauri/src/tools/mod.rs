@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 pub mod calculate;
 pub mod current_date;
 pub mod graph;

@@ -17,87 +17,65 @@ mod tools;
 mod vault;
 mod wrapup;
 
-use config::{AppConfig, AppConfigModels};
 use textbook_catalog::LicenseInfo;
 use crate::services::session::{Message, Session, SessionHeader};
 use tauri::State;
 use crate::services::AppServices;
 
-// ─── App State (legacy `db` moved to services::memory::MemoryService) ──
+// ─── App State (legacy — only mcp_client remains; → SynapseService later) ──
 
 pub struct AppState {
-    pub models_config: Mutex<Option<AppConfigModels>>,
-    pub app_config: Mutex<Option<AppConfig>>,
     pub mcp_client: Mutex<Option<mcp_client::McpClient>>,
 }
 
 use std::sync::Mutex;
 
-// ─── Environment Variable Commands ──────────────
-
-/// Safely read an environment variable from the backend.
-/// Only reads specific allowed env var names (never arbitrary keys).
-#[tauri::command]
-fn get_env_var(key: String) -> Result<Option<String>, String> {
-    // Whitelist of allowed env var names — never expose arbitrary env vars to the frontend
-    let allowed = ["OPENROUTER_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY"];
-    if !allowed.contains(&key.as_str()) {
-        return Err(format!(
-            "Access denied: env var '{}' is not in the allowed list",
-            key
-        ));
-    }
-    Ok(std::env::var(&key).ok())
-}
-
 // ─── Config Commands ────────────────────────────
 
 #[tauri::command]
-fn get_models_config(state: State<AppState>) -> Result<AppConfigModels, String> {
-    let mut cache = state.models_config.lock().map_err(|e| e.to_string())?;
-    if let Some(ref config) = *cache {
-        return Ok(config.clone());
-    }
-    let config = config::load_models_config()?;
-    *cache = Some(config.clone());
-    Ok(config)
+fn get_env_var(
+    svc: State<AppServices>,
+    key: String,
+) -> Result<Option<String>, String> {
+    svc.config.get_env_var(&key).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn get_app_config(state: State<AppState>) -> Result<AppConfig, String> {
-    let mut cache = state.app_config.lock().map_err(|e| e.to_string())?;
-    if let Some(ref config) = *cache {
-        return Ok(config.clone());
-    }
-    let config = config::load_app_config()?;
-    *cache = Some(config.clone());
-    Ok(config)
+fn get_models_config(
+    svc: State<AppServices>,
+) -> Result<crate::services::config::AppConfigModels, String> {
+    svc.config.get_models_config().map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn save_app_config(state: State<AppState>, config: AppConfig) -> Result<(), String> {
-    config::save_app_config(&config)?;
-    let mut cache = state.app_config.lock().map_err(|e| e.to_string())?;
-    *cache = Some(config);
-    Ok(())
+fn get_app_config(
+    svc: State<AppServices>,
+) -> Result<crate::services::config::AppConfig, String> {
+    svc.config.get_app_config().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn save_app_config(
+    svc: State<AppServices>,
+    config: crate::services::config::AppConfig,
+) -> Result<(), String> {
+    svc.config.save_app_config(&config).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 fn set_provider_api_key(
-    state: State<AppState>,
+    svc: State<AppServices>,
     provider_name: String,
     api_key: Option<String>,
 ) -> Result<(), String> {
-    config::set_provider_api_key(&provider_name, api_key)?;
-    // Invalidate the cache so the next read picks up the new key
-    let mut cache = state.models_config.lock().map_err(|e| e.to_string())?;
-    *cache = None;
-    Ok(())
+    svc.config
+        .set_provider_api_key(&provider_name, api_key)
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn get_config_path() -> String {
-    config::config_dir().to_string_lossy().to_string()
+fn get_config_path(svc: State<AppServices>) -> String {
+    svc.config.config_path()
 }
 
 // ─── Session Commands ───────────────────────────
@@ -207,89 +185,19 @@ fn get_last_session(
 /// Read a file that was explicitly chosen by the user via a native OS dialog.
 /// Skips path-scope checks — the OS file picker is the permission gate.
 #[tauri::command]
-fn read_user_selected_file(path: String) -> Result<String, String> {
-    use base64::Engine;
-    let target =
-        pathscope::normalize_local_path(&path).map_err(|_| format!("Invalid path: '{}'", path))?;
-    let data = std::fs::read(&target).map_err(|e| format!("Failed to read file: {}", e))?;
-    Ok(base64::engine::general_purpose::STANDARD.encode(&data))
-}
-
-/// Entry returned by list_recent_images.
-#[derive(serde::Serialize)]
-struct RecentImageEntry {
+fn read_user_selected_file(
+    svc: State<AppServices>,
     path: String,
-    filename: String,
-    /// Unix timestamp (seconds)
-    modified_at: i64,
-    size_bytes: u64,
+) -> Result<String, String> {
+    svc.images.read_user_selected(&path).map_err(|e| e.to_string())
 }
 
-/// Scan standard image directories for recently modified image files.
-/// Checks: ~/Desktop, ~/Downloads, ~/Pictures/Screenshots, ~/Pictures
 #[tauri::command]
-fn list_recent_images(limit: usize) -> Result<Vec<RecentImageEntry>, String> {
-    use std::time::UNIX_EPOCH;
-
-    let home = dirs_next::home_dir().ok_or("Cannot determine home directory")?;
-    let candidates = [
-        home.join("Desktop"),
-        home.join("Downloads"),
-        home.join("Pictures").join("Screenshots"),
-        home.join("Pictures"),
-    ];
-    let image_exts = ["png", "jpg", "jpeg", "gif", "webp"];
-
-    let mut entries: Vec<RecentImageEntry> = Vec::new();
-
-    for dir in &candidates {
-        if !dir.is_dir() {
-            continue;
-        }
-        let Ok(read_dir) = std::fs::read_dir(dir) else {
-            continue;
-        };
-        for entry in read_dir.flatten() {
-            let path = entry.path();
-            if !path.is_file() {
-                continue;
-            }
-            let ext = path
-                .extension()
-                .and_then(|e| e.to_str())
-                .map(|e| e.to_lowercase())
-                .unwrap_or_default();
-            if !image_exts.contains(&ext.as_str()) {
-                continue;
-            }
-            let Ok(meta) = std::fs::metadata(&path) else {
-                continue;
-            };
-            let modified_at = meta
-                .modified()
-                .ok()
-                .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
-                .map(|d| d.as_secs() as i64)
-                .unwrap_or(0);
-            let filename = path
-                .file_name()
-                .and_then(|n| n.to_str())
-                .unwrap_or("")
-                .to_string();
-            entries.push(RecentImageEntry {
-                path: path.to_string_lossy().to_string(),
-                filename,
-                modified_at,
-                size_bytes: meta.len(),
-            });
-        }
-    }
-
-    // Sort newest first, deduplicate by filename (prefer earlier dir), cap
-    entries.sort_by(|a, b| b.modified_at.cmp(&a.modified_at));
-    entries.dedup_by(|a, b| a.filename == b.filename);
-    entries.truncate(limit);
-    Ok(entries)
+fn list_recent_images(
+    svc: State<AppServices>,
+    limit: usize,
+) -> Result<Vec<crate::services::image::RecentImageEntry>, String> {
+    svc.images.list_recent(limit).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -419,12 +327,12 @@ fn scan_vault(
     svc: State<AppServices>,
     path: String,
     project_id: Option<String>,
-) -> Result<Vec<vault::VaultNote>, String> {
+) -> Result<Vec<crate::services::vault::VaultNote>, String> {
     let target = svc
         .path
         .guard(&path, project_id.as_deref(), false)
         .map_err(|e| e.to_string())?;
-    vault::scan_vault(&target.to_string_lossy())
+    svc.vault.scan(&target.to_string_lossy()).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -437,29 +345,49 @@ fn read_note(
         .path
         .guard(&path, project_id.as_deref(), true)
         .map_err(|e| e.to_string())?;
-    vault::read_note(&target.to_string_lossy())
+    svc.vault.read_note(&target.to_string_lossy()).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn init_vault(vault_path: String, project_name: String) -> Result<(), String> {
-    vault::init_vault(&vault_path, &project_name)
+fn init_vault(
+    svc: State<AppServices>,
+    vault_path: String,
+    project_name: String,
+) -> Result<(), String> {
+    svc.vault.init(&vault_path, &project_name).map_err(|e| e.to_string())
 }
 
 // ─── Image Commands ─────────────────────────────
 
 #[tauri::command]
-fn save_image(session_id: String, mime: String, data_base64: String) -> Result<String, String> {
-    images::save_image(&session_id, &mime, &data_base64)
+fn save_image(
+    svc: State<AppServices>,
+    session_id: String,
+    mime: String,
+    data_base64: String,
+) -> Result<String, String> {
+    svc.images
+        .save(&session_id, &mime, &data_base64)
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn load_image(session_id: String, filename: String) -> Result<(String, String), String> {
-    images::load_image(&session_id, &filename)
+fn load_image(
+    svc: State<AppServices>,
+    session_id: String,
+    filename: String,
+) -> Result<(String, String), String> {
+    svc.images
+        .load(&session_id, &filename)
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn evict_session_images(session_id: String) -> Result<(), String> {
-    images::evict_session_images(&session_id)
+fn evict_session_images(
+    svc: State<AppServices>,
+    session_id: String,
+) -> Result<(), String> {
+    svc.images.evict(&session_id).map_err(|e| e.to_string())
 }
 
 // ─── Memory Commands ────────────────────────────
@@ -522,18 +450,24 @@ fn set_profile(
 // ─── Wrap-Up Commands ───────────────────────────
 
 #[tauri::command]
-fn generate_wrap_up(session_id: String) -> Result<wrapup::WrapUpResult, String> {
-    wrapup::generate_wrap_up(&session_id)
+fn generate_wrap_up(
+    svc: State<AppServices>,
+    session_id: String,
+) -> Result<crate::services::wrapup::WrapUpResult, String> {
+    svc.wrapup.generate(&session_id).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 fn save_wrap_up(
+    svc: State<AppServices>,
     project_name: String,
     vault_path: String,
     content: String,
     session_id: String,
 ) -> Result<String, String> {
-    wrapup::save_wrap_up(&project_name, &vault_path, &content, &session_id)
+    svc.wrapup
+        .save(&project_name, &vault_path, &content, &session_id)
+        .map_err(|e| e.to_string())
 }
 
 // ─── Textbook Commands ──────────────────────────
@@ -853,8 +787,6 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_shell::init())
         .manage(AppState {
-            models_config: Mutex::new(None),
-            app_config: Mutex::new(None),
             mcp_client: Mutex::new(None),
         })
         .manage(services::AppServices::init().expect("Failed to init AppServices"))
