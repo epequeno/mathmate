@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { X, FolderOpen, ImagePlus, RefreshCw } from "lucide-react";
-import { invoke } from "../lib/tauri";
+import { Files } from "../lib/api";
 
 interface RecentImageEntry {
   path: string;
@@ -56,7 +56,7 @@ export default function RecentImagesPanel({ onAttach, onClose, onBrowse }: Recen
     setError(null);
     setSelected(new Set());
     try {
-      const entries = await invoke<RecentImageEntry[]>("list_recent_images", { limit: 30 });
+      const entries = await Files.listRecentImages(30);
       setImages(entries);
       // Kick off thumbnail loading
       setThumbnails({});
@@ -71,7 +71,7 @@ export default function RecentImagesPanel({ onAttach, onClose, onBrowse }: Recen
   const loadThumbnail = useCallback(async (path: string) => {
     setThumbnails((prev) => ({ ...prev, [path]: { b64: null, loading: true, error: false } }));
     try {
-      const b64 = await invoke<string>("read_user_selected_file", { path });
+      const b64 = await Files.readBase64(path);
       setThumbnails((prev) => ({ ...prev, [path]: { b64, loading: false, error: false } }));
     } catch {
       setThumbnails((prev) => ({ ...prev, [path]: { b64: null, loading: false, error: true } }));
@@ -96,7 +96,7 @@ export default function RecentImagesPanel({ onAttach, onClose, onBrowse }: Recen
       for (const path of selected) {
         const thumb = thumbnails[path];
         // Re-use already-loaded data; otherwise fetch now
-        const b64 = thumb?.b64 ?? await invoke<string>("read_user_selected_file", { path });
+        const b64 = thumb?.b64 ?? await Files.readBase64(path);
         onAttach(b64, mimeFromPath(path));
       }
       onClose();

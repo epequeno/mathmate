@@ -176,7 +176,9 @@ Quick, *no-behavior-change* cleanups surfaced by the review. Each item is an ind
 - [ ] **G.15 — Add `@command:` JSDoc annotations + diff-check script**: Blocked on 14A (typed API client modules must exist first). Deferred. ([`Implementation_Phase14G_Cleanup.md`](../Implementation_Phase14G_Cleanup.md))
 
 ### 14A — Typed Tauri API Client
-- [ ] **Typed `invoke` wrappers in `src/lib/api/*`**: One module per Rust domain. Replaces 21 hand-written `invoke<T>("name", { argKey: value })` call sites. Adds an ESLint rule banning raw `invoke` outside `lib/api/`. ([`Implementation_Phase14A_TypedTauriApiClient.md`](../Implementation_Phase14A_TypedTauriApiClient.md))
+- [x] **Typed `invoke` wrappers in `src/lib/api/*`**: 8 modules (`sessions`, `projects`, `config`, `memory`, `tools`, `vault`, `files`, `textbook`, `wrapup`) with typed args/return + `@command:` JSDoc annotations + `index.ts` barrel with `api` facade. All 40+ call sites migrated across stores and components. Dynamic `await import("../lib/tauri")` eliminated from `providers.ts` and `ContextPanel.tsx`. Raw `invoke` now lives only in `lib/api/` and `lib/tauri.ts`. ([`Implementation_Phase14A_TypedTauriApiClient.md`](../Implementation_Phase14A_TypedTauriApiClient.md))
+- [ ] **ESLint rule** banning raw `invoke` outside `lib/api/` and `lib/tauri.ts` (deferred).
+- [ ] **Wrapper-coverage diff-check script** in `prebuild` (deferred).
 
 ### 14F — CSS Module Migration (top patterns)
 - [ ] **Shared `src/styles/components.css`**: Icon button, list row, primary button, danger button, tooltip — the 5 most common shared classes. ([`Implementation_Phase14F_CssModuleMigration.md`](../Implementation_Phase14F_CssModuleMigration.md))

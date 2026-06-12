@@ -4,7 +4,7 @@ import { getCommands } from "../stores/commandStore";
 import { useProjectStore } from "../stores/projectStore";
 import LaTeXPalette from "./LaTeXPalette";
 import RecentImagesPanel from "./RecentImagesPanel";
-import { invoke } from "../lib/tauri";
+import { Files } from "../lib/api";
 
 interface ChatInputProps {
   onToggleContextPanel?: () => void;
@@ -88,7 +88,7 @@ export default function ChatInput({ onToggleContextPanel: _onToggleContextPanel 
       for (const path of paths) {
         // Use read_user_selected_file — no path-scope check needed since
         // the user explicitly picked this file via the OS dialog.
-        const b64 = await invoke<string>("read_user_selected_file", { path });
+        const b64 = await Files.readBase64(path);
         const ext = path.split(".").pop()?.toLowerCase() ?? "png";
         const mime = ext === "jpg" ? "image/jpeg" : ext === "webp" ? "image/webp" : `image/${ext}`;
         attachImage(b64, mime);

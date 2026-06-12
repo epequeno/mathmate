@@ -1,5 +1,6 @@
 import type { ProviderConfig } from "../stores/configStore";
 import type { StreamChunk } from "./types";
+import { Config } from "./api";
 
 export interface MessagePayload {
   role: "user" | "assistant" | "system";
@@ -371,8 +372,7 @@ function _deltaText(value: unknown): string {
  */
 async function _getEnvKey(key: string): Promise<string | undefined> {
   try {
-    const { invoke } = await import("./tauri");
-    const value = await invoke<string | null>("get_env_var", { key });
+    const value = await Config.getEnvVar(key);
     if (value) return value;
   } catch {
     // fall through — the Tauri command will reject non-whitelisted keys

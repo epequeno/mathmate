@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { invoke } from "../lib/tauri";
+import { Config } from "../lib/api";
 import type { ModelCatalog, ModelCatalogEntry } from "../lib/types";
 
 // ─── Theme helpers ────────────────────────────────────────────────────────────
@@ -94,10 +94,10 @@ export const useConfigStore = create<ConfigState>((set) => ({
     set({ loading: true, error: null });
     try {
 
-      const modelsConfig = await invoke<{ providers: ProviderConfig[] }>("get_models_config");
+      const modelsConfig = await Config.getModels();
       let appConfig: AppConfig | null = null;
       try {
-        appConfig = await invoke<AppConfig>("get_app_config");
+        appConfig = await Config.get();
       } catch (err) {
         }
       set({
@@ -114,7 +114,7 @@ export const useConfigStore = create<ConfigState>((set) => ({
   fetchModelCatalog: async (forceRefresh = false) => {
     set({ modelCatalogLoading: true, modelCatalogError: null });
     try {
-      const catalog = await invoke<ModelCatalog>("fetch_models", { forceRefresh });
+      const catalog = await Config.fetchModels(forceRefresh);
       set({ modelCatalog: catalog, modelCatalogLoading: false });
     } catch (err) {
       console.error("[configStore] Failed to fetch model catalog:", err);
@@ -124,7 +124,7 @@ export const useConfigStore = create<ConfigState>((set) => ({
 
   loadCachedModelCatalog: async () => {
     try {
-      const cached = await invoke<ModelCatalog | null>("get_cached_models");
+      const cached = await Config.getCachedModels();
       if (cached) {
         set({ modelCatalog: cached });
       }

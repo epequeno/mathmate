@@ -1,12 +1,12 @@
 import { create } from "zustand";
-import type { Message, MemoryItem, MessageSegment, Session, SessionHeader, StreamChunk } from "../lib/types";
+import type { Message, MessageSegment, Session, SessionHeader, StreamChunk } from "../lib/types";
 import { makeMessage, makeSegment, makeSessionHeader } from "../lib/types";
 import { buildPayload, buildToolPayload, streamChat, StreamError, assembleToolCalls } from "../lib/providers";
 import { useConfigStore } from "./configStore";
 import { useProjectStore } from "./projectStore";
 import { executeCommand } from "./commandStore";
-import { invoke } from "../lib/tauri";
 import { wrapRetrievedMemories } from "../lib/memorySafety";
+import { Sessions, Memory as MemoryApi, Tools as ToolsApi } from "../lib/api";
 
 interface ChatState {
   currentSession: Session | null;
@@ -36,7 +36,7 @@ interface ChatState {
 
   // ─── Synapse / Memory ────────────────────────────
   /** Memories retrieved for the current/active query */
-  retrievedMemories: MemoryItem[];
+  retrievedMemories: import("../lib/types").MemoryItem[];
   /** Whether memory search is in progress */
   memorySearchActive: boolean;
   /** Whether memory context injection is enabled */
@@ -101,7 +101,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   loadSessions: async () => {
     try {
-      const headers = await invoke<SessionHeader[]>("list_sessions", { projectId: null });
+      const headers = await Sessions.list(null);
       set({ sessionList: headers });
     } catch (err) {
       console.error("Failed to list sessions:", err);
@@ -110,7 +110,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   loadArchivedSessions: async () => {
     try {
-      const headers = await invoke<SessionHeader[]>("list_archived_sessions", { projectId: null });
+      const headers = await Sessions.listArchived(null);
       set({ archivedSessionList: headers });
     } catch (err) {
       console.error("Failed to list archived sessions:", err);
@@ -119,10 +119,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   restoreLastSession: async () => {
     try {
-      const lastId = await invoke<string | null>("get_last_session");
+      const lastId = await Sessions.getLast();
       if (lastId) {
         try {
-          const session = await invoke<Session>("load_session", { sessionId: lastId });
+          const session = await Sessions.load(lastId);
           // Sync the picker's model/provider to match the restored session
           set({
             currentSession: session,
@@ -143,7 +143,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   openSession: async (sessionId: string) => {
     try {
-      const session = await invoke<Session>("load_session", { sessionId });
+      const session = await Sessions.load(sessionId);
       // Sync the picker's model/provider to match the loaded session
       set({
         currentSession: session,
@@ -156,7 +156,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         const project = useProjectStore.getState().projects.find(p => p.id === pid);
         if (project) useProjectStore.getState().setCurrentProject(project);
       }
-      invoke("save_last_session", { sessionId }).catch(() => {});
+      Sessions.saveLast(sessionId).catch(() => {});
     } catch (err) {
       console.error("Failed to load session:", err);
     }
@@ -175,17 +175,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
       tutor_style: project?.tutor_style,
     });
     try {
-      const session = await invoke<Session>("create_session", {
-        header,
-        initialMessage: null,
-      });
+      const session = await Sessions.create(header, null);
       if (project) useProjectStore.getState().setCurrentProject(project);
       set({
         currentSession: session,
         model: project?.default_model || model,
         provider,
       });
-      invoke("save_last_session", { sessionId: session.header.id }).catch(() => {});
+      Sessions.saveLast(session.header.id).catch(() => {});
       get().loadSessions();
     } catch (err) {
       console.error("Failed to create session:", err);
@@ -202,10 +199,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       if (result && currentSession) {
         const assistantMsg = makeMessage("assistant", result);
         try {
-          const updated = await invoke<Session>("append_message", {
-            sessionId: currentSession.header.id,
-            message: assistantMsg,
-          });
+          const updated = await Sessions.append(currentSession.header.id, assistantMsg);
           set({ currentSession: updated, inputText: "" });
         } catch (err) {
           console.error("Failed to save command response:", err);
@@ -234,7 +228,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         tutor_style: tutorStyle,
       });
       try {
-        const newS = await invoke<Session>("create_session", { header, initialMessage: null });
+        const newS = await Sessions.create(header, null);
         set({ currentSession: newS });
         sessionId = newS.header.id;
       } catch (err) {
@@ -256,10 +250,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       userMsg.content = userMsg.content.filter((p) => p.type !== "text" || (p.text ?? "").trim() !== "");
     }
     try {
-      const updated = await invoke<Session>("append_message", {
-        sessionId,
-        message: userMsg,
-      });
+      const updated = await Sessions.append(sessionId, userMsg);
       set({ currentSession: updated, inputText: "" });
     } catch (err) {
       console.error("Failed to save user message:", err);
@@ -271,19 +262,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
     if (!sess) return;
 
     // Save last session
-    invoke("save_last_session", { sessionId: sess.header.id }).catch(() => {});
+    Sessions.saveLast(sess.header.id).catch(() => {});
 
     // ─── Synapse memory retrieval ─────────────────
     // Query relevant memories to inject as context for the model
-    let retrievedMemories: MemoryItem[] = [];
+    let retrievedMemories: import("../lib/types").MemoryItem[] = [];
     const { memoryEnabled } = get();
     if (memoryEnabled) {
       try {
         const memoryQuery = inputText.substring(0, 200);
-        retrievedMemories = await invoke<MemoryItem[]>("query_memories", {
-          query: memoryQuery,
-          limit: 8,
-        });
+        retrievedMemories = await MemoryApi.query(memoryQuery, 8);
       } catch (err) {
         console.error("[synapse] Failed to query memories:", err);
       }
@@ -305,10 +293,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       set({ streaming: false, abortController: null });
       const errMsg = makeMessage("assistant", "No API provider configured. Add one in Settings.");
       try {
-        const updated = await invoke<Session>("append_message", {
-          sessionId: sess.header.id,
-          message: errMsg,
-        });
+        const updated = await Sessions.append(sess.header.id, errMsg);
         set({ currentSession: updated });
       } catch {}
       return;
@@ -429,7 +414,7 @@ covered in the course.`;
         // Fetch tool definitions from Rust
         let toolDefs: any[] = [];
         try {
-          toolDefs = await invoke<any[]>("get_tool_definitions");
+          toolDefs = await ToolsApi.getDefinitions();
         } catch (err) {
           console.warn("[tools] Failed to load tool definitions:", err);
         }
@@ -517,10 +502,7 @@ covered in the course.`;
               assistantMsg.thinking = accumulatedThinking;
             }
 
-            const updated = await invoke<Session>("append_message", {
-              sessionId: sess.header.id,
-              message: assistantMsg,
-            });
+            const updated = await Sessions.append(sess.header.id, assistantMsg);
             finalSession = updated;
             break;
           }
@@ -548,10 +530,7 @@ covered in the course.`;
           if (accumulatedThinking) {
             assistantWithTools.thinking = accumulatedThinking;
           }
-          const updatedAfterTools = await invoke<Session>("append_message", {
-            sessionId: sess.header.id,
-            message: assistantWithTools,
-          });
+          const updatedAfterTools = await Sessions.append(sess.header.id, assistantWithTools);
           finalSession = updatedAfterTools;
 
           // Execute each tool call
@@ -561,16 +540,12 @@ covered in the course.`;
           for (const tc of assembledCalls) {
             try {
               // Add timeout via AbortController-like pattern
-              const resultPromise = invoke<{
-                call_id: string;
-                result: unknown;
-                is_error: boolean;
-              }>("execute_tool", {
-                callId: tc.call_id,
-                toolName: tc.tool_name,
-                arguments: tc.arguments,
-                projectId: currentProjectId,
-              });
+              const resultPromise = ToolsApi.execute(
+                tc.call_id,
+                tc.tool_name,
+                tc.arguments,
+                currentProjectId,
+              );
 
               const timeoutPromise = new Promise<never>((_, reject) =>
                 setTimeout(() => reject(new Error("Tool execution timed out")), TOOL_TIMEOUT_MS)
@@ -622,12 +597,9 @@ covered in the course.`;
           for (const tr of toolResults) {
             const toolResultMsg = makeMessage("tool" as any, JSON.stringify(tr.result));
             toolResultMsg.tool_call_id = tr.call_id;
-            await invoke<Session>("append_message", {
-              sessionId: sess.header.id,
-              message: toolResultMsg,
-            });
+            await Sessions.append(sess.header.id, toolResultMsg);
           }
-          finalSession = await invoke<Session>("load_session", { sessionId: sess.header.id });
+          finalSession = await Sessions.load(sess.header.id);
 
           // Build conversation messages for the next round
           // Include assistant tool_calls + tool results
@@ -662,10 +634,7 @@ covered in the course.`;
             "assistant",
             `Stopped after ${MAX_TOOL_ROUNDS} tool rounds without a final answer.`
           );
-          const updated = await invoke<Session>("append_message", {
-            sessionId: sess.header.id,
-            message: assistantMsg,
-          });
+          const updated = await Sessions.append(sess.header.id, assistantMsg);
           finalSession = updated;
         }
         const memEnabled = get().memoryEnabled;
@@ -685,8 +654,8 @@ covered in the course.`;
           // Store the user's question as a memory for future retrieval
           try {
             const now = new Date().toISOString();
-            await invoke("store_memory_with_safety", {
-              memory: {
+            await MemoryApi.storeWithSafety(
+              {
                 id: crypto.randomUUID(),
                 session_id: sess.header.id,
                 source_type: "chat",
@@ -697,8 +666,8 @@ covered in the course.`;
                 tags: ["auto", "question"],
                 provenance: sess.header.id,
               },
-              mode: "balanced",
-            });
+              "balanced"
+            );
           } catch (err) {
             console.error("[synapse] Failed to store session memory:", err);
           }
@@ -714,10 +683,7 @@ covered in the course.`;
           const partialText = get().streamedText || "(cancelled)";
           const partialMsg = makeMessage("assistant", partialText);
           try {
-            const updated = await invoke<Session>("append_message", {
-              sessionId: sess.header.id,
-              message: partialMsg,
-            });
+            const updated = await Sessions.append(sess.header.id, partialMsg);
             set({ currentSession: updated });
           } catch {}
           set({
@@ -759,10 +725,7 @@ covered in the course.`;
 
         const errMsg = makeMessage("assistant", `**Error**: ${lastError}`);
         try {
-          const updated = await invoke<Session>("append_message", {
-            sessionId: sess.header.id,
-            message: errMsg,
-          });
+          const updated = await Sessions.append(sess.header.id, errMsg);
           set({ currentSession: updated });
         } catch {}
         return;
@@ -785,7 +748,7 @@ covered in the course.`;
 
   archiveSession: async (sessionId: string) => {
     try {
-      await invoke("archive_session", { sessionId });
+      await Sessions.archive(sessionId);
       const { currentSession } = get();
       if (currentSession?.header.id === sessionId) {
         set({ currentSession: null });
@@ -799,7 +762,7 @@ covered in the course.`;
 
   unarchiveSession: async (sessionId: string) => {
     try {
-      await invoke("unarchive_session", { sessionId });
+      await Sessions.unarchive(sessionId);
       get().loadSessions();
       get().loadArchivedSessions();
     } catch (err) {
@@ -809,7 +772,7 @@ covered in the course.`;
 
   renameSession: async (sessionId: string, title: string) => {
     try {
-      const updated = await invoke<Session>("rename_session", { sessionId, title });
+      const updated = await Sessions.rename(sessionId, title);
       set({ currentSession: updated });
       get().loadSessions();
     } catch (err) {
@@ -819,7 +782,7 @@ covered in the course.`;
 
   deleteSession: async (sessionId: string) => {
     try {
-      await invoke("delete_session", { sessionId });
+      await Sessions.delete(sessionId);
       const { currentSession } = get();
       if (currentSession?.header.id === sessionId) {
         set({ currentSession: null });
@@ -832,7 +795,7 @@ covered in the course.`;
 
   purgeSession: async (sessionId: string) => {
     try {
-      await invoke("purge_session", { sessionId });
+      await Sessions.purge(sessionId);
       const { currentSession } = get();
       if (currentSession?.header.id === sessionId) {
         set({ currentSession: null });

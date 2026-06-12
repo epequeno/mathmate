@@ -6,6 +6,7 @@ import { useConfigStore } from "../stores/configStore";
 import { useMemoryStore } from "../stores/memoryStore";
 import { useVaultStore } from "../stores/vaultStore";
 import type { Message, MessageSegment } from "../lib/types";
+import { Vault as VaultApi } from "../lib/api";
 
 interface ContextPanelProps {
   onClose: () => void;
@@ -151,12 +152,7 @@ export default function ContextPanel({ onClose }: ContextPanelProps) {
     const timer = setTimeout(async () => {
       setRelatedLoading(true);
       try {
-        const raw = await import("../lib/tauri").then((m) =>
-          m.invoke<unknown>("synapse_call", {
-            tool: "note_search",
-            args: { query: relatedQuery, limit: 5 },
-          })
-        );
+        const raw = await VaultApi.synapseCall<unknown>("note_search", { query: relatedQuery, limit: 5 });
         const entries = Array.isArray(raw) ? raw : (raw as Record<string, unknown>).results ?? [];
         setRelatedNotes(
           (entries as { path: string; title: string }[]).map((n) => ({

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useProjectStore } from "../stores/projectStore";
 import { useChatStore } from "../stores/chatStore";
 import type { SessionHeader } from "../lib/types";
-import { invoke } from "../lib/tauri";
+import { Sessions } from "../lib/api";
 import { useNavigate } from "react-router-dom";
 
 // SVG icons
@@ -72,7 +72,7 @@ export default function OverviewPage() {
 
   useEffect(() => {
     if (currentProject) {
-      invoke<SessionHeader[]>("list_sessions", { projectId: currentProject.id })
+      Sessions.list(currentProject.id)
         .then(setProjectSessions)
         .catch(() => setProjectSessions([]));
     } else {

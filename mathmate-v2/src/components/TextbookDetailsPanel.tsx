@@ -1,4 +1,4 @@
-import { invoke } from "../lib/tauri";
+import { Textbook } from "../lib/api";
 import type { TextbookCatalogEntry, DownloadResult, TextbookLicenseInfo } from "../lib/types";
 import { subjectLabel, subjectColor, buildAttributionNotice, formatFileSize, LICENSE_INFO } from "../lib/textbookLicenses";
 import { useProjectStore } from "../stores/projectStore";
@@ -27,10 +27,7 @@ export default function TextbookDetailsPanel({ entry, onClose }: TextbookDetails
     setSuccessMsg(null);
 
     try {
-      const result = await invoke<DownloadResult>("download_free_textbook", {
-        catalogId: entry.id,
-        projectId: currentProject?.id ?? null,
-      });
+      const result = await Textbook.download(entry.id);
 
       if (currentProject) {
         await loadProjects();

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useProjectStore } from "../stores/projectStore";
 import { useChatStore } from "../stores/chatStore";
 import { useNavigate, useOutletContext } from "react-router-dom";
-import { invoke } from "../lib/tauri";
+import { Textbook } from "../lib/api";
 import PdfViewer from "../components/PdfViewer";
 import { FolderOpen, Settings2, AlertTriangle, CheckCircle } from "lucide-react";
 
@@ -68,9 +68,7 @@ export default function BookPage() {
     setLoading(true);
     setError(null);
 
-    invoke<string>("read_project_textbook", {
-      projectId: currentProject.id,
-    })
+    Textbook.readProjectTextbook(currentProject.id)
       .then((base64) => {
         if (cancelled) return;
         const binaryStr = atob(base64);
@@ -88,9 +86,7 @@ export default function BookPage() {
 
         // Derive stable textbook ID for search indexing
         if (currentProject.textbook_path) {
-          invoke<string>("derive_textbook_id", {
-            pdfPath: currentProject.textbook_path,
-          })
+          Textbook.deriveId(currentProject.textbook_path)
             .then((id) => {
               if (!cancelled) setTextbookId(id);
             })

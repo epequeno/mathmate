@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { invoke } from "../lib/tauri";
+import { Textbook } from "../lib/api";
 import type { TextbookCatalogEntry, DownloadResult } from "../lib/types";
 import { subjectLabel, subjectColor } from "../lib/textbookLicenses";
 import { useProjectStore } from "../stores/projectStore";
@@ -41,7 +41,7 @@ export default function TextbookCatalog({ onClose }: TextbookCatalogProps) {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    invoke<TextbookCatalogEntry[]>("list_textbook_catalog")
+    Textbook.listCatalog()
       .then((catalog) => {
         setEntries(catalog);
         setLoading(false);
@@ -86,10 +86,7 @@ export default function TextbookCatalog({ onClose }: TextbookCatalogProps) {
       setSuccessMsg(null);
 
       try {
-        const result = await invoke<DownloadResult>("download_free_textbook", {
-          catalogId: entry.id,
-          projectId: currentProject?.id ?? null,
-        });
+        const result = await Textbook.download(entry.id);
 
         // Refresh project store if we updated the textbook path
         if (currentProject) {

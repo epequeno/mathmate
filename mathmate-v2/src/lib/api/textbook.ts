@@ -1,0 +1,101 @@
+/**
+ * Typed Tauri API wrapper for Textbook commands.
+ *
+ * @module lib/api/textbook
+ */
+
+import { invoke } from "@tauri-apps/api/core";
+import type {
+  TextbookCatalogEntry,
+  TextbookMetadata,
+  DownloadResult,
+} from "../types";
+
+export interface TocEntry {
+  title: string;
+  page: number;
+  level: number;
+  index: number;
+  children?: TocEntry[];
+}
+
+export interface ImportResult {
+  files_created: string[];
+  chapters_found: number;
+  sections_found: number;
+}
+
+export interface PageContent {
+  page: number;
+  text: string;
+}
+
+export interface TextbookIndexMeta {
+  textbook_id: string;
+  title?: string;
+  total_pages: number;
+  indexed_pages: number;
+  status: "idle" | "indexing" | "complete" | "error";
+  error?: string;
+}
+
+export const Textbook = {
+  /** @command: list_textbook_catalog */
+  listCatalog: () =>
+    invoke<TextbookCatalogEntry[]>("list_textbook_catalog"),
+
+  /** @command: download_free_textbook */
+  download: (catalogId: string, format?: "pdf" | "epub") =>
+    invoke<DownloadResult>("download_free_textbook", { catalogId, format }),
+
+  /** @command: index_textbook_pages */
+  indexPages: (
+    textbookId: string,
+    title: string | null,
+    totalPages: number,
+    pages: PageContent[],
+    complete: boolean
+  ) =>
+    invoke<TextbookIndexMeta>("index_textbook_pages", {
+      textbookId,
+      title,
+      totalPages,
+      pages,
+      complete,
+    }),
+
+  /** @command: get_textbook_index_status */
+  getIndexStatus: (textbookId: string) =>
+    invoke<TextbookIndexMeta | null>("get_textbook_index_status", {
+      textbookId,
+    }),
+
+  /** @command: extract_pdf_toc */
+  extractToc: (path: string) =>
+    invoke<TocEntry[]>("extract_pdf_toc", { path }),
+
+  /** @command: import_pdf_toc */
+  importToc: (
+    pdfPath: string,
+    vaultPath: string,
+    selectedIndices: number[],
+    textbookTitle?: string
+  ) =>
+    invoke<ImportResult>("import_pdf_toc", {
+      pdfPath,
+      vaultPath,
+      selectedIndices,
+      textbookTitle,
+    }),
+
+  /** @command: read_project_textbook */
+  readProjectTextbook: (
+    projectId: string,
+    pageNumber?: number,
+    mode?: string
+  ) => invoke<string>("read_project_textbook", { projectId, pageNumber, mode }),
+
+  /** @command: derive_textbook_id */
+  deriveId: (path: string) =>
+    invoke<string>("derive_textbook_id", { path }),
+} as const;

@@ -23,7 +23,7 @@ import {
   AlertCircle,
   Loader2,
 } from "lucide-react";
-import { invoke } from "../lib/tauri";
+import { Files } from "../lib/api";
 import { renderMarkdown } from "../lib/renderMarkdown";
 import { sanitize } from "../lib/sanitize";
 import { ask } from "@tauri-apps/plugin-dialog";
@@ -212,7 +212,7 @@ export default function VaultPage() {
   // paths outside roots require confirmed:true after a user confirmation dialog.
   const handleOpenNote = async (path: string) => {
     try {
-      await invoke("open_path", { path, projectId: currentProject?.id, confirmed: false });
+      await Files.openPath(path, currentProject?.id, false);
     } catch (err) {
       if (!String(err).includes("outside allowed roots")) return;
       const confirmed = await ask(`Open this file outside the current project roots?\n\n${path}`, {
@@ -220,7 +220,7 @@ export default function VaultPage() {
         kind: "warning",
       });
       if (confirmed) {
-        await invoke("open_path", { path, projectId: currentProject?.id, confirmed: true }).catch(() => {});
+        await Files.openPath(path, currentProject?.id, true).catch(() => {});
       }
     }
   };

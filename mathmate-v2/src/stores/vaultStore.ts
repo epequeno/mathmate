@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { invoke } from "../lib/tauri";
+import { Vault as VaultApi } from "../lib/api";
 import type { VaultNote } from "../lib/types";
 
 // ─── Synapse Response Types ─────────────────────────────────────────────
@@ -94,10 +94,7 @@ interface VaultState {
  * Helper to call a Synapse MCP tool via the `synapse_call` Tauri command.
  */
 async function synapseCall<T>(tool: string, args?: Record<string, unknown>): Promise<T> {
-  return invoke<T>("synapse_call", {
-    tool,
-    args: args ?? {},
-  });
+  return VaultApi.synapseCall<T>(tool, args);
 }
 
 export const useVaultStore = create<VaultState>((set, get) => ({
@@ -138,7 +135,7 @@ export const useVaultStore = create<VaultState>((set, get) => ({
         const { useProjectStore } = await import("./projectStore");
         const project = useProjectStore.getState().currentProject;
         if (project?.vault_path) {
-          const vaultNotes = await invoke<VaultNote[]>("scan_vault", { path: project.vault_path, projectId: project.id });
+          const vaultNotes = await VaultApi.scan(project.vault_path, project.id);
           const notes: NoteEntry[] = vaultNotes.map((n) => ({
             path: n.path,
             title: n.title || n.filename,
@@ -205,7 +202,7 @@ export const useVaultStore = create<VaultState>((set, get) => ({
         // Legacy fallback
         const { useProjectStore } = await import("./projectStore");
         const projectId = useProjectStore.getState().currentProject?.id;
-        const content = await invoke<string>("read_note", { path, projectId });
+        const content = await VaultApi.readNote(path, projectId);
         const filename = path.split("/").pop()?.replace(/\.md$/i, "") || path;
         set({
           selectedNote: { path, title: filename, body: content },
@@ -298,7 +295,7 @@ export const useVaultStore = create<VaultState>((set, get) => ({
 
   checkSynapseStatus: async () => {
     try {
-      const status = await invoke<{ running: boolean; tool_count: number }>("synapse_mcp_status");
+      const status = await VaultApi.synapseStatus();
       set({ synapseRunning: status.running });
       if (status.running) {
         // Fetch note count from vault_info

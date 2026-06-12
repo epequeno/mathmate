@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useConfigStore, type AppConfig, type ProviderConfig } from "../stores/configStore";
 import { useChatStore } from "../stores/chatStore";
-import { invoke } from "../lib/tauri";
+import { Config } from "../lib/api";
 import { AlertTriangle, CheckCircle2, Monitor, Sun, Moon } from "lucide-react";
 
 type Tab = "general" | "chat" | "models" | "about";
@@ -52,7 +52,7 @@ export default function SettingsPage() {
     // Load all providers (including disabled) for models tab
     const loadAll = async () => {
       try {
-        const config = await invoke<{ providers: ProviderConfig[] }>("get_models_config");
+        const config = await Config.getModels();
         setAllProviders(config.providers);
         // Pre-fill API key inputs from stored keys
         const keyMap: Record<string, string> = {};
@@ -84,7 +84,7 @@ export default function SettingsPage() {
       ui: { font_size: fontSize },
     };
     try {
-      await invoke("save_app_config", { config: updated });
+      await Config.save(updated);
       setDirty(false);
       showToast("Settings saved");
     } catch (err) {
@@ -473,13 +473,10 @@ export default function SettingsPage() {
                       setSavingKeys((prev) => ({ ...prev, [p.name]: true }));
                       try {
                         const key = apiKeyInputs[p.name]?.trim() || null;
-                        await invoke("set_provider_api_key", {
-                          providerName: p.name,
-                          apiKey: key,
-                        });
+                        await Config.setProviderKey(p.name, key);
                         showToast(`${p.name} API key ${key ? "saved" : "cleared"}`);
                         // Reload providers to reflect the change locally and in global config store
-                        const config = await invoke<{ providers: ProviderConfig[] }>("get_models_config");
+                        const config = await Config.getModels();
                         setAllProviders(config.providers);
                         await loadConfig();
                       } catch (err) {

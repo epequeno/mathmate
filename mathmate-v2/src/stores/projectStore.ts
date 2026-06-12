@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { MathProject } from "../lib/types";
 
-import { invoke } from "../lib/tauri";
+import { Projects } from "../lib/api";
 
 interface SynapseStatus {
   running: boolean;
@@ -51,7 +51,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       } else {
       }
     try {
-      const projects = await invoke<MathProject[]>("list_projects");
+      const projects = await Projects.list();
       const hasProjects = projects.length > 0;
       set({ projects, hasProjects, loading: false });
       const current = get().currentProject;
@@ -82,39 +82,33 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
   loadArchivedProjects: async () => {
     try {
-      const projects = await invoke<MathProject[]>("list_archived_projects");
+      const projects = await Projects.listArchived();
       set({ archivedProjects: projects });
     } catch (err) {
     }
   },
 
   createProject: async (opts) => {
-    const project = await invoke<MathProject>("create_project", {
-      name: opts.name,
-      vaultPath: opts.vaultPath ?? null,
-      textbookPath: opts.textbookPath ?? null,
-      defaultModel: opts.defaultModel ?? null,
-      tutorStyle: opts.tutorStyle ?? null,
-    });
+    const project = await Projects.create(opts);
     await get().loadProjects();
     set({ currentProject: project });
     return project;
   },
 
   updateProject: async (project: MathProject) => {
-    await invoke("update_project", { project });
+    await Projects.update(project);
     get().loadProjects();
   },
 
   deleteProject: async (id: string) => {
-    await invoke("delete_project", { projectId: id });
+    await Projects.delete(id);
     const { currentProject } = get();
     if (currentProject?.id === id) set({ currentProject: null });
     get().loadProjects();
   },
 
   deleteProjectCascade: async (id: string) => {
-    await invoke("delete_project_cascade", { projectId: id });
+    await Projects.deleteCascade(id);
     const { currentProject } = get();
     if (currentProject?.id === id) set({ currentProject: null });
     get().loadProjects();
@@ -122,7 +116,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   archiveProject: async (id: string) => {
-    await invoke("archive_project", { projectId: id });
+    await Projects.archive(id);
     const { currentProject } = get();
     if (currentProject?.id === id) set({ currentProject: null });
     get().loadProjects();
@@ -130,7 +124,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   unarchiveProject: async (id: string) => {
-    await invoke("unarchive_project", { projectId: id });
+    await Projects.unarchive(id);
     get().loadProjects();
     get().loadArchivedProjects();
   },
@@ -139,7 +133,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     // Stop Synapse when switching away from a vault project
     const prev = get().currentProject;
     if (prev?.vault_path) {
-      invoke("stop_synapse_mcp").catch(() => {});
+      Projects.stopSynapse().catch(() => {});
       set({ synapseStatus: { running: false, vault_path: null, tool_count: 0 } });
     }
 
@@ -156,7 +150,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     if (!project?.vault_path) return;
 
     try {
-      await invoke("start_synapse_mcp", { vaultPath: project.vault_path });
+      await Projects.startSynapse(project.vault_path);
       await get().checkSynapseStatus();
     } catch (err) {
       console.warn("[synapse] Failed to start MCP:", err);
@@ -166,7 +160,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
   stopSynapse: async () => {
     try {
-      await invoke("stop_synapse_mcp");
+      await Projects.stopSynapse();
     } catch (err) {
       console.warn("[synapse] Failed to stop MCP:", err);
     }
@@ -175,7 +169,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
   checkSynapseStatus: async () => {
     try {
-      const status = await invoke<SynapseStatus>("synapse_mcp_status");
+      const status = await Projects.synapseStatus();
       set({ synapseStatus: status });
     } catch {
       set({ synapseStatus: { running: false, vault_path: null, tool_count: 0 } });

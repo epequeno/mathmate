@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { MemoryItem } from "../lib/types";
-import { invoke } from "../lib/tauri";
+import { Memory as MemoryApi } from "../lib/api";
 import { scanMemoryContent } from "../lib/memorySafety";
 import type { SafetyMode } from "../lib/memorySafety";
 
@@ -23,7 +23,7 @@ export const useMemoryStore = create<MemoryState>((set) => ({
   queryMemories: async (query: string, limit = 20) => {
     set({ loading: true });
     try {
-      const memories = await invoke<MemoryItem[]>("query_memories", { query, limit });
+      const memories = await MemoryApi.query(query, limit);
       set({ memories, loading: false });
     } catch (err) {
       console.error("Failed to query memories:", err);
@@ -40,10 +40,7 @@ export const useMemoryStore = create<MemoryState>((set) => ({
     }
 
     try {
-      const result = await invoke<{ kind: string; reason?: string }>("store_memory_with_safety", {
-        memory,
-        mode: safetyMode,
-      });
+      const result = await MemoryApi.storeWithSafety(memory, safetyMode);
       set({ lastScanResult: { kind: result.kind, reason: result.reason } });
     } catch (err) {
       console.error("Failed to store memory:", err);
@@ -52,7 +49,7 @@ export const useMemoryStore = create<MemoryState>((set) => ({
 
   forgetMemory: async (id: string) => {
     try {
-      await invoke("forget_memory", { memoryId: id });
+      await MemoryApi.forget(id);
       set((s) => ({ memories: s.memories.filter((m) => m.id !== id) }));
     } catch (err) {
       console.error("Failed to forget memory:", err);

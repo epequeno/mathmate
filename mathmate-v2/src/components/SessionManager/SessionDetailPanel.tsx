@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import type { SessionHeader, Session } from "../../lib/types";
 import { ArrowUpRight, Archive, Trash2, RotateCcw, Pencil } from "lucide-react";
-import { invoke } from "../../lib/tauri";
+import { Sessions } from "../../lib/api";
 
 interface SessionDetailPanelProps {
   session: SessionHeader | null;
@@ -54,7 +54,7 @@ export default function SessionDetailPanel({
       setRenaming(false);
       // Load full session for message preview
       setLoadingPreview(true);
-      invoke<Session>("load_session", { sessionId: session.id })
+      Sessions.load(session.id)
         .then((s) => setFullSession(s))
         .catch(() => setFullSession(null))
         .finally(() => setLoadingPreview(false));

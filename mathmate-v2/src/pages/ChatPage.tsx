@@ -15,7 +15,7 @@ import ModelSelector from "../components/ModelSelector";
 import type { WrapUpResult, Message } from "../lib/types";
 import { renderMarkdown } from "../lib/renderMarkdown";
 import { sanitize } from "../lib/sanitize";
-import { invoke } from "../lib/tauri";
+import { Sessions, Files, WrapUp } from "../lib/api";
 import { ask } from "@tauri-apps/plugin-dialog";
 import { AlertTriangle, X, Camera, Settings2 } from "lucide-react";
 
@@ -148,14 +148,14 @@ function ChatToolbar({
                   e.preventDefault();
                   // open_path contract (see lib.rs docs): paths inside project roots open
                   // immediately; paths outside roots require confirmed:true after a user dialog.
-                  invoke("open_path", { path: bookPath, projectId: currentProject?.id, confirmed: false }).catch(async (err) => {
+                  Files.openPath(bookPath, currentProject?.id, false).catch(async (err) => {
                     if (!String(err).includes("outside allowed roots")) return;
                     const confirmed = await ask(`Open this file outside the current project roots?\n\n${bookPath}`, {
                       title: "Open External File",
                       kind: "warning",
                     });
                     if (confirmed) {
-                      await invoke("open_path", { path: bookPath, projectId: currentProject?.id, confirmed: true }).catch(() => {});
+                      await Files.openPath(bookPath, currentProject?.id, true).catch(() => {});
                     }
                   });
                 }}
@@ -396,7 +396,7 @@ export default function ChatPage() {
     // Note: loadConfig and restoreLastSession are now called once in Layout.tsx
     (async () => {
       try {
-        const headers = await invoke<any[]>("list_sessions", { projectId: null });
+        const headers = await Sessions.list(null);
         if (headers.length > 0) {
           setMigrationCount(headers.length);
           const seen = localStorage.getItem("mathmate-migration-seen");
@@ -469,9 +469,7 @@ export default function ChatPage() {
     if (!currentSession) return;
     try {
       setToast("Generating wrap-up summary...");
-      const result = await invoke<WrapUpResult>("generate_wrap_up", {
-        sessionId: currentSession.header.id,
-      });
+      const result = await WrapUp.generate(currentSession.header.id);
       setWrapUpResult(result);
       setToast(null);
       setShowWrapUp(true);
@@ -484,12 +482,12 @@ export default function ChatPage() {
     if (!wrapUpResult) return;
     try {
       const vaultPath = currentProject?.vault_path ?? "~/.mathmate/study_logs";
-      const savedPath = await invoke<string>("save_wrap_up", {
-        projectName: currentProject?.name ?? "General",
+      const savedPath = await WrapUp.save(
+        currentProject?.name ?? "General",
         vaultPath,
-        content: wrapUpResult.content,
-        sessionId: currentSession?.header.id ?? "unknown",
-      });
+        wrapUpResult.content,
+        currentSession?.header.id ?? "unknown"
+      );
       setToast(`Study log saved to ${savedPath}`);
       setShowWrapUp(false);
       setWrapUpResult(null);

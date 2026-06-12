@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { X, FolderOpen, BookOpen, Bot, GraduationCap, Save, Sparkles, CheckCircle2, AlertCircle, FileDown, Loader2, ChevronRight, ChevronDown, Library } from "lucide-react";
 import { useProjectStore } from "../stores/projectStore";
-import { invoke } from "../lib/tauri";
+import { Vault as VaultApi, Textbook as TextbookApi } from "../lib/api";
 import type { MathProject } from "../lib/types";
 import TextbookCatalog from "./TextbookCatalog";
 
@@ -103,10 +103,7 @@ export default function ProjectSettingsPanel({ onClose }: ProjectSettingsPanelPr
     setInitStatus("running");
     setInitError(null);
     try {
-      await invoke("init_vault", {
-        vaultPath: path,
-        projectName: name.trim() || currentProject?.name || "Study Vault",
-      });
+      await VaultApi.init(path, name.trim() || currentProject?.name || "Study Vault");
       setInitStatus("done");
       setTimeout(() => setInitStatus("idle"), 4000);
     } catch (err) {
@@ -124,7 +121,7 @@ export default function ProjectSettingsPanel({ onClose }: ProjectSettingsPanelPr
     setImportResult(null);
     setImportError(null);
     try {
-      const entries = await invoke<TocEntry[]>("extract_pdf_toc", { path: pdfPath });
+      const entries = await TextbookApi.extractToc(pdfPath);
       setTocEntries(entries);
       setTocExpanded(true);
       // Select all by default
@@ -144,12 +141,12 @@ export default function ProjectSettingsPanel({ onClose }: ProjectSettingsPanelPr
     setImportError(null);
     setImportResult(null);
     try {
-      const result = await invoke<ImportResult>("import_pdf_toc", {
+      const result = await TextbookApi.importToc(
         pdfPath,
-        vaultPath: vPath,
-        selectedIndices: Array.from(selectedIndices),
-        textbookTitle: name.trim() || undefined,
-      });
+        vPath,
+        Array.from(selectedIndices),
+        name.trim() || undefined
+      );
       setImportResult(result);
     } catch (err) {
       setImportError(String(err));

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { invoke } from "../lib/tauri";
+import { Textbook } from "../lib/api";
 
 interface IndexProgress {
   indexed: number;
@@ -51,7 +51,7 @@ export function useTextbookIndexer({
     let cancelled = false;
     setStatus("checking");
 
-    invoke<any | null>("get_textbook_index_status", { textbookId })
+    Textbook.getIndexStatus(textbookId)
       .then((meta) => {
         if (cancelled) return;
         if (meta?.status === "complete") {
@@ -105,16 +105,16 @@ export function useTextbookIndexer({
 
         // Send batch to Rust backend
         const isComplete = endPage >= totalPages;
-        await invoke("index_textbook_pages", {
+        await Textbook.indexPages(
           textbookId,
-          title: title ?? null,
+          title ?? null,
           totalPages,
-          pages: batchResults.map((r) => ({
+          batchResults.map((r) => ({
             page: r.page,
             text: r.text,
           })),
-          complete: isComplete,
-        });
+          isComplete
+        );
 
         setProgress({ indexed: Math.min(endPage, totalPages), total: totalPages });
         setStatus(isComplete ? "complete" : "indexing");
