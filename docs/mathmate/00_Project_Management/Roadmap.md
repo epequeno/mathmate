@@ -210,7 +210,7 @@ Quick, *no-behavior-change* cleanups surfaced by the review. Each item is an ind
 - [x] **`lib/turn/prompt.ts`**: `buildSystemPrompt()` pure function extracted from the 60-line system-prompt literal in `sendMessage`.
 - [x] **`lib/turn/types.ts`**: `TurnEvent` discriminated union (10 variants), `TurnInput`, `TurnDeps` (injectable I/O).
 - [x] **Orchestrator unit tests** (13 tests): text-only, tool round (single + timeout + max-rounds), abort, network error, 1 MB overflow, memory storage, segment accumulation.
-- [ ] **Move auto-store-memory out of the streaming loop** into a Zustand subscription. ([`Implementation_Phase14B_StreamTurnOrchestrator.md`](../Implementation_Phase14B_StreamTurnOrchestrator.md))
+- [x] **Move auto-store-memory out of the streaming loop** into a Zustand subscription. ([`Implementation_Phase14B_StreamTurnOrchestrator.md`](../Implementation_Phase14B_StreamTurnOrchestrator.md))
 
 ### 14D — Vault Backend Abstraction
 - [ ] **`VaultBackend` strategy interface**: `list`, `read`, `write`, `create`, `delete`, `search`, `backlinks`, `vaultInfo`, `healthCheck`. Replaces 9 inlined `if (synapseRunning) ... else ...` branches. ([`Implementation_Phase14D_VaultBackend.md`](../Implementation_Phase14D_VaultBackend.md))
