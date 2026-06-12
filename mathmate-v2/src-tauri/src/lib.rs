@@ -17,18 +17,9 @@ mod tools;
 mod vault;
 mod wrapup;
 
-use textbook_catalog::LicenseInfo;
 use crate::services::session::{Message, Session, SessionHeader};
 use tauri::State;
 use crate::services::AppServices;
-
-// ─── App State (legacy — only mcp_client remains; → SynapseService later) ──
-
-pub struct AppState {
-    pub mcp_client: Mutex<Option<mcp_client::McpClient>>,
-}
-
-use std::sync::Mutex;
 
 // ─── Config Commands ────────────────────────────
 
@@ -473,14 +464,13 @@ fn save_wrap_up(
 // ─── Textbook Commands ──────────────────────────
 
 #[tauri::command]
-fn read_textbook_metadata(path: String) -> Result<textbook::TextbookMetadata, String> {
-    textbook::read_textbook_metadata(&path)
+fn read_textbook_metadata(
+    svc: State<AppServices>,
+    path: String,
+) -> Result<crate::services::textbook::TextbookMetadata, String> {
+    svc.textbook.read_metadata(&path).map_err(|e| e.to_string())
 }
 
-/// Read the current project's textbook PDF and return it as base64-encoded bytes.
-///
-/// Security: the frontend only passes a project_id; the textbook path is read
-/// from the project record, not from the frontend, preventing path substitution.
 #[tauri::command]
 fn read_project_textbook(
     svc: State<AppServices>,
@@ -488,8 +478,7 @@ fn read_project_textbook(
 ) -> Result<String, String> {
     use base64::Engine;
 
-    let project = project::load_project(&project_id)
-        .map_err(|e| format!("Failed to load project: {}", e))?;
+    let project = svc.projects.load(&project_id).map_err(|e| e.to_string())?;
 
     let path = project
         .textbook_path
@@ -509,11 +498,9 @@ fn read_project_textbook(
         return Err("Project textbook is not a PDF".to_string());
     }
 
-    // Check file size before loading — warn for large PDFs
     let metadata = std::fs::metadata(&target)
         .map_err(|e| format!("Failed to read textbook metadata: {}", e))?;
     if metadata.len() > 150_000_000 {
-        // 150 MB soft limit
         return Err("Textbook PDF is too large (over 150 MB)".to_string());
     }
 
@@ -525,56 +512,61 @@ fn read_project_textbook(
 
 // ─── PDF Import Commands ───────────────────────────────
 
-/// Extract the table of contents (document outline) from a PDF file.
 #[tauri::command]
-fn extract_pdf_toc(path: String) -> Result<Vec<pdf_import::TocEntry>, String> {
-    pdf_import::extract_pdf_toc(&path)
+fn extract_pdf_toc(
+    svc: State<AppServices>,
+    path: String,
+) -> Result<Vec<crate::services::textbook::TocEntry>, String> {
+    svc.textbook.extract_pdf_toc(&path).map_err(|e| e.to_string())
 }
 
-/// Generate vault markdown files from selected PDF TOC entries.
 #[tauri::command]
 fn import_pdf_toc(
+    svc: State<AppServices>,
     pdf_path: String,
     vault_path: String,
     selected_indices: Vec<usize>,
     textbook_title: Option<String>,
-) -> Result<pdf_import::ImportResult, String> {
-    pdf_import::import_pdf_toc(
-        &pdf_path,
-        &vault_path,
-        &selected_indices,
-        textbook_title.as_deref(),
-    )
+) -> Result<crate::services::textbook::ImportResult, String> {
+    svc.textbook
+        .import_pdf_toc(&pdf_path, &vault_path, &selected_indices, textbook_title.as_deref())
+        .map_err(|e| e.to_string())
 }
 
 // ─── Free Textbook Catalog Commands ────────────
 
-/// List all free textbooks in the bundled catalog.
 #[tauri::command]
-fn list_textbook_catalog() -> Result<Vec<textbook_catalog::TextbookCatalogEntry>, String> {
-    textbook_catalog::load_catalog()
+fn list_textbook_catalog(
+    svc: State<AppServices>,
+) -> Result<Vec<crate::services::textbook::TextbookCatalogEntry>, String> {
+    svc.textbook.list_catalog().map_err(|e| e.to_string())
 }
 
-/// Get license information for a textbook license type.
 #[tauri::command]
-fn get_textbook_license_info(license: String) -> Result<LicenseInfo, String> {
-    textbook_catalog::get_license_info(&license)
+fn get_textbook_license_info(
+    svc: State<AppServices>,
+    license: String,
+) -> Result<crate::services::textbook::LicenseInfo, String> {
+    svc.textbook.get_license_info(&license).map_err(|e| e.to_string())
 }
 
-/// Download a free textbook PDF to the local library.
-/// If project_id is provided, update the project's textbook_path.
 #[tauri::command]
 fn download_free_textbook(
+    svc: State<AppServices>,
     catalog_id: String,
     project_id: Option<String>,
-) -> Result<textbook_catalog::DownloadResult, String> {
-    let result = textbook_catalog::download_textbook(&catalog_id)?;
+) -> Result<crate::services::textbook::DownloadResult, String> {
+    let result = svc.textbook
+        .download_free_textbook(&catalog_id)
+        .map_err(|e| e.to_string())?;
 
     // If a project_id was provided, update the project's textbook path
     if let Some(pid) = project_id {
-        let mut project = project::load_project(&pid)?;
+        let mut project = svc.projects.load(&pid).map_err(|e| e.to_string())?;
         project.textbook_path = Some(result.local_path.clone());
-        project::update_project(&project)?;
+        svc.projects
+            .update(&project)
+            .map_err(|e| e.to_string())?;
     }
 
     Ok(result)
@@ -582,200 +574,124 @@ fn download_free_textbook(
 
 // ─── Textbook Index Commands ────────────────
 
-/// Save a batch of extracted pages to the textbook search index.
-/// Called from the frontend during pdf.js text extraction.
 #[tauri::command]
 fn index_textbook_pages(
+    svc: State<AppServices>,
     textbook_id: String,
     title: Option<String>,
     total_pages: u32,
-    pages: Vec<textbook_index::PageContent>,
+    pages: Vec<crate::services::textbook::PageContent>,
     complete: bool,
-) -> Result<textbook_index::TextbookIndexMeta, String> {
-    textbook_index::save_page_batch(&textbook_id, title, total_pages, pages, complete)
+) -> Result<crate::services::textbook::TextbookIndexMeta, String> {
+    svc.textbook
+        .index_pages(&textbook_id, title.as_deref(), total_pages, pages, complete)
+        .map_err(|e| e.to_string())
 }
 
-/// Check whether a textbook has a search index already.
 #[tauri::command]
-fn get_textbook_index_status(textbook_id: String) -> Result<Option<textbook_index::TextbookIndexMeta>, String> {
-    match textbook_index::load_meta(&textbook_id) {
-        Ok(meta) => Ok(Some(meta)),
-        Err(_) => Ok(None),
-    }
+fn get_textbook_index_status(
+    svc: State<AppServices>,
+    textbook_id: String,
+) -> Result<Option<crate::services::textbook::TextbookIndexMeta>, String> {
+    svc.textbook.get_index_status(&textbook_id).map_err(|e| e.to_string())
 }
 
-/// Derive a stable textbook ID from a PDF file path.
-/// Used by the frontend to know which ID to check/lookup.
 #[tauri::command]
-fn derive_textbook_id(pdf_path: String) -> Result<String, String> {
-    Ok(textbook_index::derive_textbook_id(&pdf_path))
+fn derive_textbook_id(
+    svc: State<AppServices>,
+    pdf_path: String,
+) -> Result<String, String> {
+    Ok(svc.textbook.derive_textbook_id(&pdf_path))
 }
 
-// ─── Tool Commands (Phase 12B) ──────────────────
+// ─── Tool Commands ──────────────────────────────
 
-/// Get OpenAI-compatible tool definitions for the current session.
-/// Includes Synapse MCP tools when the MCP client is running.
-/// Falls back to old vault tools when Synapse is not available.
 #[tauri::command]
-fn get_tool_definitions(state: State<AppState>) -> Vec<tools::ToolDefinition> {
-    // Start with non-vault tools (calculate, current_date, graph)
-    let mut defs = vec![tools::calculate::definition(), tools::current_date::definition(), tools::graph::definition()];
-
-    // Try to get Synapse tool definitions from the running MCP client
-    if let Ok(mut guard) = state.mcp_client.lock() {
-        if let Some(ref mut client) = *guard {
-            if let Ok(synapse_tools) = client.list_tools() {
-                defs.extend(synapse_tools);
-                return defs;
-            }
-        }
-    }
-
-    // Fallback: include old vault tools when Synapse is NOT running
-    defs.extend([
-        tools::vault_list::definition(),
-        tools::vault_read::definition(),
-        tools::vault_search::definition(),
-        tools::vault_write::definition(),
-    ]);
-
-    defs
+fn get_tool_definitions(
+    svc: State<AppServices>,
+) -> Result<Vec<tools::ToolDefinition>, String> {
+    svc.synapse.get_tool_definitions().map_err(|e| e.to_string())
 }
 
-/// Execute a tool call and return the result.
 #[tauri::command]
 fn execute_tool(
-    state: State<AppState>,
+    svc: State<AppServices>,
     call_id: String,
     tool_name: String,
     arguments: serde_json::Value,
     project_id: Option<String>,
-) -> tools::ToolResult {
+) -> Result<tools::ToolResult, String> {
+    let vault_path = project_id
+        .as_deref()
+        .and_then(|pid| svc.projects.load(pid).ok())
+        .and_then(|p| p.vault_path);
+
     let call = tools::ToolCall {
         call_id,
         tool_name,
         arguments,
     };
 
-    // Try Synapse MCP client: query the live tool list to decide routing.
-    // This replaces the old hardcoded synapse_tools string array with a
-    // runtime check that won't drift when Synapse adds/removes tools.
-    if let Ok(mut guard) = state.mcp_client.lock() {
-        if let Some(ref mut client) = *guard {
-            if let Ok(current_tools) = client.list_tools() {
-                if current_tools.iter().any(|t| t.function.name == call.tool_name) {
-                    return client
-                        .call(&call.tool_name, call.arguments.clone())
-                        .map(|r| tools::ToolResult {
-                            call_id: call.call_id.clone(),
-                            result: r,
-                            is_error: false,
-                        })
-                        .unwrap_or_else(|e| tools::ToolResult {
-                            call_id: call.call_id.clone(),
-                            result: serde_json::json!({"error": e}),
-                            is_error: true,
-                        });
-                }
-            }
-        }
-    }
-
-    // Resolve vault path from project (for legacy vault_search tool)
-    let vault_path = project_id
-        .as_deref()
-        .and_then(|pid| project::load_project(pid).ok())
-        .and_then(|p| p.vault_path);
-
-    tools::execute_tool(&call, vault_path.as_deref(), project_id.as_deref())
+    svc.synapse
+        .execute_tool(call, vault_path.as_deref(), project_id.as_deref())
+        .map_err(|e| e.to_string())
 }
 
-/// Thin proxy: call any Synapse MCP tool directly from the frontend.
-/// Allows UI-driven operations (note_list, note_read, note_update, etc.)
-/// independently of the agent tool loop.
 #[tauri::command]
 fn synapse_call(
-    state: State<AppState>,
+    svc: State<AppServices>,
     tool: String,
     args: serde_json::Value,
 ) -> Result<serde_json::Value, String> {
-    let mut guard = state.mcp_client.lock().map_err(|e| e.to_string())?;
-    let client = guard.as_mut().ok_or("Synapse MCP not running")?;
-    client.call_unwrapped(&tool, args)
+    svc.synapse.call(&tool, args).map_err(|e| e.to_string())
 }
 
-// ─── Synapse MCP Commands (Phase 13A) ───────────
+// ─── Synapse MCP Commands ───────────────────────
 
-/// Start the Synapse MCP subprocess for a given vault path.
 #[tauri::command]
-fn start_synapse_mcp(state: State<AppState>, vault_path: String) -> Result<(), String> {
-    // Kill any existing MCP client
-    if let Ok(mut guard) = state.mcp_client.lock() {
-        if let Some(ref mut client) = *guard {
-            client.stop();
-        }
-        *guard = Some(mcp_client::McpClient::start(&vault_path)?);
-    }
-    Ok(())
-}
-
-/// Stop the Synapse MCP subprocess.
-#[tauri::command]
-fn stop_synapse_mcp(state: State<AppState>) -> Result<(), String> {
-    if let Ok(mut guard) = state.mcp_client.lock() {
-        if let Some(ref mut client) = *guard {
-            client.stop();
-        }
-        *guard = None;
-    }
-    Ok(())
-}
-
-/// Check the status of the Synapse MCP subprocess.
-#[derive(serde::Serialize)]
-struct SynapseStatus {
-    running: bool,
-    vault_path: Option<String>,
-    tool_count: usize,
+fn start_synapse_mcp(
+    svc: State<AppServices>,
+    vault_path: String,
+) -> Result<(), String> {
+    svc.synapse.start(&vault_path).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn synapse_mcp_status(state: State<AppState>) -> SynapseStatus {
-    if let Ok(mut guard) = state.mcp_client.lock() {
-        if let Some(ref mut client) = *guard {
-            // Try list_tools to confirm it's alive
-            if let Ok(tools) = client.list_tools() {
-                return SynapseStatus {
-                    running: true,
-                    vault_path: None, // Not stored on the client
-                    tool_count: tools.len(),
-                };
-            }
-        }
-    }
-    SynapseStatus {
-        running: false,
-        vault_path: None,
-        tool_count: 0,
-    }
+fn stop_synapse_mcp(
+    svc: State<AppServices>,
+) -> Result<(), String> {
+    svc.synapse.stop().map_err(|e| e.to_string())
 }
 
-/// Check whether the synapse binary is available on the system.
 #[tauri::command]
-fn check_synapse_available() -> bool {
-    mcp_client::is_synapse_available()
+fn synapse_mcp_status(
+    svc: State<AppServices>,
+) -> Result<crate::services::synapse::SynapseStatus, String> {
+    svc.synapse.status().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn check_synapse_available(
+    svc: State<AppServices>,
+) -> bool {
+    svc.synapse.is_available()
 }
 
 // ─── Model Catalog Commands ─────────────────────
 
 #[tauri::command]
-fn fetch_models(force_refresh: bool) -> Result<models::ModelCatalog, String> {
-    models::fetch_models(force_refresh)
+fn fetch_models(
+    svc: State<AppServices>,
+    force_refresh: bool,
+) -> Result<models::ModelCatalog, String> {
+    svc.model_catalog.fetch(force_refresh).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn get_cached_models() -> Result<Option<models::ModelCatalog>, String> {
-    Ok(models::get_cached_models())
+fn get_cached_models(
+    svc: State<AppServices>,
+) -> Result<Option<models::ModelCatalog>, String> {
+    Ok(svc.model_catalog.get_cached())
 }
 
 // ─── App Builder ────────────────────────────────
@@ -786,9 +702,6 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_shell::init())
-        .manage(AppState {
-            mcp_client: Mutex::new(None),
-        })
         .manage(services::AppServices::init().expect("Failed to init AppServices"))
         .invoke_handler(tauri::generate_handler![
             // Environment variables

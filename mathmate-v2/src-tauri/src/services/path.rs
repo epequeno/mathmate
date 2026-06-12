@@ -208,7 +208,7 @@ mod tests {
         std::fs::create_dir_all(note.parent().unwrap()).unwrap();
         std::fs::write(&note, "# hello").unwrap();
 
-        let guard = PathScope::new();
+        let _guard = PathScope::new();
         // Build a fake env where roots includes this vault
         // (test uses the fact that build_allowed_roots won't find a real
         // project for a random ID, so we check the hard-rejection path

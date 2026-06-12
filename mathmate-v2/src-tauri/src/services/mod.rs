@@ -13,10 +13,12 @@
 pub mod config;
 pub mod image;
 pub mod memory;
+pub mod models;
 pub mod path;
 pub mod project;
 pub mod session;
-pub mod tools;
+pub mod synapse;
+pub mod textbook;
 pub mod vault;
 pub mod wrapup;
 
@@ -24,10 +26,12 @@ use crate::error::AppError;
 use config::ConfigService;
 use image::ImageService;
 use memory::MemoryService;
+use models::ModelCatalogService;
 use path::PathScope;
 use project::ProjectService;
 use session::SessionService;
-use tools::ToolService;
+use synapse::SynapseService;
+use textbook::TextbookService;
 use vault::VaultService;
 use wrapup::WrapUpService;
 
@@ -36,11 +40,12 @@ pub struct AppServices {
     pub config: ConfigService,
     pub images: ImageService,
     pub memory: MemoryService,
+    pub model_catalog: ModelCatalogService,
     pub path: PathScope,
     pub projects: ProjectService,
     pub sessions: SessionService,
-    #[allow(dead_code)] // wired when tool commands migrate with SynapseService
-    pub tools: ToolService,
+    pub synapse: SynapseService,
+    pub textbook: TextbookService,
     pub vault: VaultService,
     pub wrapup: WrapUpService,
 }
@@ -56,10 +61,12 @@ impl AppServices {
             config: ConfigService::new(base_dir.clone()),
             images: ImageService::new(base_dir.clone()),
             memory: MemoryService::new(base_dir.clone()),
+            model_catalog: ModelCatalogService::new(),
             path: PathScope::new(),
             projects: ProjectService::new(base_dir.clone()),
             sessions: SessionService::new(base_dir.clone()),
-            tools: ToolService::new(),
+            synapse: SynapseService::new(),
+            textbook: TextbookService::new(),
             vault: VaultService::new(),
             wrapup: WrapUpService::new(),
         })
