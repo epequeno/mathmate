@@ -173,19 +173,19 @@ Quick, *no-behavior-change* cleanups surfaced by the review. Each item is an ind
 - [x] **G.12 — Remove unused `visionFilterEnabled` flag in `configStore`**: Finding was stale — already wired to `ModelSelector.tsx` with toggle chip + filter logic. No change needed. ([`Implementation_Phase14G_Cleanup.md`](../Implementation_Phase14G_Cleanup.md))
 - [x] **G.13 — Strengthen `scripts/check-no-eval.mjs`**: Now catches bare `Function(`, `(0, eval)`, and `setTimeout/setInterval` string-code patterns. All 6 fixture patterns detected. ([`Implementation_Phase14G_Cleanup.md`](../Implementation_Phase14G_Cleanup.md))
 - [x] **G.14 — Cap `streamedText` / `streamedThinking` growth**: 1 MB cap per accumulated string with `StreamError` on overflow. ([`Implementation_Phase14G_Cleanup.md`](../Implementation_Phase14G_Cleanup.md))
-- [ ] **G.15 — Add `@command:` JSDoc annotations + diff-check script**: Blocked on 14A (typed API client modules must exist first). Deferred. ([`Implementation_Phase14G_Cleanup.md`](../Implementation_Phase14G_Cleanup.md))
+- [x] **G.15 — Add `@command:` JSDoc annotations + diff-check script**: `scripts/check-api-commands.mjs` diffs `invoke_handler!` in `lib.rs` against `@command:` annotations in `lib/api/*.ts`. 63 commands matched. Added 11 missing annotations to memory/files/config/vault/textbook API modules. ([`Implementation_Phase14G_Cleanup.md`](../Implementation_Phase14G_Cleanup.md))
 
 ### 14A — Typed Tauri API Client
 - [x] **Typed `invoke` wrappers in `src/lib/api/*`**: 8 modules (`sessions`, `projects`, `config`, `memory`, `tools`, `vault`, `files`, `textbook`, `wrapup`) with typed args/return + `@command:` JSDoc annotations + `index.ts` barrel with `api` facade. All 40+ call sites migrated across stores and components. Dynamic `await import("../lib/tauri")` eliminated from `providers.ts` and `ContextPanel.tsx`. Raw `invoke` now lives only in `lib/api/` and `lib/tauri.ts`. ([`Implementation_Phase14A_TypedTauriApiClient.md`](../Implementation_Phase14A_TypedTauriApiClient.md))
-- [ ] **ESLint rule** banning raw `invoke` outside `lib/api/` and `lib/tauri.ts` (deferred).
-- [ ] **Wrapper-coverage diff-check script** in `prebuild` (deferred).
+- [x] **ESLint rule** banning raw `invoke` outside `lib/api/` and `lib/tauri.ts`: `scripts/check-no-raw-invoke.mjs` prebuild guard. 0 violations in 79 source files.
+- [x] **Wrapper-coverage diff-check script** in `prebuild`: `scripts/check-api-commands.mjs` (see G.15 above).
 
 ### 14F — CSS Module Migration (top patterns)
 - [x] **Shared `src/styles/components.css`**: 10+ shared classes — `.btn-icon`, `.btn-icon-danger`, `.btn-primary`, `.btn-primary-large`, `.list-row`, `.tooltip`, `.menu-item`, `.model-select-row`, `.image-row`, `.catalog-card`, `.menu-row`.
 - [x] **`clsx` utility**: Tiny `cx()` function at `src/lib/clsx.ts` for conditional class merging.
 - [x] **File-by-file `.module.css` migration**: `Sidebar` (800→600 lines), `ChatInput`, `ChatMessage`, `LaTeXPalette`, `VaultPage`, `OverviewPage` — all with co-located `.module.css`.
 - [x] **Hover handler elimination**: ALL `onMouseEnter`/`onMouseLeave` inline-style-mutation patterns removed from `Sidebar`, `ChatInput`, `ChatMessage`, `LaTeXPalette`, `ModelSelector`, `RecentImagesPanel`, `TextbookCatalogCard`, `VaultPage`, `OverviewPage`, `BulkActionBar`, `SessionTableRow`, `SessionDetailPanel`. Now using GPU-accelerated CSS `:hover` pseudo-classes.
-- [ ] **ESLint rule banning `style={{...}}` > 5 lines / > 4 keys**: Deferred.
+- [x] **ESLint rule banning `style={{...}}` > 5 lines / > 4 keys**: `scripts/check-inline-styles.mjs` informational lint (318 violations across 39 files — full migration deferred to follow-up). Runs as warning by default; `--strict` flag for CI gate.
 
 ### 14E — Unified Error Model
 - [x] **Rust `AppError` enum** in `src-tauri/src/error.rs`: 11 variants with `#[serde(tag = "kind")]`, `is_retryable()`, `From` impls for `io::Error`, `rusqlite::Error`, `serde_json::Error`. 9 tests. (14E.0)

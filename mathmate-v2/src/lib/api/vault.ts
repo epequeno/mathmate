@@ -32,4 +32,8 @@ export const Vault = {
   /** @command: init_vault */
   init: (vaultPath: string, projectName: string) =>
     invoke<void>("init_vault", { vaultPath, projectName }),
+
+  /** @command: check_synapse_available */
+  checkSynapseAvailable: () =>
+    invoke<boolean>("check_synapse_available"),
 } as const;

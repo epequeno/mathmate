@@ -6,11 +6,14 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "prebuild": "node scripts/check-no-eval.mjs",
+    "prebuild": "node scripts/check-no-eval.mjs && node scripts/check-api-commands.mjs && node scripts/check-no-raw-invoke.mjs",
     "postinstall": "node scripts/copy-pdf-worker.mjs",
     "preview": "vite preview",
     "tauri": "tauri",
     "lint:no-eval": "node scripts/check-no-eval.mjs",
+    "lint:api-commands": "node scripts/check-api-commands.mjs",
+    "lint:no-raw-invoke": "node scripts/check-no-raw-invoke.mjs",
+    "lint:inline-styles": "node scripts/check-inline-styles.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },

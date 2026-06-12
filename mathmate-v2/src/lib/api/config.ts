@@ -35,4 +35,8 @@ export const Config = {
   /** @command: get_env_var */
   getEnvVar: (key: string) =>
     invoke<string | null>("get_env_var", { key }),
+
+  /** @command: get_config_path */
+  getConfigPath: () =>
+    invoke<string>("get_config_path"),
 } as const;

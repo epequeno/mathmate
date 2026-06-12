@@ -38,4 +38,20 @@ export const Files = {
     projectId: string | undefined,
     confirmed: boolean
   ) => invoke<void>("open_path", { path, projectId, confirmed }),
+
+  /** @command: read_file_as_base64 */
+  readFileAsBase64: (path: string, projectId?: string) =>
+    invoke<string>("read_file_as_base64", { path, projectId }),
+
+  /** @command: save_image */
+  saveImage: (sessionId: string, mime: string, dataBase64: string) =>
+    invoke<string>("save_image", { sessionId, mime, dataBase64 }),
+
+  /** @command: load_image */
+  loadImage: (sessionId: string, filename: string) =>
+    invoke<[string, string]>("load_image", { sessionId, filename }),
+
+  /** @command: evict_session_images */
+  evictSessionImages: (sessionId: string) =>
+    invoke<void>("evict_session_images", { sessionId }),
 } as const;

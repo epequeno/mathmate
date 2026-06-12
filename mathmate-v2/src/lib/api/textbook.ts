@@ -98,4 +98,12 @@ export const Textbook = {
   /** @command: derive_textbook_id */
   deriveId: (path: string) =>
     invoke<string>("derive_textbook_id", { path }),
+
+  /** @command: read_textbook_metadata */
+  readMetadata: (path: string) =>
+    invoke<TextbookMetadata>("read_textbook_metadata", { path }),
+
+  /** @command: get_textbook_license_info */
+  getLicenseInfo: (license: string) =>
+    invoke<Record<string, unknown>>("get_textbook_license_info", { license }),
 } as const;
