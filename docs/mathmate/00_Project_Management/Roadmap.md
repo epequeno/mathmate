@@ -193,7 +193,7 @@ Quick, *no-behavior-change* cleanups surfaced by the review. Each item is an ind
 - [x] **Map `StreamError` → `AppError`**: `providers.ts` now throws typed `AppError` objects from every error path via `errorFromStatus()`. Internal `StreamError` instances (abort reasons) are converted before re-throw. `chatStore.ts` retry logic uses `isRetryable(appErr)` instead of `err instanceof StreamError`. (14E.0)
 - [x] **`<ErrorBanner>` component** with kind-specific icons and actions (Retry for `network`/`rate_limit`/`server`/`unavailable`, Dismiss for the rest). ([`Implementation_Phase14E_UnifiedErrorModel.md`](../Implementation_Phase14E_UnifiedErrorModel.md))
 - [x] **All Rust commands return `Result<T, AppError>`** (zero `map_err(|e| e.to_string())` boilerplate). (14E.1)
-- [ ] **Fix `session.append_message` data-loss risk**: Add `fsync` to `append_message`; coordinate in-memory and on-disk updates. ([`Implementation_Phase14E_UnifiedErrorModel.md`](../Implementation_Phase14E_UnifiedErrorModel.md))
+- [x] **Fix `session.append_message` data-loss risk**: Write-before-memory ordering + `fsync` in `SessionService::append`. ([`Implementation_Phase14E_UnifiedErrorModel.md`](../Implementation_Phase14E_UnifiedErrorModel.md))
 - [x] **chatStore + configStore + vaultStore**: error fields use `AppError`; catch blocks use `toAppError(err).message`. (14E.1)
 
 ### 14C — Rust Service Layer

@@ -1,8 +1,8 @@
 // ─── Memory Service ──────────────────────────────────────────────────
 //
-// Owns the SQLite memory database (lazy-init, thread-safe).  All memory
-// CRUD, learner-profile, and content-safety scanning flows through this
-// service so Tauri commands become thin wrappers.
+// Owns the SQLite memory database via an r2d2 connection pool.
+// All memory CRUD, learner-profile, and content-safety scanning flows
+// through this service so Tauri commands become thin wrappers.
 //
 // Delegates to the existing `crate::memory` free functions for the
 // low-level SQL logic while owning connection lifecycle and path
@@ -11,9 +11,10 @@
 // See: Implementation_Phase14C_RustServiceLayer.md § C.6
 
 use std::path::PathBuf;
-use std::sync::Mutex;
 
-use rusqlite::Connection;
+use r2d2_sqlite::SqliteConnectionManager;
+use r2d2::Pool;
+use r2d2::PooledConnection;
 
 use crate::error::AppError;
 // Import the low-level module under an alias so the public re-exports
@@ -27,40 +28,62 @@ pub use crate::memory::{MemoryItem, SafetyMode, ScanResult, ScanResultKind};
 
 pub struct MemoryService {
     db_path: PathBuf,
-    conn: Mutex<Option<Connection>>,
+    pool: Pool<SqliteConnectionManager>,
 }
 
 impl MemoryService {
     /// Create a `MemoryService` that uses `base_dir/memory.db`.
+    /// The pool is initialized immediately and the schema is ensured.
     pub fn new(base_dir: PathBuf) -> Self {
         let mut db_path = base_dir;
         std::fs::create_dir_all(&db_path).ok();
         db_path.push("memory.db");
-        Self {
-            db_path,
-            conn: Mutex::new(None),
-        }
+
+        // Ensure the schema exists before creating the pool (use a
+        // temporary direct connection; pool connections will pick up the
+        // initialized database).
+        mem::open_db_at(&db_path)
+            .map_err(|e| AppError::internal(e))
+            .ok();
+
+        let manager = SqliteConnectionManager::file(&db_path);
+        let pool = Pool::builder()
+            .max_size(4)
+            .build(manager)
+            .expect("Failed to create memory DB pool");
+
+        Self { db_path, pool }
     }
 
-    /// Lazy-init the database connection (called on first access).
-    fn ensure_conn(&self) -> Result<std::sync::MutexGuard<'_, Option<Connection>>, AppError> {
-        let mut guard = self
-            .conn
-            .lock()
-            .map_err(|e| AppError::internal(format!("DB lock poisoned: {}", e)))?;
-        if guard.is_none() {
-            *guard = Some(mem::open_db_at(&self.db_path)?);
+    /// Get a connection from the pool.
+    fn get_conn(&self) -> Result<PooledConnection<SqliteConnectionManager>, AppError> {
+        self.pool
+            .get()
+            .map_err(|e| AppError::internal(format!("DB pool exhausted: {}", e)))
+    }
+
+    /// Explicitly open the database at a given path (used by tests).
+    #[cfg(test)]
+    pub fn open_db_at(path: &std::path::Path) -> Self {
+        let pb = path.to_path_buf();
+        crate::memory::open_db_at(&pb).unwrap();
+        let manager = SqliteConnectionManager::file(path);
+        let pool = Pool::builder()
+            .max_size(2)
+            .build(manager)
+            .expect("Failed to create test DB pool");
+        Self {
+            db_path: pb,
+            pool,
         }
-        Ok(guard)
     }
 
     // ── public API ───────────────────────────────────────────────────
 
     /// Store a new memory (no content scan).
     pub fn store(&self, memory: &MemoryItem) -> Result<(), AppError> {
-        let guard = self.ensure_conn()?;
-        let conn = guard.as_ref().unwrap();
-        mem::store_memory(conn, memory).map_err(AppError::from)
+        let conn = self.get_conn()?;
+        mem::store_memory(&conn, memory).map_err(AppError::from)
     }
 
     /// Store a memory after scanning for prompt-injection patterns.
@@ -73,9 +96,8 @@ impl MemoryService {
         memory: &MemoryItem,
         mode: &SafetyMode,
     ) -> Result<ScanResult, AppError> {
-        let guard = self.ensure_conn()?;
-        let conn = guard.as_ref().unwrap();
-        mem::store_memory_with_safety(conn, memory, mode).map_err(AppError::from)
+        let conn = self.get_conn()?;
+        mem::store_memory_with_safety(&conn, memory, mode).map_err(AppError::from)
     }
 
     /// Search memories by FTS5 full-text query.
@@ -83,30 +105,26 @@ impl MemoryService {
     /// If `query` is empty, returns the most recent memories sorted by
     /// score descending then creation date descending.
     pub fn query(&self, query: &str, limit: usize) -> Result<Vec<MemoryItem>, AppError> {
-        let guard = self.ensure_conn()?;
-        let conn = guard.as_ref().unwrap();
-        mem::query_memories(conn, query, limit).map_err(AppError::from)
+        let conn = self.get_conn()?;
+        mem::query_memories(&conn, query, limit).map_err(AppError::from)
     }
 
     /// Delete a memory by ID.
     pub fn forget(&self, id: &str) -> Result<(), AppError> {
-        let guard = self.ensure_conn()?;
-        let conn = guard.as_ref().unwrap();
-        mem::forget_memory(conn, id).map_err(AppError::from)
+        let conn = self.get_conn()?;
+        mem::forget_memory(&conn, id).map_err(AppError::from)
     }
 
     /// Get a value from the learner profile.
     pub fn get_profile(&self, key: &str) -> Result<Option<String>, AppError> {
-        let guard = self.ensure_conn()?;
-        let conn = guard.as_ref().unwrap();
-        mem::get_profile(conn, key).map_err(AppError::from)
+        let conn = self.get_conn()?;
+        mem::get_profile(&conn, key).map_err(AppError::from)
     }
 
     /// Set a value in the learner profile.
     pub fn set_profile(&self, key: &str, value: &str) -> Result<(), AppError> {
-        let guard = self.ensure_conn()?;
-        let conn = guard.as_ref().unwrap();
-        mem::set_profile(conn, key, value).map_err(AppError::from)
+        let conn = self.get_conn()?;
+        mem::set_profile(&conn, key, value).map_err(AppError::from)
     }
 }
 

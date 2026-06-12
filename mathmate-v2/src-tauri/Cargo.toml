@@ -31,3 +31,5 @@ reqwest = { version = "0.12", features = ["blocking", "json"] }
 meval = "0.2"
 lopdf = "0.34"
 indexmap = "2"
+r2d2_sqlite = "0.24"
+r2d2 = "0.8"
