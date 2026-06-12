@@ -19,7 +19,6 @@ mod wrapup;
 
 use config::{AppConfig, AppConfigModels};
 use textbook_catalog::LicenseInfo;
-use project::MathProject;
 use crate::services::session::{Message, Session, SessionHeader};
 use tauri::State;
 use crate::services::AppServices;
@@ -347,48 +346,70 @@ fn open_path(
 
 #[tauri::command]
 fn create_project(
+    svc: State<AppServices>,
     name: String,
     vault_path: Option<String>,
     textbook_path: Option<String>,
     default_model: Option<String>,
     tutor_style: Option<String>,
-) -> Result<MathProject, String> {
-    project::create_project(name, vault_path, textbook_path, default_model, tutor_style)
+) -> Result<crate::services::project::MathProject, String> {
+    svc.projects
+        .create(name, vault_path, textbook_path, default_model, tutor_style)
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn update_project(project: MathProject) -> Result<(), String> {
-    project::update_project(&project)
+fn update_project(
+    svc: State<AppServices>,
+    project: crate::services::project::MathProject,
+) -> Result<(), String> {
+    svc.projects.update(&project).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn delete_project(project_id: String) -> Result<(), String> {
-    project::delete_project(&project_id)
+fn delete_project(
+    svc: State<AppServices>,
+    project_id: String,
+) -> Result<(), String> {
+    svc.projects.delete(&project_id).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn archive_project(project_id: String) -> Result<(), String> {
-    project::archive_project(&project_id)
+fn archive_project(
+    svc: State<AppServices>,
+    project_id: String,
+) -> Result<(), String> {
+    svc.projects.archive(&project_id).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn unarchive_project(project_id: String) -> Result<(), String> {
-    project::unarchive_project(&project_id)
+fn unarchive_project(
+    svc: State<AppServices>,
+    project_id: String,
+) -> Result<(), String> {
+    svc.projects.unarchive(&project_id).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn list_archived_projects() -> Result<Vec<MathProject>, String> {
-    project::list_archived_projects()
+fn list_archived_projects(
+    svc: State<AppServices>,
+) -> Result<Vec<crate::services::project::MathProject>, String> {
+    svc.projects.list_archived().map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn delete_project_cascade(project_id: String) -> Result<(), String> {
-    project::delete_project_cascade(&project_id)
+fn delete_project_cascade(
+    svc: State<AppServices>,
+    project_id: String,
+) -> Result<(), String> {
+    svc.projects.delete_cascade(&project_id).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn list_projects() -> Result<Vec<MathProject>, String> {
-    project::list_projects()
+fn list_projects(
+    svc: State<AppServices>,
+) -> Result<Vec<crate::services::project::MathProject>, String> {
+    svc.projects.list().map_err(|e| e.to_string())
 }
 
 // ─── Vault Commands ─────────────────────────────

@@ -12,17 +12,20 @@
 
 pub mod memory;
 pub mod path;
+pub mod project;
 pub mod session;
 
 use crate::error::AppError;
 use memory::MemoryService;
 use path::PathScope;
+use project::ProjectService;
 use session::SessionService;
 
 /// Central service container managed by Tauri as state.
 pub struct AppServices {
     pub memory: MemoryService,
     pub path: PathScope,
+    pub projects: ProjectService,
     pub sessions: SessionService,
 }
 
@@ -37,6 +40,7 @@ impl AppServices {
         Ok(Self {
             memory: MemoryService::new(base_dir.clone()),
             path: PathScope::new(),
+            projects: ProjectService::new(base_dir.clone()),
             sessions: SessionService::new(base_dir),
         })
     }
