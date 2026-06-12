@@ -420,8 +420,6 @@ covered in the course.`;
       model: selectedModel,
       provider,
       toolDefinitions: toolDefs,
-      memoryEnabled: get().memoryEnabled,
-      userInputText: inputText,
       signal: abortController.signal,
     };
 
@@ -440,23 +438,6 @@ covered in the course.`;
       },
       executeTool: async (callId, toolName, args, projectId) => {
         return await ToolsApi.execute(callId, toolName, args, projectId);
-      },
-      storeMemory: async (content, sid) => {
-        const now = new Date().toISOString();
-        await MemoryApi.storeWithSafety(
-          {
-            id: crypto.randomUUID(),
-            session_id: sid,
-            source_type: "chat",
-            unit_type: "question",
-            content,
-            score: 1.0,
-            created_at: now,
-            tags: ["auto", "question"],
-            provenance: sid,
-          },
-          "balanced",
-        );
       },
       buildPayload,
       buildToolPayload,
@@ -483,9 +464,6 @@ covered in the course.`;
             case "segments-changed":
               set({ streamSegments: event.segments });
               break;
-            case "memory-stored":
-              // Memory auto-stored; no UI change needed.
-              break;
             case "tool-round-started":
             case "tool-round-finished":
               // Round lifecycle — no-op for now.
@@ -503,6 +481,32 @@ covered in the course.`;
                 error: null,
                 retrievedMemories: [],
               });
+
+              // ─── Auto-store session memory (moved here from orchestrator) ───
+              const { memoryEnabled } = get();
+              const userText = inputText; // captured from closure
+              if (memoryEnabled) {
+                try {
+                  const now = new Date().toISOString();
+                  await MemoryApi.storeWithSafety(
+                    {
+                      id: crypto.randomUUID(),
+                      session_id: sess.header.id,
+                      source_type: "chat",
+                      unit_type: "question",
+                      content: userText.substring(0, 500),
+                      score: 1.0,
+                      created_at: now,
+                      tags: ["auto", "question"],
+                      provenance: sess.header.id,
+                    },
+                    "balanced",
+                  );
+                } catch {
+                  // Non-fatal.
+                }
+              }
+
               get().loadSessions();
               return;
             }

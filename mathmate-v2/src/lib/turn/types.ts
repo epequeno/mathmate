@@ -18,7 +18,6 @@ export type TurnEvent =
   | { kind: "tool-round-started"; round: number }
   | { kind: "tool-round-finished"; round: number }
   | { kind: "message-saved"; session: Message }
-  | { kind: "memory-stored" }
   | { kind: "turn-finished" }
   | { kind: "turn-aborted"; partialText: string; partialThinking: string; partialSegments: MessageSegment[] }
   | { kind: "turn-error"; error: AppError };
@@ -36,10 +35,6 @@ export interface TurnInput {
   provider: ProviderConfig;
   /** Tool definitions for function calling. */
   toolDefinitions: unknown[];
-  /** Whether to auto-store session memory after the turn. */
-  memoryEnabled: boolean;
-  /** User's input text (for memory storage). */
-  userInputText: string;
   /** Signal for cancellation. */
   signal: AbortSignal;
 }
@@ -55,8 +50,6 @@ export interface TurnDeps {
   loadSession: (sessionId: string) => Promise<any>;
   /** Execute a tool call via the Tauri backend. */
   executeTool: (callId: string, toolName: string, args: unknown, projectId?: string) => Promise<{ call_id: string; result: unknown; is_error: boolean }>;
-  /** Store a memory for future retrieval. */
-  storeMemory: (content: string, sessionId: string) => Promise<void>;
   /** Build payload for text-only requests. */
   buildPayload: (...args: any[]) => any;
   /** Build payload with tool definitions for function calling. */

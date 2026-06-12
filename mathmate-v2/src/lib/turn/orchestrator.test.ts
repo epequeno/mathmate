@@ -47,8 +47,6 @@ function makeInput(overrides?: Partial<TurnInput>): TurnInput {
       fetch_models: false,
     },
     toolDefinitions: [],
-    memoryEnabled: false,
-    userInputText: "Hello",
     signal: new AbortController().signal,
     ...overrides,
   };
@@ -65,7 +63,6 @@ function makeDeps(overrides?: Partial<TurnDeps>): TurnDeps {
       result: { value: 42 },
       is_error: false,
     }),
-    storeMemory: vi.fn().mockResolvedValue(undefined),
     buildPayload: vi.fn((msgs: any[]) => msgs),
     buildToolPayload: vi.fn((msgs: any[], tools: any[]) => ({
       messages: msgs,
@@ -446,41 +443,7 @@ describe("runTurn — errors", () => {
   });
 });
 
-describe("runTurn — memory storage", () => {
-  it("calls storeMemory when memoryEnabled is true", async () => {
-    const deps = makeDeps({
-      streamChat: vi.fn().mockImplementation(() =>
-        mockStream({ text: "Hello" }, { done: true }),
-      ),
-    });
-
-    const input = makeInput({
-      memoryEnabled: true,
-      userInputText: "Original user question",
-    });
-
-    const events = await collectEvents(runTurn(input, deps));
-
-    expect(deps.storeMemory).toHaveBeenCalledWith(
-      "Original user question",
-      "s1",
-    );
-  });
-
-  it("does not call storeMemory when memoryEnabled is false", async () => {
-    const deps = makeDeps({
-      streamChat: vi.fn().mockImplementation(() =>
-        mockStream({ text: "Hello" }, { done: true }),
-      ),
-    });
-
-    const input = makeInput({ memoryEnabled: false });
-
-    const events = await collectEvents(runTurn(input, deps));
-
-    expect(deps.storeMemory).not.toHaveBeenCalled();
-  });
-});
+// Memory storage tests moved to chatStore — orchestrator no longer stores memory.
 
 describe("runTurn — segment accumulation", () => {
   it("creates thinking and content segments from chunks", async () => {
