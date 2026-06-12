@@ -1,6 +1,8 @@
 import type { ProviderConfig } from "../stores/configStore";
 import type { StreamChunk } from "./types";
 import { Config } from "./api";
+import { errorFromStatus, isCancelled } from "./error";
+import type { AppError } from "./error";
 
 export interface MessagePayload {
   role: "user" | "assistant" | "system";
@@ -31,6 +33,18 @@ const TOTAL_TIMEOUT = 120_000;       // 120s total for entire response
  * Yields text and thinking chunks as they arrive.
  * Supports optional tool definitions for function calling.
  */
+
+/** Convert internal StreamError to typed AppError for consumers. */
+function _streamErrorToAppError(err: StreamError): AppError {
+  if (err.status) {
+    return errorFromStatus(err.status, err.message, {
+      retryAfterSecs: err.rateLimited ? 30 : undefined,
+    });
+  }
+  // No status → network/timeout errors, always retryable
+  return { kind: "network", message: err.message };
+}
+
 export async function* streamChat(
   payload: MessagePayload[] | { messages: MessagePayload[]; tools?: unknown[] },
   model: string,
@@ -80,9 +94,9 @@ export async function* streamChat(
   }
 
   if (!apiKey) {
-    throw new StreamError(
-      `No API key found for provider "${provider.name}". Save a key in Settings → Models or set the \`${provider.env_key ?? `${provider.name.toUpperCase()}_API_KEY`}\` environment variable.`,
-      { retryable: true }
+    throw errorFromStatus(
+      401,
+      `No API key found for provider "${provider.name}". Save a key in Settings → Models or set the \`${provider.env_key ?? `${provider.name.toUpperCase()}_API_KEY`}\` environment variable.`
     );
   }
 
@@ -139,8 +153,6 @@ export async function* streamChat(
     if (!response.ok) {
       const errText = await response.text().catch(() => "");
       const status = response.status;
-      const retryable = status >= 500 || status === 429;
-      const rateLimited = status === 429;
 
       // Extract a useful detail string from the API response body
       let apiDetail = "";
@@ -181,7 +193,7 @@ export async function* streamChat(
           : `API error ${status} from ${provider.name}.`;
       }
 
-      throw new StreamError(msg, { status, retryable, rateLimited });
+      throw errorFromStatus(status, msg);
     }
 
     const reader = response.body?.getReader();
@@ -225,19 +237,22 @@ export async function* streamChat(
     }
   } catch (err: any) {
     clearTimers();
-    // Re-throw StreamErrors as-is, wrap everything else
-    if (err instanceof StreamError) throw err;
+    // Convert StreamError (internal abort reasons) to AppError
+    if (err instanceof StreamError) {
+      throw _streamErrorToAppError(err);
+    }
     if (err.name === "AbortError") {
       const reason = ourAbort.signal.reason;
-      if (reason instanceof StreamError) throw reason;
-      throw new StreamError("Request cancelled", { retryable: true });
+      if (reason instanceof StreamError) {
+        throw _streamErrorToAppError(reason);
+      }
+      throw { kind: "cancelled", message: "Request cancelled" } satisfies AppError;
     }
     // Network errors (fetch throws TypeError)
-    const isNetworkError = err instanceof TypeError || err.message?.includes("fetch");
-    throw new StreamError(
-      isNetworkError ? `Network error: ${err.message || "Connection failed"}` : `Stream error: ${err.message || "Unknown error"}`,
-      { retryable: isNetworkError }
-    );
+    if (err instanceof TypeError || err.message?.includes("fetch")) {
+      throw errorFromStatus(0, `Network error: ${err.message || "Connection failed"}`);
+    }
+    throw { kind: "unknown", message: `Stream error: ${err.message || "Unknown error"}` } satisfies AppError;
   } finally {
     clearTimers();
   }
@@ -537,10 +552,9 @@ export function assembleToolCalls(
       args = JSON.parse(assembled.argumentsRaw || "{}");
     } catch {
       // Malformed tool-call arguments — surface the error rather than
-      // silently executing with empty/default args.
-      throw new StreamError(
-        `Tool call "${assembled.tool_name}" has malformed arguments: ${assembled.argumentsRaw?.substring(0, 200)}`,
-        { status: 502, retryable: false }
+      throw errorFromStatus(
+        502,
+        `Tool call "${assembled.tool_name}" has malformed arguments: ${assembled.argumentsRaw?.substring(0, 200)}`
       );
     }
     results.push({

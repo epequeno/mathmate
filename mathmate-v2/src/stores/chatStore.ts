@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import type { Message, MessageSegment, Session, SessionHeader, StreamChunk } from "../lib/types";
 import { makeMessage, makeSegment, makeSessionHeader } from "../lib/types";
-import { buildPayload, buildToolPayload, streamChat, StreamError, assembleToolCalls } from "../lib/providers";
+import { buildPayload, buildToolPayload, streamChat, assembleToolCalls } from "../lib/providers";
+import { toAppError, isRetryable, isCancelled } from "../lib/error";
 import { useConfigStore } from "./configStore";
 import { useProjectStore } from "./projectStore";
 import { executeCommand } from "./commandStore";
@@ -470,7 +471,7 @@ covered in the course.`;
             if (chunk.text) {
               accumulatedText += chunk.text;
               if (accumulatedText.length > MAX_STREAMED_BYTES) {
-                throw new StreamError("Response exceeded 1 MB limit", { status: 502, retryable: false });
+                throw { kind: "server" as const, message: "Response exceeded 1 MB limit", status: 502 };
               }
               set({ streamedText: accumulatedText });
               updateSegments();
@@ -478,7 +479,7 @@ covered in the course.`;
             if (chunk.thinking) {
               accumulatedThinking += chunk.thinking;
               if (accumulatedThinking.length > MAX_STREAMED_BYTES) {
-                throw new StreamError("Thinking trace exceeded 1 MB limit", { status: 502, retryable: false });
+                throw { kind: "server" as const, message: "Thinking trace exceeded 1 MB limit", status: 502 };
               }
               set({ streamedThinking: accumulatedThinking });
               updateSegments();
@@ -697,10 +698,19 @@ covered in the course.`;
           return;
         }
 
-        // Only retry on StreamError with retryable flag
-        const isRetryable = err instanceof StreamError ? err.retryable : false;
+        // Convert to AppError for typed retry/cancel decisions
+        const appErr = toAppError(err);
 
-        if (attempt < maxRetries && isRetryable) {
+        // Don't retry cancellations
+        if (isCancelled(appErr)) {
+          set({ streaming: false, abortController: null, streamSegments: [] });
+          return;
+        }
+
+        // Only retry on retryable errors
+        const retryable = isRetryable(appErr);
+
+        if (attempt < maxRetries && retryable) {
           const delay = Math.pow(2, attempt) * 1000; // 2s, then 4s
           set({ error: `Retrying... (attempt ${attempt + 1}/${maxRetries})` });
           await new Promise((r) => setTimeout(r, delay));

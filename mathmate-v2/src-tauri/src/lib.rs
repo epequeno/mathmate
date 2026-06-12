@@ -1,5 +1,6 @@
 mod audit;
 mod config;
+mod error;
 mod images;
 mod mcp_client;
 mod memory;
