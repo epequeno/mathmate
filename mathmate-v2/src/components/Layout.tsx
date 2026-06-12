@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import TabBar from "./TabBar";
@@ -34,10 +34,15 @@ export default function Layout() {
   // Restore the last session once when the app shell mounts.
   // Keeping this here (not in ChatPage) prevents re-triggering on every
   // Chat tab navigation, which was creating phantom sessions.
+  // The useRef guard additionally prevents re-triggering if Layout ever
+  // unmounts and remounts (e.g., during a React Strict Mode double-mount).
+  const initialized = useRef(false);
   useEffect(() => {
+    if (initialized.current) return;
+    initialized.current = true;
     loadConfig();
     restoreLastSession();
-  }, []);
+  }, [loadConfig, restoreLastSession]);
 
   useKeyboardShortcuts({ onToggleContextPanel: toggleContextPanel });
 

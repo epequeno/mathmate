@@ -339,6 +339,17 @@ fn read_file_as_base64(path: String, project_id: Option<String>) -> Result<Strin
     Ok(base64::engine::general_purpose::STANDARD.encode(&data))
 }
 
+/// Open a file path in the system's default application.
+///
+/// # Security contract
+/// - Only `file:` URIs and absolute/relative filesystem paths are accepted.
+/// - Extension allowlist: `.md`, `.pdf`, `.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`, `.txt`, `.json`, `.tex`, `.csv`.
+/// - Paths inside the active project's allowed roots (vault, textbook, sessions, `~/.mathmate/`) open immediately.
+/// - Paths outside allowed roots require `confirmed: true`, set by the frontend after a user warning dialog.
+///
+/// The two-step call pattern:
+/// 1. Frontend calls with `confirmed: false` → Rust returns an error if the path is outside roots.
+/// 2. Frontend catches the error, shows a user confirmation dialog, retries with `confirmed: true`.
 #[tauri::command]
 fn open_path(
     path: String,
@@ -571,8 +582,9 @@ fn save_wrap_up(
     project_name: String,
     vault_path: String,
     content: String,
+    session_id: String,
 ) -> Result<String, String> {
-    wrapup::save_wrap_up(&project_name, &vault_path, &content)
+    wrapup::save_wrap_up(&project_name, &vault_path, &content, &session_id)
 }
 
 // ─── Textbook Commands ──────────────────────────
@@ -762,40 +774,28 @@ fn execute_tool(
         arguments,
     };
 
-    // Try Synapse MCP client first for note_* tools and vault_info
-    let synapse_tools = [
-        "vault_info",
-        "note_list",
-        "note_read",
-        "note_create",
-        "note_update",
-        "note_delete",
-        "note_search",
-        "note_backlinks",
-    ];
-    if synapse_tools.contains(&call.tool_name.as_str()) {
-        if let Ok(mut guard) = state.mcp_client.lock() {
-            if let Some(ref mut client) = *guard {
-                return client
-                    .call(&call.tool_name, call.arguments.clone())
-                    .map(|r| tools::ToolResult {
-                        call_id: call.call_id.clone(),
-                        result: r,
-                        is_error: false,
-                    })
-                    .unwrap_or_else(|e| tools::ToolResult {
-                        call_id: call.call_id.clone(),
-                        result: serde_json::json!({"error": e}),
-                        is_error: true,
-                    });
+    // Try Synapse MCP client: query the live tool list to decide routing.
+    // This replaces the old hardcoded synapse_tools string array with a
+    // runtime check that won't drift when Synapse adds/removes tools.
+    if let Ok(mut guard) = state.mcp_client.lock() {
+        if let Some(ref mut client) = *guard {
+            if let Ok(current_tools) = client.list_tools() {
+                if current_tools.iter().any(|t| t.function.name == call.tool_name) {
+                    return client
+                        .call(&call.tool_name, call.arguments.clone())
+                        .map(|r| tools::ToolResult {
+                            call_id: call.call_id.clone(),
+                            result: r,
+                            is_error: false,
+                        })
+                        .unwrap_or_else(|e| tools::ToolResult {
+                            call_id: call.call_id.clone(),
+                            result: serde_json::json!({"error": e}),
+                            is_error: true,
+                        });
+                }
             }
         }
-        // Synapse not running — return error with guidance
-        return tools::ToolResult {
-            call_id: call.call_id.clone(),
-            result: serde_json::json!({"error": "Synapse is not running. Please ensure a vault is configured."}),
-            is_error: true,
-        };
     }
 
     // Resolve vault path from project (for legacy vault_search tool)
@@ -818,26 +818,7 @@ fn synapse_call(
 ) -> Result<serde_json::Value, String> {
     let mut guard = state.mcp_client.lock().map_err(|e| e.to_string())?;
     let client = guard.as_mut().ok_or("Synapse MCP not running")?;
-    let result = client.call(&tool, args)?;
-
-    // Unwrap MCP response content wrapper: the new Synapse returns structured
-    // JSON via `Content::json()`, which wraps the payload as:
-    //   { "content": [{ "type": "text", "text": "{...json...}" }] }
-    // We extract the inner JSON so the frontend gets the shape it expects.
-    if let Some(content) = result.get("content").and_then(|c| c.as_array()) {
-        if let Some(text_content) = content.first() {
-            if let Some(text) = text_content.get("text").and_then(|t| t.as_str()) {
-                if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(text) {
-                    return Ok(parsed);
-                }
-                // Non-JSON text (shouldn't happen with current Synapse, but
-                // keep as fallback)
-                return Ok(serde_json::Value::String(text.to_string()));
-            }
-        }
-    }
-
-    Ok(result)
+    client.call_unwrapped(&tool, args)
 }
 
 // ─── Synapse MCP Commands (Phase 13A) ───────────

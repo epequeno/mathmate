@@ -158,13 +158,11 @@ This session covered {} questions with {} total messages. Key topics included: {
 }
 
 /// Save a wrap-up study log with path containment checks, banner, and audit log.
-///
-/// Uses the vault path from the caller (currently request-driven from the frontend).
-/// A future enhancement should resolve the vault path from backend project/session state.
 pub fn save_wrap_up(
     _project_name: &str,
     vault_path: &str,
     content: &str,
+    session_id: &str,
 ) -> Result<String, String> {
     let now = Utc::now();
 
@@ -175,7 +173,6 @@ pub fn save_wrap_up(
     let safe_target = pathscope::ensure_inside_vault(vault_path, &target)?;
 
     // Prepend banner with session id and content hash
-    let session_id = "unknown"; // TODO: plumb session_id through from caller
     let annotated = prepend_banner(content, session_id, &now);
 
     // Write the file

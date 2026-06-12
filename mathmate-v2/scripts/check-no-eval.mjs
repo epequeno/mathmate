@@ -1,9 +1,10 @@
 /**
- * check-no-eval.mjs — CI guard against eval / new Function in source
+ * check-no-eval.mjs — CI guard against eval / new Function / string-code timers
  *
  * Recursively scans src/ for:
- *   - new Function(...)
- *   - eval(...)
+ *   - new Function(...) / Function(...)
+ *   - eval(...) including obfuscated (0, eval)(...) forms
+ *   - setTimeout("...", ...) / setInterval("...", ...) string-code patterns
  *
  * Exits non-zero with file:line on any match.
  * Prints summary on success.
@@ -17,8 +18,12 @@ const SRC = join(ROOT, "src");
 
 // Patterns to ban
 const BANNED = [
-  { re: /\bnew\s+Function\s*\(/g, label: "new Function(" },
-  { re: /\beval\s*\(/g, label: "eval(" },
+  // `new Function(...)` and bare `Function(...)` constructor calls
+  { re: /\b(?:new\s+)?Function\s*\(/g, label: "Function(" },
+  // `eval(...)` and obfuscated `(0, eval)(...)` forms
+  { re: /\beval\b/g, label: "eval" },
+  // String code in setTimeout / setInterval (e.g., setTimeout("alert(1)", 0))
+  { re: /\bset(?:Timeout|Interval)\s*\(\s*["']/g, label: "setTimeout/setInterval(string)" },
 ];
 
 let totalFiles = 0;

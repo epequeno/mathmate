@@ -190,6 +190,31 @@ impl McpClient {
         }
     }
 
+    /// Same as `call`, but unwraps the Synapse MCP `content[0].text` envelope.
+    ///
+    /// The Synapse MCP server returns structured JSON wrapped as:
+    ///   `{ "content": [{ "type": "text", "text": "{...json...}" }] }`
+    /// This method extracts and parses the inner JSON payload so callers
+    /// receive the domain shape directly.
+    pub fn call_unwrapped(&mut self, tool: &str, args: Value) -> Result<Value, String> {
+        let result = self.call(tool, args)?;
+
+        if let Some(content) = result.get("content").and_then(|c| c.as_array()) {
+            if let Some(text_content) = content.first() {
+                if let Some(text) = text_content.get("text").and_then(|t| t.as_str()) {
+                    if let Ok(parsed) = serde_json::from_str::<Value>(text) {
+                        return Ok(parsed);
+                    }
+                    // Non-JSON text (shouldn't happen with current Synapse,
+                    // but keep as fallback)
+                    return Ok(Value::String(text.to_string()));
+                }
+            }
+        }
+
+        Ok(result)
+    }
+
     /// Fetch the server's tool list via `tools/list`.
     /// Converts MCP tool definitions to MathMate's ToolDefinition format.
     pub fn list_tools(&mut self) -> Result<Vec<ToolDefinition>, String> {

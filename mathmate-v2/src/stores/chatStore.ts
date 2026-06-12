@@ -31,9 +31,6 @@ interface ChatState {
   streamingThinking: string;
   /** Live segment accumulation during streaming (Phase 12A) */
   streamSegments: MessageSegment[];
-  /** Accumulated tool call deltas during streaming */
-  _toolCallDeltas: { index: number; call_id_part?: string; tool_name_part?: string; arguments_part?: string }[];
-
   // Vision warning
   visionWarning: string | null;
 
@@ -93,7 +90,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
   memoryEnabled: true,
 
   streamSegments: [],
-  _toolCallDeltas: [],
 
   // Derived getters (computed in subscribe or consumers)
   get streamingContent() { return this.streamedText; },
@@ -296,7 +292,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
     // Start streaming
     const abortController = new AbortController();
-    set({ streaming: true, abortController, streamedText: "", streamedThinking: "", streamSegments: [], _toolCallDeltas: [], error: null });
+    set({ streaming: true, abortController, streamedText: "", streamedThinking: "", streamSegments: [], error: null });
 
     const configuredProviders = useConfigStore.getState().providers;
     // Explicit picker selection wins over session-stored model — this prevents
@@ -426,6 +422,7 @@ covered in the course.`;
         // ─── Multi-round tool loop (Phase 12B) ───────────
         const MAX_TOOL_ROUNDS = 3;
         const TOOL_TIMEOUT_MS = 8000;
+        const MAX_STREAMED_BYTES = 1_048_576; // 1 MB cap per accumulated string
         let toolRound = 0;
         let finalSession = sess;
 
@@ -487,18 +484,23 @@ covered in the course.`;
           )) {
             if (chunk.text) {
               accumulatedText += chunk.text;
+              if (accumulatedText.length > MAX_STREAMED_BYTES) {
+                throw new StreamError("Response exceeded 1 MB limit", { status: 502, retryable: false });
+              }
               set({ streamedText: accumulatedText });
               updateSegments();
             }
             if (chunk.thinking) {
               accumulatedThinking += chunk.thinking;
+              if (accumulatedThinking.length > MAX_STREAMED_BYTES) {
+                throw new StreamError("Thinking trace exceeded 1 MB limit", { status: 502, retryable: false });
+              }
               set({ streamedThinking: accumulatedThinking });
               updateSegments();
             }
             const incomingToolDeltas = chunk.tool_call_deltas ?? (chunk.tool_call_delta ? [chunk.tool_call_delta] : []);
             if (incomingToolDeltas.length > 0) {
               toolCallDeltas.push(...incomingToolDeltas);
-              set({ _toolCallDeltas: [...toolCallDeltas] });
             }
             if (chunk.done) break;
           }
@@ -674,7 +676,6 @@ covered in the course.`;
           streamedText: "",
           streamedThinking: "",
           streamSegments: [],
-          _toolCallDeltas: [],
           error: null,
           retrievedMemories: [], // Clear retrieval indicator after response
         });
@@ -683,9 +684,8 @@ covered in the course.`;
         if (memEnabled) {
           // Store the user's question as a memory for future retrieval
           try {
-            const { invoke: tauriInvoke } = await import("@tauri-apps/api/core");
             const now = new Date().toISOString();
-            await tauriInvoke("store_memory_with_safety", {
+            await invoke("store_memory_with_safety", {
               memory: {
                 id: crypto.randomUUID(),
                 session_id: sess.header.id,
@@ -726,7 +726,6 @@ covered in the course.`;
             streamedText: "",
             streamedThinking: "",
             streamSegments: [],
-            _toolCallDeltas: [],
             error: null,
           });
           return;
@@ -743,10 +742,20 @@ covered in the course.`;
           continue;
         }
 
-        // Not retryable or out of retries — show error
+        // Not retryable or out of retries — surface the error.
+        //
+        // Current error UX (dual-surface):
+        // 1. Store `error` field → rendered as inline error banner in ChatPage
+        //    (immediate, dismissible notification for operational errors).
+        // 2. Assistant error message → persisted in session history so the
+        //    user sees the error context on session reload.
+        //
+        // TODO (14E.1): consolidate into a single `<ErrorBanner>` with
+        // kind-specific icons and retry actions. The session-history
+        // persistence should use a non-assistant message type.
 
         // Set error on store for the error banner
-        set({ error: lastError, streaming: false, abortController: null, streamSegments: [], _toolCallDeltas: [] });
+        set({ error: lastError, streaming: false, abortController: null, streamSegments: [] });
 
         const errMsg = makeMessage("assistant", `**Error**: ${lastError}`);
         try {

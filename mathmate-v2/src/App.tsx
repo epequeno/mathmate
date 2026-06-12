@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { listen } from "@tauri-apps/api/event";
 import Layout from "./components/Layout";
 import ChatPage from "./pages/ChatPage";
 import VaultPage from "./pages/VaultPage";
@@ -47,12 +48,11 @@ export default function App() {
 
   // Listen for menu events from Rust backend
   useEffect(() => {
-    let unlisten: (() => void) | undefined;
+    const unlisteners = useRef<(() => void)[]>([]);
 
     const setupListener = async () => {
       try {
-        const { listen } = await import("@tauri-apps/api/event");
-        unlisten = await listen<string>("menu-navigate", async (event) => {
+        const unlisten = await listen<string>("menu-navigate", async (event) => {
           const payload = event.payload;
           if (payload === "settings") navigate("/settings");
           if (payload === "new-session") {
@@ -61,6 +61,7 @@ export default function App() {
             useChatStore.getState().newSession();
           }
         });
+        unlisteners.current.push(unlisten);
       } catch {
         // Not running in Tauri (dev mode without Tauri)
       }
@@ -68,7 +69,8 @@ export default function App() {
 
     setupListener();
     return () => {
-      unlisten?.();
+      for (const fn of unlisteners.current) fn();
+      unlisteners.current = [];
     };
   }, []);
 

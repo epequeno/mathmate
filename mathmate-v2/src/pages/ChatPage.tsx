@@ -146,6 +146,8 @@ function ChatToolbar({
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
+                  // open_path contract (see lib.rs docs): paths inside project roots open
+                  // immediately; paths outside roots require confirmed:true after a user dialog.
                   invoke("open_path", { path: bookPath, projectId: currentProject?.id, confirmed: false }).catch(async (err) => {
                     if (!String(err).includes("outside allowed roots")) return;
                     const confirmed = await ask(`Open this file outside the current project roots?\n\n${bookPath}`, {
@@ -486,6 +488,7 @@ export default function ChatPage() {
         projectName: currentProject?.name ?? "General",
         vaultPath,
         content: wrapUpResult.content,
+        sessionId: currentSession?.header.id ?? "unknown",
       });
       setToast(`Study log saved to ${savedPath}`);
       setShowWrapUp(false);

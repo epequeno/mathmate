@@ -208,6 +208,8 @@ export default function VaultPage() {
     }
   };
 
+  // open_path contract (see lib.rs docs): paths inside project roots open immediately;
+  // paths outside roots require confirmed:true after a user confirmation dialog.
   const handleOpenNote = async (path: string) => {
     try {
       await invoke("open_path", { path, projectId: currentProject?.id, confirmed: false });

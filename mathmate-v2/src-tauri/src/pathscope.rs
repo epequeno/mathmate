@@ -7,28 +7,6 @@ use std::path::{Path, PathBuf};
 
 // ─── Public API ──────────────────────────────────────────────────────────────
 
-/// Return `true` if `target` is inside `root`.
-///
-/// Both paths are canonicalized (target may not exist yet — see
-/// `canonicalize_or_parent`).  Uses `Path::starts_with` for a proper
-/// component-by-component comparison.
-///
-/// ```text
-/// // assert!(is_within("/Users/x/Vault", "/Users/x/Vault/notes/calc.md"));
-/// // assert!(!is_within("/Users/x/Vault", "/Users/x/Vaultness/notes/calc.md"));
-/// // assert!(!is_within("/tmp", "/tmp/../etc/passwd"));
-/// ```
-#[allow(dead_code)]
-pub fn is_within(root: &Path, target: &Path) -> bool {
-    let Ok(root_canon) = canonicalize(root) else {
-        return false;
-    };
-    let Ok(target_canon) = canonicalize_or_parent(target) else {
-        return false;
-    };
-    target_canon.starts_with(&root_canon)
-}
-
 /// Ensure `target` is inside `vault`, canonicalizing both paths.
 ///
 /// Creates the target's parent directory if needed, then canonicalizes it
@@ -168,58 +146,6 @@ fn canonicalize_or_parent(target: &Path) -> Result<PathBuf, String> {
 mod tests {
     use super::*;
     use std::path::Path;
-
-    // ─── is_within tests ──────────────────────────────────────────────────
-
-    #[test]
-    fn test_is_within_same_directory() {
-        let _root = Path::new("/");
-        let _target = Path::new("/tmp/foo.txt");
-        // assert!(is_within(root, target));
-    }
-
-    #[test]
-    fn test_is_within_nested() {
-        // Create a real temp dir for canonicalization
-        let dir = std::env::temp_dir().join("pathscope_test_nested");
-        let _ = std::fs::create_dir_all(&dir);
-        let file = dir.join("notes/calc.md");
-        let _ = std::fs::create_dir_all(file.parent().unwrap());
-        std::fs::write(&file, "test").ok();
-
-        // assert!(is_within(&dir, &file));
-        let _ = std::fs::remove_dir_all(&dir);
-    }
-
-    #[test]
-    fn test_is_within_prefix_attack() {
-        let _root = Path::new("/Users/x/Vault");
-        let _target = Path::new("/Users/x/Vaultness/notes/calc.md");
-        // These don't exist, so both canonicalize to parent which doesn't exist
-        // assert!(!is_within(root, target));
-    }
-
-    #[test]
-    fn test_is_within_outside() {
-        let _root = Path::new("/Users/x/Vault");
-        let _target = Path::new("/Users/x/.ssh/id_rsa");
-        // assert!(!is_within(root, target));
-    }
-
-    #[test]
-    fn test_is_within_traversal() {
-        let _root = Path::new("/tmp");
-        let _target = Path::new("/tmp/../etc/passwd");
-        // After canonicalization, this resolves to /etc/passwd which is not inside /tmp
-        // assert!(!is_within(root, target));
-    }
-
-    #[test]
-    fn test_is_within_nonexistent_root() {
-        let _root = Path::new("/nonexistent_path_xyzzy");
-        let _target = Path::new("/tmp");
-        // assert!(!is_within(root, target));
-    }
 
     // ─── ensure_inside_vault tests ────────────────────────────────────────
 

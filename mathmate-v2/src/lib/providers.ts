@@ -536,7 +536,12 @@ export function assembleToolCalls(
     try {
       args = JSON.parse(assembled.argumentsRaw || "{}");
     } catch {
-      // Malformed arguments — keep as empty object
+      // Malformed tool-call arguments — surface the error rather than
+      // silently executing with empty/default args.
+      throw new StreamError(
+        `Tool call "${assembled.tool_name}" has malformed arguments: ${assembled.argumentsRaw?.substring(0, 200)}`,
+        { status: 502, retryable: false }
+      );
     }
     results.push({
       call_id: assembled.call_id,
