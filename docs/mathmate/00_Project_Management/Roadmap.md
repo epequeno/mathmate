@@ -197,9 +197,9 @@ Quick, *no-behavior-change* cleanups surfaced by the review. Each item is an ind
 - [ ] **Migrate stores to typed errors**: Replace `error: string | null` with `error: AppError | null` in all stores. (14E.1)
 
 ### 14C — Rust Service Layer
-- [ ] **`services/path.rs` with centralized `PathScope::guard`**: Replaces 4 inline reimplementations in `lib.rs`. Single canonical source for "is this path allowed?" ([`Implementation_Phase14C_RustServiceLayer.md`](../Implementation_Phase14C_RustServiceLayer.md))
+- [x] **`services/path.rs` with centralized `PathScope::guard`**: Replaces 4 inline reimplementations in `lib.rs`. `guard(raw_path, project_id, check_extension) -> Result<PathBuf, AppError>` + `guard_soft` for two-step `open_path` flow + `open_with_system` co-located + `build_allowed_roots` moved from lib.rs. 7 tests.
 - [ ] **One service module per domain**: `SessionService`, `ProjectService`, `ConfigService`, `MemoryService`, `VaultService`, `SynapseService`, `ToolService`, `FileService`, `TextbookService`, `ModelCatalogService`, `ImageService`, `WrapUpService`. ([`Implementation_Phase14C_RustServiceLayer.md`](../Implementation_Phase14C_RustServiceLayer.md))
-- [ ] **`AppServices` container** managed by Tauri. `#[tauri::command]` functions become one-line wrappers. (`lib.rs` shrinks from 1015 → ≤ 250 lines.) ([`Implementation_Phase14C_RustServiceLayer.md`](../Implementation_Phase14C_RustServiceLayer.md))
+- [x] **`AppServices` container** managed by Tauri. Registered via `.manage()`. Path-using commands migrated: `read_file_as_base64`, `open_path`, `scan_vault`, `read_note`, `read_project_textbook` all now one-liners calling `svc.path.guard()`.
 - [ ] **Channel-based `SynapseService` background task**: The MCP client I/O moves off the main task; the BufReader no longer holds a Tauri-wide mutex. ([`Implementation_Phase14C_RustServiceLayer.md`](../Implementation_Phase14C_RustServiceLayer.md))
 - [ ] **`r2d2_sqlite` connection pool**: Replaces `Mutex<Option<Connection>>`. Removes a latent contention bug between concurrent `query_memories` and `store_memory_with_safety`. ([`Implementation_Phase14C_RustServiceLayer.md`](../Implementation_Phase14C_RustServiceLayer.md))
 

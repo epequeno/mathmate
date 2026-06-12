@@ -8,6 +8,7 @@ mod models;
 mod pathscope;
 mod pdf_import;
 mod project;
+mod services;
 mod session;
 mod textbook;
 mod textbook_catalog;
@@ -23,6 +24,7 @@ use project::MathProject;
 use session::{Message, Session, SessionHeader};
 use std::sync::Mutex;
 use tauri::State;
+use crate::services::AppServices;
 
 // ─── App State ──────────────────────────────────
 
@@ -33,42 +35,7 @@ pub struct AppState {
     pub mcp_client: Mutex<Option<mcp_client::McpClient>>,
 }
 
-/// Build the list of allowed roots for path-scope checking.
-///
-/// Roots are canonicalized (or attempted) and include:
-/// 1. The active project's vault_path (if set)
-/// 2. The active project's textbook_path parent dir (if set)
-/// 3. `~/.mathmate/` — session data, images, project metadata
-/// 4. `~/.mathmate/sessions/` — session + image directories
-fn build_allowed_roots(project_id: Option<&str>) -> Vec<std::path::PathBuf> {
-    let mut roots: Vec<std::path::PathBuf> = Vec::new();
-
-    // Always include ~/.mathmate/
-    if let Some(home) = dirs_next::home_dir() {
-        roots.push(home.join(".mathmate"));
-        roots.push(home.join(".mathmate/sessions"));
-        roots.push(home.join(".mathmate/projects"));
-    }
-
-    // Resolve project roots
-    if let Some(pid) = project_id {
-        if let Ok(project) = project::load_project(pid) {
-            if let Some(ref vp) = project.vault_path {
-                roots.push(std::path::PathBuf::from(vp));
-            }
-            if let Some(ref tp) = project.textbook_path {
-                // Allow the textbook file itself and its parent directory
-                let tb_path = std::path::PathBuf::from(tp);
-                if let Some(parent) = tb_path.parent() {
-                    roots.push(parent.to_path_buf());
-                }
-                roots.push(tb_path);
-            }
-        }
-    }
-
-    roots
-}
+// (build_allowed_roots has moved to services::path::build_allowed_roots)
 
 impl AppState {
     fn get_db(&self) -> Result<std::sync::MutexGuard<'_, Option<rusqlite::Connection>>, String> {
@@ -319,21 +286,15 @@ fn list_recent_images(limit: usize) -> Result<Vec<RecentImageEntry>, String> {
 }
 
 #[tauri::command]
-fn read_file_as_base64(path: String, project_id: Option<String>) -> Result<String, String> {
-    // Build allowed roots
-    let roots = build_allowed_roots(project_id.as_deref());
-
-    // Normalize the path (expand ~, resolve relative)
-    let target = pathscope::normalize_local_path(&path)
-        .map_err(|_| format!("Access denied: invalid path '{}'", path))?;
-
-    // Check containment
-    if !pathscope::canonical_inside_any(&roots, &target) {
-        return Err(format!(
-            "Access denied: '{}' is outside allowed roots",
-            path
-        ));
-    }
+fn read_file_as_base64(
+    svc: State<AppServices>,
+    path: String,
+    project_id: Option<String>,
+) -> Result<String, String> {
+    let target = svc
+        .path
+        .guard(&path, project_id.as_deref(), false)
+        .map_err(|e| e.to_string())?;
 
     use base64::Engine;
     let data = std::fs::read(&target).map_err(|e| format!("Failed to read file: {}", e))?;
@@ -349,68 +310,29 @@ fn read_file_as_base64(path: String, project_id: Option<String>) -> Result<Strin
 /// - Paths outside allowed roots require `confirmed: true`, set by the frontend after a user warning dialog.
 ///
 /// The two-step call pattern:
-/// 1. Frontend calls with `confirmed: false` → Rust returns an error if the path is outside roots.
-/// 2. Frontend catches the error, shows a user confirmation dialog, retries with `confirmed: true`.
 #[tauri::command]
 fn open_path(
+    svc: State<AppServices>,
     path: String,
     project_id: Option<String>,
     confirmed: Option<bool>,
 ) -> Result<(), String> {
-    // 1. Normalize — reject non-`file:` schemes
-    let target =
-        pathscope::normalize_local_path(&path).map_err(|e| format!("Access denied: {}", e))?;
+    // Use guard_soft to get the path + containment flag without
+    // rejecting paths that are outside roots (the two-step flow
+    // lets the user confirm external paths).
+    let (target, inside) = svc
+        .path
+        .guard_soft(&path, project_id.as_deref(), true)
+        .map_err(|e| e.to_string())?;
 
-    // 2. Check extension allowlist
-    if !pathscope::safe_extension(&target) {
-        return Err(format!(
-            "Access denied: extension not allowed for '{}'",
-            path
-        ));
-    }
-
-    // 3. Build allowed roots from the active project
-    let roots = build_allowed_roots(project_id.as_deref());
-
-    // 4. Check containment; if outside and not confirmed, ask the user
-    let inside = pathscope::canonical_inside_any(&roots, &target);
     if !inside && confirmed != Some(true) {
-        // Use tauri-plugin-dialog's blocking_ask via the app handle
-        // We can't get the app handle directly in a command — use frontend-side dialog
         return Err(
             "Path is outside allowed roots; call with confirmed=true after user approval"
                 .to_string(),
         );
     }
 
-    // 5. Open with platform-specific handler
-    let path_str = target.to_string_lossy().to_string();
-    #[cfg(target_os = "macos")]
-    {
-        std::process::Command::new("open")
-            .arg(&path_str)
-            .spawn()
-            .map_err(|e| format!("Failed to open '{}': {}", path_str, e))?;
-    }
-    #[cfg(target_os = "linux")]
-    {
-        std::process::Command::new("xdg-open")
-            .arg(&path_str)
-            .spawn()
-            .map_err(|e| format!("Failed to open '{}': {}", path_str, e))?;
-    }
-    #[cfg(target_os = "windows")]
-    {
-        std::process::Command::new("cmd")
-            .args(["/C", "start", "", &path_str])
-            .spawn()
-            .map_err(|e| format!("Failed to open '{}': {}", path_str, e))?;
-    }
-    #[cfg(not(any(target_os = "macos", target_os = "linux", target_os = "windows")))]
-    {
-        return Err("Unsupported OS".to_string());
-    }
-    Ok(())
+    svc.path.open_with_system(&target).map_err(|e| e.to_string())
 }
 
 // ─── Project Commands ───────────────────────────
@@ -464,36 +386,28 @@ fn list_projects() -> Result<Vec<MathProject>, String> {
 // ─── Vault Commands ─────────────────────────────
 
 #[tauri::command]
-fn scan_vault(path: String, project_id: Option<String>) -> Result<Vec<vault::VaultNote>, String> {
-    let target =
-        pathscope::normalize_local_path(&path).map_err(|e| format!("Access denied: {}", e))?;
-    let roots = build_allowed_roots(project_id.as_deref());
-    if !pathscope::canonical_inside_any(&roots, &target) {
-        return Err(format!(
-            "Access denied: '{}' is outside allowed roots",
-            path
-        ));
-    }
+fn scan_vault(
+    svc: State<AppServices>,
+    path: String,
+    project_id: Option<String>,
+) -> Result<Vec<vault::VaultNote>, String> {
+    let target = svc
+        .path
+        .guard(&path, project_id.as_deref(), false)
+        .map_err(|e| e.to_string())?;
     vault::scan_vault(&target.to_string_lossy())
 }
 
 #[tauri::command]
-fn read_note(path: String, project_id: Option<String>) -> Result<String, String> {
-    let target =
-        pathscope::normalize_local_path(&path).map_err(|e| format!("Access denied: {}", e))?;
-    if !pathscope::safe_extension(&target) {
-        return Err(format!(
-            "Access denied: extension not allowed for '{}'",
-            path
-        ));
-    }
-    let roots = build_allowed_roots(project_id.as_deref());
-    if !pathscope::canonical_inside_any(&roots, &target) {
-        return Err(format!(
-            "Access denied: '{}' is outside allowed roots",
-            path
-        ));
-    }
+fn read_note(
+    svc: State<AppServices>,
+    path: String,
+    project_id: Option<String>,
+) -> Result<String, String> {
+    let target = svc
+        .path
+        .guard(&path, project_id.as_deref(), true)
+        .map_err(|e| e.to_string())?;
     vault::read_note(&target.to_string_lossy())
 }
 
@@ -600,7 +514,10 @@ fn read_textbook_metadata(path: String) -> Result<textbook::TextbookMetadata, St
 /// Security: the frontend only passes a project_id; the textbook path is read
 /// from the project record, not from the frontend, preventing path substitution.
 #[tauri::command]
-fn read_project_textbook(project_id: String) -> Result<String, String> {
+fn read_project_textbook(
+    svc: State<AppServices>,
+    project_id: String,
+) -> Result<String, String> {
     use base64::Engine;
 
     let project = project::load_project(&project_id)
@@ -610,8 +527,10 @@ fn read_project_textbook(project_id: String) -> Result<String, String> {
         .textbook_path
         .ok_or_else(|| "No textbook set for this project".to_string())?;
 
-    let target = pathscope::normalize_local_path(&path)
-        .map_err(|_| format!("Invalid textbook path: '{}'", path))?;
+    let target = svc
+        .path
+        .guard(&path, Some(&project_id), false)
+        .map_err(|e| e.to_string())?;
 
     let is_pdf = target
         .extension()
@@ -620,11 +539,6 @@ fn read_project_textbook(project_id: String) -> Result<String, String> {
         .unwrap_or(false);
     if !is_pdf {
         return Err("Project textbook is not a PDF".to_string());
-    }
-
-    let roots = build_allowed_roots(Some(&project_id));
-    if !pathscope::canonical_inside_any(&roots, &target) {
-        return Err("Textbook path is outside allowed project roots".to_string());
     }
 
     // Check file size before loading — warn for large PDFs
@@ -910,6 +824,7 @@ pub fn run() {
             db: Mutex::new(None),
             mcp_client: Mutex::new(None),
         })
+        .manage(services::AppServices::init().expect("Failed to init AppServices"))
         .invoke_handler(tauri::generate_handler![
             // Environment variables
             get_env_var,
