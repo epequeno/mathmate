@@ -4,11 +4,15 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader, Write};
 use std::path::PathBuf;
+#[cfg(feature = "export-types")]
+use ts_rs::TS;
 
 // ─── Public data model ───────────────────────────────────────────────────────
 
 /// Mirrors the Swift `SessionHeader` model for backward compat.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "session.ts"))]
 pub struct SessionHeader {
     pub id: String,
     pub title: String,
@@ -24,6 +28,8 @@ pub struct SessionHeader {
 /// A content part within a message (text or image).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "session.ts"))]
 pub enum ContentPart {
     #[serde(rename = "text")]
     Text { text: String },
@@ -43,6 +49,8 @@ pub enum ContentPart {
 /// Status of a tool call in the timeline.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "session.ts"))]
 pub enum ToolCallStatus {
     Pending,
     Running,
@@ -53,6 +61,8 @@ pub enum ToolCallStatus {
 /// The kind/type of a message segment.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "session.ts"))]
 pub enum SegmentKind {
     Thinking {
         content: String,
@@ -75,6 +85,8 @@ pub enum SegmentKind {
 
 /// An ordered segment within an assistant message's timeline.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "session.ts"))]
 pub struct MessageSegment {
     pub id: String,
     pub ts: String,
@@ -84,6 +96,8 @@ pub struct MessageSegment {
 
 /// A single message in the conversation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "session.ts"))]
 pub struct Message {
     pub id: String,
     pub role: String, // "user" | "assistant" | "system" | "tool"
@@ -103,6 +117,8 @@ pub struct Message {
 
 /// Full session — header + messages.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "session.ts"))]
 pub struct Session {
     pub header: SessionHeader,
     pub messages: Vec<Message>,

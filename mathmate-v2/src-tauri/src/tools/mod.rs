@@ -9,11 +9,15 @@ pub mod vault_search;
 pub mod vault_write;
 
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "export-types")]
+use ts_rs::TS;
 
 // ─── Tool Definition (OpenAI-compatible) ────────────────────────────────────
 
 /// OpenAI-compatible tool definition for function calling.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "tool.ts"))]
 pub struct ToolDefinition {
     #[serde(rename = "type")]
     pub tool_type: String,
@@ -21,6 +25,8 @@ pub struct ToolDefinition {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "tool.ts"))]
 pub struct FunctionDef {
     pub name: String,
     pub description: String,
@@ -31,6 +37,8 @@ pub struct FunctionDef {
 
 /// A tool call emitted by the model during streaming.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "tool.ts"))]
 pub struct ToolCall {
     pub call_id: String,
     pub tool_name: String,
@@ -41,6 +49,8 @@ pub struct ToolCall {
 
 /// The result of executing a tool.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "tool.ts"))]
 pub struct ToolResult {
     pub call_id: String,
     pub result: serde_json::Value,

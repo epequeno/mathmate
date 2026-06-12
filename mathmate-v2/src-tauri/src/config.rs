@@ -1,10 +1,14 @@
 #![allow(dead_code)]
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
+#[cfg(feature = "export-types")]
+use ts_rs::TS;
 
 // ─── Provider Config ────────────────────────────
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "config.ts"))]
 pub struct ProviderConfig {
     pub name: String,
     #[serde(default = "default_enabled")]
@@ -44,6 +48,8 @@ impl ProviderConfig {
 // ─── App Config Models ──────────────────────────
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "config.ts"))]
 pub struct AppConfigModels {
     pub providers: Vec<ProviderConfig>,
 }
@@ -51,6 +57,8 @@ pub struct AppConfigModels {
 // ─── App Config ─────────────────────────────────
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "config.ts"))]
 pub struct AppConfig {
     pub latex: LaTeXConfig,
     pub synapse: SynapseConfig,
@@ -59,23 +67,31 @@ pub struct AppConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "config.ts"))]
 pub struct LaTeXConfig {
     pub engine: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "config.ts"))]
 pub struct SynapseConfig {
     pub vaults: Option<Vec<VaultConfig>>,
     pub study_log_path: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "config.ts"))]
 pub struct VaultConfig {
     pub name: String,
     pub path: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "config.ts"))]
 pub struct ChatConfig {
     pub system_prompt: Option<String>,
     pub max_tokens: Option<u32>,
@@ -86,6 +102,8 @@ pub struct ChatConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "config.ts"))]
 pub struct UIConfig {
     pub font_size: Option<u32>,
 }

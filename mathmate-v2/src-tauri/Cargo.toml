@@ -33,3 +33,7 @@ lopdf = "0.34"
 indexmap = "2"
 r2d2_sqlite = "0.24"
 r2d2 = "0.8"
+ts-rs = { version = "10", optional = true, features = ["serde-json-impl"] }
+
+[features]
+export-types = ["ts-rs"]

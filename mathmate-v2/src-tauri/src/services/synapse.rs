@@ -16,6 +16,7 @@ use std::sync::mpsc;
 use crate::error::AppError;
 use crate::mcp_client::McpClient;
 use crate::tools::{self, ToolCall, ToolDefinition, ToolResult};
+pub use crate::tools::{ToolDefinition as ToolDef, FunctionDef, ToolCall as ToolCallType, ToolResult as ToolResultType};
 
 // ─── Types ───────────────────────────────────────────────────────────────
 

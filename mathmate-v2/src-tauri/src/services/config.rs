@@ -11,7 +11,7 @@
 use std::path::PathBuf;
 use std::sync::Mutex;
 
-pub use crate::config::{AppConfig, AppConfigModels, ProviderConfig};
+pub use crate::config::{AppConfig, AppConfigModels, ProviderConfig, LaTeXConfig, SynapseConfig, VaultConfig, ChatConfig, UIConfig};
 
 use crate::error::AppError;
 

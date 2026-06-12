@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "prebuild": "node scripts/check-no-eval.mjs && node scripts/check-api-commands.mjs && node scripts/check-no-raw-invoke.mjs",
+    "prebuild": "node scripts/check-no-eval.mjs && node scripts/check-api-commands.mjs && node scripts/check-no-raw-invoke.mjs && node scripts/check-ts-types.mjs",
     "postinstall": "node scripts/copy-pdf-worker.mjs",
     "preview": "vite preview",
     "tauri": "tauri",
@@ -14,6 +14,8 @@
     "lint:api-commands": "node scripts/check-api-commands.mjs",
     "lint:no-raw-invoke": "node scripts/check-no-raw-invoke.mjs",
     "lint:inline-styles": "node scripts/check-inline-styles.mjs",
+    "lint:ts-types": "node scripts/check-ts-types.mjs",
+    "generate:ts-types": "cd src-tauri && TS_RS_EXPORT_DIR=../src/lib/types-generated cargo test --features export-types export_types -- --ignored",
     "test": "vitest run",
     "test:watch": "vitest"
   },

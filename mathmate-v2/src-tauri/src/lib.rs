@@ -9,6 +9,15 @@ mod pathscope;
 mod pdf_import;
 mod project;
 mod services;
+
+// Re-export wire types for external consumers (e.g. test codegen).
+// Use `pub_use` prefix to avoid conflicting with legacy modules.
+pub mod types_export {
+    pub use crate::services::session::*;
+    pub use crate::services::config::*;
+    pub use crate::services::memory::*;
+    pub use crate::services::synapse::*;
+}
 mod session;
 mod textbook;
 mod textbook_catalog;

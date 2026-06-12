@@ -20,7 +20,7 @@ use crate::error::AppError;
 
 // Re-export the public data model types so Tauri commands in lib.rs
 // can import them from a single place.
-pub use crate::session::{Message, Session, SessionHeader};
+pub use crate::session::{Message, Session, SessionHeader, ContentPart, ToolCallStatus, MessageSegment, SegmentKind};
 
 // ─── On-disk line types (JSONL helpers, shared with session.rs) ──────
 

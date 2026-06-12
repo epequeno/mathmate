@@ -1,12 +1,17 @@
 use rusqlite::{params, Connection};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
+#[cfg(feature = "export-types")]
+use ts_rs::TS;
 
 // ─── Scan Result Types ──────────────────────────
 
 /// Result of scanning memory content for injection patterns.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "memory.ts"))]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "memory.ts"))]
 pub enum ScanResultKind {
     Accepted,
     AcceptedWithRedaction,
@@ -14,6 +19,8 @@ pub enum ScanResultKind {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "memory.ts"))]
 pub struct ScanResult {
     pub kind: ScanResultKind,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -25,6 +32,8 @@ pub struct ScanResult {
 /// Safety mode for memory scanning.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "memory.ts"))]
 pub enum SafetyMode {
     Strict,
     Balanced,
@@ -35,6 +44,8 @@ pub enum SafetyMode {
 
 /// A memory item in the learner profile.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "memory.ts"))]
 pub struct MemoryItem {
     pub id: String,
     pub session_id: Option<String>,
