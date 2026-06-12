@@ -226,7 +226,49 @@ Quick, *no-behavior-change* cleanups surfaced by the review. Each item is an ind
 
 ---
 
-## 🔭 Future Architecture (Phase 15+)
+## Phase 15 — Component Health + Wire Protocol + Multi-Vault
+
+> All items depend on Phase 14 being complete. Each gets its own implementation doc (see links).
+
+
+### 15A — Component Decomposition
+- [ ] **Split `ChatMessage.tsx` (386L)** → `UserBubble`, `AssistantBubble`, `ToolResultBubble`, `MessageSegments`, `VaultChips`, `QuickSavePopover`, `StreamingMessage`. ([`Implementation_Phase15A_ComponentDecomposition.md`](../Implementation_Phase15A_ComponentDecomposition.md))
+- [ ] **Split `Sidebar.tsx` (585L)** → `ProjectSection`, `ProjectRow`, `SessionList`, `SessionRow`, `ProjectMenu`, `ArchivalToggle`. ([`Implementation_Phase15A_ComponentDecomposition.md`](../Implementation_Phase15A_ComponentDecomposition.md))
+- [ ] **Split `ProjectSettingsPanel.tsx` (748L)** → `VaultSettingsTab`, `ModelSettingsTab`, `LaTeXSettingsTab`, `TextbookTab`, `AdvancedTab`. ([`Implementation_Phase15A_ComponentDecomposition.md`](../Implementation_Phase15A_ComponentDecomposition.md))
+- [ ] **Split `PdfViewer.tsx` (903L)** → `PdfPageCanvas`, `usePdfRenderer`, `usePdfRegionSelect`, `useTextbookIndexer`, `PdfNavigationBar`, `PdfRegionHighlight`. ([`Implementation_Phase15A_ComponentDecomposition.md`](../Implementation_Phase15A_ComponentDecomposition.md))
+
+### 15B — Discriminated-Union Stream State
+- [ ] **`phase: TurnPhase` discriminated union** replaces 8 streaming fields (`streaming`, `abortController`, `streamedText`, `streamedThinking`, `streamSegments`, `visionWarning`, etc.) in `useChatStore`. ([`Implementation_Phase15B_DiscriminatedUnionStreamState.md`](../Implementation_Phase15B_DiscriminatedUnionStreamState.md))
+- [ ] **Phase transition map**: `idle → waiting-for-turn → streaming → finishing → finished/aborted/errored → idle`. ([`Implementation_Phase15B_DiscriminatedUnionStreamState.md`](../Implementation_Phase15B_DiscriminatedUnionStreamState.md))
+- [ ] **Computed helpers**: `isStreaming`, `isIdle`, `currentError`, `currentAbortController`, `latestText`. ([`Implementation_Phase15B_DiscriminatedUnionStreamState.md`](../Implementation_Phase15B_DiscriminatedUnionStreamState.md))
+
+### 15C — Anthropic Wire-Protocol Support
+- [ ] **Provider-specific delta parsers**: `parseSSE_Anthropic` vs `parseSSE_OpenAI` — Anthropic uses `content_block_delta` events, not `choice.delta`. ([`Implementation_Phase15C_AnthropicWireProtocol.md`](../Implementation_Phase15C_AnthropicWireProtocol.md))
+- [ ] **Anthropic thinking blocks**: Map `content_block(content_type=thinking)` → `thinking` segment. ([`Implementation_Phase15C_AnthropicWireProtocol.md`](../Implementation_Phase15C_AnthropicWireProtocol.md))
+- [ ] **Tool call parsing**: Map `content_block_delta(input_json_block)` → internal `ToolCallDelta`. ([`Implementation_Phase15C_AnthropicWireProtocol.md`](../Implementation_Phase15C_AnthropicWireProtocol.md))
+- [ ] **Anthropic parser tests**: SSE fixtures for text-only, thinking, tool-use, mixed, error events. ([`Implementation_Phase15C_AnthropicWireProtocol.md`](../Implementation_Phase15C_AnthropicWireProtocol.md))
+
+### 15D — Turn Orchestrator E2E Tests
+- [ ] **Contract fixture suite** (8 scenarios): text-only, single tool, multi-tool, abort pre-stream, abort mid-stream, error pre-stream, error mid-stream, max-tool-rounds. ([`Implementation_Phase15D_TurnOrchestratorE2ETests.md`](../Implementation_Phase15D_TurnOrchestratorE2ETests.md))
+- [ ] **`smartJoin()` + `delayedChunks()` + `toolCallChunk()`** test helpers for scripted streaming. ([`Implementation_Phase15D_TurnOrchestratorE2ETests.md`](../Implementation_Phase15D_TurnOrchestratorE2ETests.md))
+- [ ] **Live contract capture**: Run `runTurn()` through a real API and log event sequences as `.snap` files for parity regression detection. ([`Implementation_Phase15D_TurnOrchestratorE2ETests.md`](../Implementation_Phase15D_TurnOrchestratorE2ETests.md))
+
+### 15E — Multi-Vault Support
+- [ ] **`vault_path` → `vaults: VaultRef[]` + `active_vault_id`** in the `MathProject` data model. One-time JSON migration on load. ([`Implementation_Phase15E_MultiVaultSupport.md`](../Implementation_Phase15E_MultiVaultSupport.md))
+- [ ] **`VaultRef`** struct: `id`, `name`, `path`, `backend` (`synapse`|`legacy`|`classroom`), `read_only`, `position`. ([`Implementation_Phase15E_MultiVaultSupport.md`](../Implementation_Phase15E_MultiVaultSupport.md))
+- [ ] **5 new Rust commands**: `update_project_vaults`, `set_active_vault`, `add_vault`, `remove_vault`, `rename_vault`. ([`Implementation_Phase15E_MultiVaultSupport.md`](../Implementation_Phase15E_MultiVaultSupport.md))
+- [ ] **`VaultSwitcher` component** with `VaultTab`, `VaultAddDialog`, `VaultRemoveDialog`. ([`Implementation_Phase15E_MultiVaultSupport.md`](../Implementation_Phase15E_MultiVaultSupport.md))
+- [ ] **Read-only classroom vault** support: lock indicator + disable writes. ([`Implementation_Phase15E_MultiVaultSupport.md`](../Implementation_Phase15E_MultiVaultSupport.md))
+
+### 15F — Auto-Generate `src/lib/api/*` Wrappers *(stretch goal)*
+- [ ] **Codegen from Rust commands**: Parse `lib.rs` for `#[tauri::command]` attrs → generate typed TS wrappers. ([`Implementation_Phase14A_TypedTauriApiClient.md`](../Implementation_Phase14A_TypedTauriApiClient.md))
+- [ ] **Remove hand-written wrappers** after codegen is verified equivalent. ([`Implementation_Phase14A_TypedTauriApiClient.md`](../Implementation_Phase14A_TypedTauriApiClient.md))
+
+---
+
+## 🔭 Future Architecture (Phase 16+)
+
+Larger refactors that depend on Phase 15 landing first.
 
 Larger refactors that depend on Phase 14 landing first. No plans yet — each will get its own implementation doc when picked up.
 
