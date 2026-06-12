@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { Config } from "../lib/api";
 import type { ModelCatalog, ModelCatalogEntry } from "../lib/types";
+import { toAppError } from "../lib/error";
 
 // ─── Theme helpers ────────────────────────────────────────────────────────────
 
@@ -98,8 +99,9 @@ export const useConfigStore = create<ConfigState>((set) => ({
       let appConfig: AppConfig | null = null;
       try {
         appConfig = await Config.get();
-      } catch (err) {
-        }
+      } catch {
+        // non-fatal: app config load can fail silently
+      }
       set({
         providers: modelsConfig.providers.filter((p) => p.enabled),
         appConfig,
@@ -107,7 +109,7 @@ export const useConfigStore = create<ConfigState>((set) => ({
       });
     } catch (err) {
       console.error("[configStore] Failed to load config:", err);
-      set({ error: String(err), loading: false });
+      set({ error: toAppError(err).message, loading: false });
     }
   },
 
@@ -118,7 +120,7 @@ export const useConfigStore = create<ConfigState>((set) => ({
       set({ modelCatalog: catalog, modelCatalogLoading: false });
     } catch (err) {
       console.error("[configStore] Failed to fetch model catalog:", err);
-      set({ modelCatalogError: String(err), modelCatalogLoading: false });
+      set({ modelCatalogError: toAppError(err).message, modelCatalogLoading: false });
     }
   },
 

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { Vault as VaultApi } from "../lib/api";
 import type { VaultNote } from "../lib/types";
+import { toAppError } from "../lib/error";
 
 // ─── Synapse Response Types ─────────────────────────────────────────────
 // These match the Synapse MCP tool response shapes.
@@ -145,7 +146,7 @@ export const useVaultStore = create<VaultState>((set, get) => ({
           set({ notes: [], loading: false, noteCount: 0 });
         }
       } catch (err) {
-        set({ error: String(err), loading: false });
+        set({ error: toAppError(err).message, loading: false });
       }
     }
   },
@@ -210,7 +211,7 @@ export const useVaultStore = create<VaultState>((set, get) => ({
       }
     } catch (err) {
       console.error("Failed to read note:", err);
-      set({ error: String(err) });
+      set({ error: toAppError(err).message });
     }
   },
 
@@ -240,7 +241,7 @@ export const useVaultStore = create<VaultState>((set, get) => ({
       throw new Error("Cannot create — Synapse not running");
     } catch (err) {
       console.error("Failed to create note:", err);
-      set({ error: String(err) });
+      set({ error: toAppError(err).message });
       return null;
     }
   },
@@ -261,7 +262,7 @@ export const useVaultStore = create<VaultState>((set, get) => ({
       }
     } catch (err) {
       console.error("Failed to delete note:", err);
-      set({ error: String(err) });
+      set({ error: toAppError(err).message });
       throw err;
     }
   },
