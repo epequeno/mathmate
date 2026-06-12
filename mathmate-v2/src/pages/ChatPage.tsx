@@ -7,6 +7,7 @@ import { useProjectStore } from "../stores/projectStore";
 import { useConfigStore } from "../stores/configStore";
 import ChatMessage from "../components/ChatMessage";
 import MemoryRetrievalBar from "../components/MemoryRetrievalBar";
+import { ErrorBanner } from "../components/ErrorBanner";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import ChatInput from "../components/ChatInput";
 import MathComposer from "../components/MathComposer";
@@ -706,36 +707,10 @@ export default function ChatPage() {
 
       {/* Error banner */}
       {error && (
-        <div
-          style={{
-            padding: "8px 16px",
-            background: "var(--color-error-bg)",
-            color: "var(--color-red)",
-            fontSize: 12,
-            borderBottom: "1px solid var(--color-border)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <span><AlertTriangle size={14} style={{ marginRight: 4, verticalAlign: "middle" }} />{error}</span>
-          <button
-            onClick={() => useChatStore.getState().clearError()}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              color: "var(--color-red)",
-              fontSize: 14,
-              padding: "0 4px",
-              fontFamily: "inherit",
-            display: "flex",
-            alignItems: "center",
-          }}
-          >
-            <X size={14} />
-          </button>
-        </div>
+        <ErrorBanner
+          error={error}
+          onDismiss={() => useChatStore.getState().clearError()}
+        />
       )}
 
       {/* Vision warning toast */}

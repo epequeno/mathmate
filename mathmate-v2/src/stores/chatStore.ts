@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { Message, MessageSegment, Session, SessionHeader, StreamChunk } from "../lib/types";
 import { makeMessage, makeSegment, makeSessionHeader } from "../lib/types";
 import { buildPayload, buildToolPayload, streamChat, assembleToolCalls } from "../lib/providers";
+import type { AppError } from "../lib/error";
 import { toAppError, isRetryable, isCancelled } from "../lib/error";
 import { useConfigStore } from "./configStore";
 import { useProjectStore } from "./projectStore";
@@ -24,7 +25,7 @@ interface ChatState {
   model: string;
   /** Currently selected provider */
   provider: string;
-  error: string | null;
+  error: AppError | null;
 
   /** Derived: current streaming content for rendering */
   streamingContent: string;
@@ -399,7 +400,7 @@ covered in the course.`;
     // Stream with auto-retry
     const maxRetries = 1;
     let attempt = 0;
-    let lastError: string | null = null;
+    let lastError: AppError | null = null;
 
     while (attempt <= maxRetries) {
       try {
@@ -677,7 +678,7 @@ covered in the course.`;
         get().loadSessions();
         return; // Success — exit the retry loop
       } catch (err: any) {
-        lastError = err.message || String(err);
+        lastError = toAppError(err);
 
         // User-initiated cancellation — never retry
         if (abortController.signal.aborted || err.name === "AbortError") {
@@ -712,28 +713,16 @@ covered in the course.`;
 
         if (attempt < maxRetries && retryable) {
           const delay = Math.pow(2, attempt) * 1000; // 2s, then 4s
-          set({ error: `Retrying... (attempt ${attempt + 1}/${maxRetries})` });
+          set({ error: { kind: "internal", message: `Retrying... (attempt ${attempt + 1}/${maxRetries})` } });
           await new Promise((r) => setTimeout(r, delay));
           attempt++;
           continue;
         }
 
-        // Not retryable or out of retries — surface the error.
-        //
-        // Current error UX (dual-surface):
-        // 1. Store `error` field → rendered as inline error banner in ChatPage
-        //    (immediate, dismissible notification for operational errors).
-        // 2. Assistant error message → persisted in session history so the
-        //    user sees the error context on session reload.
-        //
-        // TODO (14E.1): consolidate into a single `<ErrorBanner>` with
-        // kind-specific icons and retry actions. The session-history
-        // persistence should use a non-assistant message type.
-
-        // Set error on store for the error banner
+        // Set error on store for the ErrorBanner
         set({ error: lastError, streaming: false, abortController: null, streamSegments: [] });
 
-        const errMsg = makeMessage("assistant", `**Error**: ${lastError}`);
+        const errMsg = makeMessage("assistant", `**Error**: ${lastError?.message ?? lastError}`);
         try {
           const updated = await Sessions.append(sess.header.id, errMsg);
           set({ currentSession: updated });

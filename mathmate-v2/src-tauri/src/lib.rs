@@ -19,6 +19,7 @@ mod wrapup;
 
 use crate::services::session::{Message, Session, SessionHeader};
 use tauri::State;
+use crate::error::AppError;
 use crate::services::AppServices;
 
 // ─── Config Commands ────────────────────────────
@@ -27,30 +28,30 @@ use crate::services::AppServices;
 fn get_env_var(
     svc: State<AppServices>,
     key: String,
-) -> Result<Option<String>, String> {
-    svc.config.get_env_var(&key).map_err(|e| e.to_string())
+) -> Result<Option<String>, AppError> {
+    svc.config.get_env_var(&key)
 }
 
 #[tauri::command]
 fn get_models_config(
     svc: State<AppServices>,
-) -> Result<crate::services::config::AppConfigModels, String> {
-    svc.config.get_models_config().map_err(|e| e.to_string())
+) -> Result<crate::services::config::AppConfigModels, AppError> {
+    svc.config.get_models_config()
 }
 
 #[tauri::command]
 fn get_app_config(
     svc: State<AppServices>,
-) -> Result<crate::services::config::AppConfig, String> {
-    svc.config.get_app_config().map_err(|e| e.to_string())
+) -> Result<crate::services::config::AppConfig, AppError> {
+    svc.config.get_app_config()
 }
 
 #[tauri::command]
 fn save_app_config(
     svc: State<AppServices>,
     config: crate::services::config::AppConfig,
-) -> Result<(), String> {
-    svc.config.save_app_config(&config).map_err(|e| e.to_string())
+) -> Result<(), AppError> {
+    svc.config.save_app_config(&config)
 }
 
 #[tauri::command]
@@ -58,10 +59,9 @@ fn set_provider_api_key(
     svc: State<AppServices>,
     provider_name: String,
     api_key: Option<String>,
-) -> Result<(), String> {
+) -> Result<(), AppError> {
     svc.config
         .set_provider_api_key(&provider_name, api_key)
-        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -75,16 +75,16 @@ fn get_config_path(svc: State<AppServices>) -> String {
 fn load_session(
     svc: State<AppServices>,
     session_id: String,
-) -> Result<Session, String> {
-    svc.sessions.load(&session_id).map_err(|e| e.to_string())
+) -> Result<Session, AppError> {
+    svc.sessions.load(&session_id)
 }
 
 #[tauri::command]
 fn list_sessions(
     svc: State<AppServices>,
     project_id: Option<String>,
-) -> Result<Vec<SessionHeader>, String> {
-    svc.sessions.list(project_id.as_deref()).map_err(|e| e.to_string())
+) -> Result<Vec<SessionHeader>, AppError> {
+    svc.sessions.list(project_id.as_deref())
 }
 
 #[tauri::command]
@@ -92,8 +92,8 @@ fn create_session(
     svc: State<AppServices>,
     header: SessionHeader,
     initial_message: Option<Message>,
-) -> Result<Session, String> {
-    svc.sessions.create(header, initial_message).map_err(|e| e.to_string())
+) -> Result<Session, AppError> {
+    svc.sessions.create(header, initial_message)
 }
 
 #[tauri::command]
@@ -101,8 +101,8 @@ fn append_message(
     svc: State<AppServices>,
     session_id: String,
     message: Message,
-) -> Result<Session, String> {
-    svc.sessions.append(&session_id, &message).map_err(|e| e.to_string())
+) -> Result<Session, AppError> {
+    svc.sessions.append(&session_id, &message)
 }
 
 #[tauri::command]
@@ -110,48 +110,48 @@ fn rename_session(
     svc: State<AppServices>,
     session_id: String,
     title: String,
-) -> Result<Session, String> {
-    svc.sessions.rename(&session_id, &title).map_err(|e| e.to_string())
+) -> Result<Session, AppError> {
+    svc.sessions.rename(&session_id, &title)
 }
 
 #[tauri::command]
 fn delete_session(
     svc: State<AppServices>,
     session_id: String,
-) -> Result<(), String> {
-    svc.sessions.delete(&session_id).map_err(|e| e.to_string())
+) -> Result<(), AppError> {
+    svc.sessions.delete(&session_id)
 }
 
 #[tauri::command]
 fn archive_session(
     svc: State<AppServices>,
     session_id: String,
-) -> Result<(), String> {
-    svc.sessions.archive(&session_id).map_err(|e| e.to_string())
+) -> Result<(), AppError> {
+    svc.sessions.archive(&session_id)
 }
 
 #[tauri::command]
 fn unarchive_session(
     svc: State<AppServices>,
     session_id: String,
-) -> Result<(), String> {
-    svc.sessions.unarchive(&session_id).map_err(|e| e.to_string())
+) -> Result<(), AppError> {
+    svc.sessions.unarchive(&session_id)
 }
 
 #[tauri::command]
 fn list_archived_sessions(
     svc: State<AppServices>,
     project_id: Option<String>,
-) -> Result<Vec<SessionHeader>, String> {
-    svc.sessions.list_archived(project_id.as_deref()).map_err(|e| e.to_string())
+) -> Result<Vec<SessionHeader>, AppError> {
+    svc.sessions.list_archived(project_id.as_deref())
 }
 
 #[tauri::command]
 fn purge_session(
     svc: State<AppServices>,
     session_id: String,
-) -> Result<(), String> {
-    svc.sessions.purge(&session_id).map_err(|e| e.to_string())
+) -> Result<(), AppError> {
+    svc.sessions.purge(&session_id)
 }
 
 // ─── Last Session Commands ──────────────────────
@@ -160,15 +160,15 @@ fn purge_session(
 fn save_last_session(
     svc: State<AppServices>,
     session_id: String,
-) -> Result<(), String> {
-    svc.sessions.save_last(&session_id).map_err(|e| e.to_string())
+) -> Result<(), AppError> {
+    svc.sessions.save_last(&session_id)
 }
 
 #[tauri::command]
 fn get_last_session(
     svc: State<AppServices>,
-) -> Result<Option<String>, String> {
-    svc.sessions.get_last().map_err(|e| e.to_string())
+) -> Result<Option<String>, AppError> {
+    svc.sessions.get_last()
 }
 
 // ─── File Utility Commands ──────────────────────
@@ -179,16 +179,16 @@ fn get_last_session(
 fn read_user_selected_file(
     svc: State<AppServices>,
     path: String,
-) -> Result<String, String> {
-    svc.images.read_user_selected(&path).map_err(|e| e.to_string())
+) -> Result<String, AppError> {
+    svc.images.read_user_selected(&path)
 }
 
 #[tauri::command]
 fn list_recent_images(
     svc: State<AppServices>,
     limit: usize,
-) -> Result<Vec<crate::services::image::RecentImageEntry>, String> {
-    svc.images.list_recent(limit).map_err(|e| e.to_string())
+) -> Result<Vec<crate::services::image::RecentImageEntry>, AppError> {
+    svc.images.list_recent(limit)
 }
 
 #[tauri::command]
@@ -196,14 +196,14 @@ fn read_file_as_base64(
     svc: State<AppServices>,
     path: String,
     project_id: Option<String>,
-) -> Result<String, String> {
+) -> Result<String, AppError> {
     let target = svc
         .path
         .guard(&path, project_id.as_deref(), false)
-        .map_err(|e| e.to_string())?;
+        ?;
 
     use base64::Engine;
-    let data = std::fs::read(&target).map_err(|e| format!("Failed to read file: {}", e))?;
+    let data = std::fs::read(&target)?;
     Ok(base64::engine::general_purpose::STANDARD.encode(&data))
 }
 
@@ -222,23 +222,22 @@ fn open_path(
     path: String,
     project_id: Option<String>,
     confirmed: Option<bool>,
-) -> Result<(), String> {
+) -> Result<(), AppError> {
     // Use guard_soft to get the path + containment flag without
     // rejecting paths that are outside roots (the two-step flow
     // lets the user confirm external paths).
     let (target, inside) = svc
         .path
         .guard_soft(&path, project_id.as_deref(), true)
-        .map_err(|e| e.to_string())?;
+        ?;
 
     if !inside && confirmed != Some(true) {
-        return Err(
+        return Err(AppError::access_denied(
             "Path is outside allowed roots; call with confirmed=true after user approval"
-                .to_string(),
-        );
+        ));
     }
 
-    svc.path.open_with_system(&target).map_err(|e| e.to_string())
+    svc.path.open_with_system(&target)
 }
 
 // ─── Project Commands ───────────────────────────
@@ -251,64 +250,63 @@ fn create_project(
     textbook_path: Option<String>,
     default_model: Option<String>,
     tutor_style: Option<String>,
-) -> Result<crate::services::project::MathProject, String> {
+) -> Result<crate::services::project::MathProject, AppError> {
     svc.projects
         .create(name, vault_path, textbook_path, default_model, tutor_style)
-        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 fn update_project(
     svc: State<AppServices>,
     project: crate::services::project::MathProject,
-) -> Result<(), String> {
-    svc.projects.update(&project).map_err(|e| e.to_string())
+) -> Result<(), AppError> {
+    svc.projects.update(&project)
 }
 
 #[tauri::command]
 fn delete_project(
     svc: State<AppServices>,
     project_id: String,
-) -> Result<(), String> {
-    svc.projects.delete(&project_id).map_err(|e| e.to_string())
+) -> Result<(), AppError> {
+    svc.projects.delete(&project_id)
 }
 
 #[tauri::command]
 fn archive_project(
     svc: State<AppServices>,
     project_id: String,
-) -> Result<(), String> {
-    svc.projects.archive(&project_id).map_err(|e| e.to_string())
+) -> Result<(), AppError> {
+    svc.projects.archive(&project_id)
 }
 
 #[tauri::command]
 fn unarchive_project(
     svc: State<AppServices>,
     project_id: String,
-) -> Result<(), String> {
-    svc.projects.unarchive(&project_id).map_err(|e| e.to_string())
+) -> Result<(), AppError> {
+    svc.projects.unarchive(&project_id)
 }
 
 #[tauri::command]
 fn list_archived_projects(
     svc: State<AppServices>,
-) -> Result<Vec<crate::services::project::MathProject>, String> {
-    svc.projects.list_archived().map_err(|e| e.to_string())
+) -> Result<Vec<crate::services::project::MathProject>, AppError> {
+    svc.projects.list_archived()
 }
 
 #[tauri::command]
 fn delete_project_cascade(
     svc: State<AppServices>,
     project_id: String,
-) -> Result<(), String> {
-    svc.projects.delete_cascade(&project_id).map_err(|e| e.to_string())
+) -> Result<(), AppError> {
+    svc.projects.delete_cascade(&project_id)
 }
 
 #[tauri::command]
 fn list_projects(
     svc: State<AppServices>,
-) -> Result<Vec<crate::services::project::MathProject>, String> {
-    svc.projects.list().map_err(|e| e.to_string())
+) -> Result<Vec<crate::services::project::MathProject>, AppError> {
+    svc.projects.list()
 }
 
 // ─── Vault Commands ─────────────────────────────
@@ -318,12 +316,12 @@ fn scan_vault(
     svc: State<AppServices>,
     path: String,
     project_id: Option<String>,
-) -> Result<Vec<crate::services::vault::VaultNote>, String> {
+) -> Result<Vec<crate::services::vault::VaultNote>, AppError> {
     let target = svc
         .path
         .guard(&path, project_id.as_deref(), false)
-        .map_err(|e| e.to_string())?;
-    svc.vault.scan(&target.to_string_lossy()).map_err(|e| e.to_string())
+        ?;
+    svc.vault.scan(&target.to_string_lossy())
 }
 
 #[tauri::command]
@@ -331,12 +329,12 @@ fn read_note(
     svc: State<AppServices>,
     path: String,
     project_id: Option<String>,
-) -> Result<String, String> {
+) -> Result<String, AppError> {
     let target = svc
         .path
         .guard(&path, project_id.as_deref(), true)
-        .map_err(|e| e.to_string())?;
-    svc.vault.read_note(&target.to_string_lossy()).map_err(|e| e.to_string())
+        ?;
+    svc.vault.read_note(&target.to_string_lossy())
 }
 
 #[tauri::command]
@@ -344,8 +342,8 @@ fn init_vault(
     svc: State<AppServices>,
     vault_path: String,
     project_name: String,
-) -> Result<(), String> {
-    svc.vault.init(&vault_path, &project_name).map_err(|e| e.to_string())
+) -> Result<(), AppError> {
+    svc.vault.init(&vault_path, &project_name)
 }
 
 // ─── Image Commands ─────────────────────────────
@@ -356,10 +354,9 @@ fn save_image(
     session_id: String,
     mime: String,
     data_base64: String,
-) -> Result<String, String> {
+) -> Result<String, AppError> {
     svc.images
         .save(&session_id, &mime, &data_base64)
-        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -367,18 +364,17 @@ fn load_image(
     svc: State<AppServices>,
     session_id: String,
     filename: String,
-) -> Result<(String, String), String> {
+) -> Result<(String, String), AppError> {
     svc.images
         .load(&session_id, &filename)
-        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 fn evict_session_images(
     svc: State<AppServices>,
     session_id: String,
-) -> Result<(), String> {
-    svc.images.evict(&session_id).map_err(|e| e.to_string())
+) -> Result<(), AppError> {
+    svc.images.evict(&session_id)
 }
 
 // ─── Memory Commands ────────────────────────────
@@ -387,8 +383,8 @@ fn evict_session_images(
 fn store_memory(
     svc: State<AppServices>,
     memory: crate::services::memory::MemoryItem,
-) -> Result<(), String> {
-    svc.memory.store(&memory).map_err(|e| e.to_string())
+) -> Result<(), AppError> {
+    svc.memory.store(&memory)
 }
 
 #[tauri::command]
@@ -396,10 +392,9 @@ fn store_memory_with_safety(
     svc: State<AppServices>,
     memory: crate::services::memory::MemoryItem,
     mode: crate::services::memory::SafetyMode,
-) -> Result<crate::services::memory::ScanResult, String> {
+) -> Result<crate::services::memory::ScanResult, AppError> {
     svc.memory
         .store_with_safety(&memory, &mode)
-        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -407,24 +402,24 @@ fn query_memories(
     svc: State<AppServices>,
     query: String,
     limit: usize,
-) -> Result<Vec<crate::services::memory::MemoryItem>, String> {
-    svc.memory.query(&query, limit).map_err(|e| e.to_string())
+) -> Result<Vec<crate::services::memory::MemoryItem>, AppError> {
+    svc.memory.query(&query, limit)
 }
 
 #[tauri::command]
 fn forget_memory(
     svc: State<AppServices>,
     memory_id: String,
-) -> Result<(), String> {
-    svc.memory.forget(&memory_id).map_err(|e| e.to_string())
+) -> Result<(), AppError> {
+    svc.memory.forget(&memory_id)
 }
 
 #[tauri::command]
 fn get_profile(
     svc: State<AppServices>,
     key: String,
-) -> Result<Option<String>, String> {
-    svc.memory.get_profile(&key).map_err(|e| e.to_string())
+) -> Result<Option<String>, AppError> {
+    svc.memory.get_profile(&key)
 }
 
 #[tauri::command]
@@ -432,10 +427,9 @@ fn set_profile(
     svc: State<AppServices>,
     key: String,
     value: String,
-) -> Result<(), String> {
+) -> Result<(), AppError> {
     svc.memory
         .set_profile(&key, &value)
-        .map_err(|e| e.to_string())
 }
 
 // ─── Wrap-Up Commands ───────────────────────────
@@ -444,8 +438,8 @@ fn set_profile(
 fn generate_wrap_up(
     svc: State<AppServices>,
     session_id: String,
-) -> Result<crate::services::wrapup::WrapUpResult, String> {
-    svc.wrapup.generate(&session_id).map_err(|e| e.to_string())
+) -> Result<crate::services::wrapup::WrapUpResult, AppError> {
+    svc.wrapup.generate(&session_id)
 }
 
 #[tauri::command]
@@ -455,10 +449,9 @@ fn save_wrap_up(
     vault_path: String,
     content: String,
     session_id: String,
-) -> Result<String, String> {
+) -> Result<String, AppError> {
     svc.wrapup
         .save(&project_name, &vault_path, &content, &session_id)
-        .map_err(|e| e.to_string())
 }
 
 // ─── Textbook Commands ──────────────────────────
@@ -467,27 +460,27 @@ fn save_wrap_up(
 fn read_textbook_metadata(
     svc: State<AppServices>,
     path: String,
-) -> Result<crate::services::textbook::TextbookMetadata, String> {
-    svc.textbook.read_metadata(&path).map_err(|e| e.to_string())
+) -> Result<crate::services::textbook::TextbookMetadata, AppError> {
+    svc.textbook.read_metadata(&path)
 }
 
 #[tauri::command]
 fn read_project_textbook(
     svc: State<AppServices>,
     project_id: String,
-) -> Result<String, String> {
+) -> Result<String, AppError> {
     use base64::Engine;
 
-    let project = svc.projects.load(&project_id).map_err(|e| e.to_string())?;
+    let project = svc.projects.load(&project_id)?;
 
     let path = project
         .textbook_path
-        .ok_or_else(|| "No textbook set for this project".to_string())?;
+        .ok_or_else(|| AppError::not_found("No textbook set for this project"))?;
 
     let target = svc
         .path
         .guard(&path, Some(&project_id), false)
-        .map_err(|e| e.to_string())?;
+        ?;
 
     let is_pdf = target
         .extension()
@@ -495,17 +488,15 @@ fn read_project_textbook(
         .map(|ext| ext.eq_ignore_ascii_case("pdf"))
         .unwrap_or(false);
     if !is_pdf {
-        return Err("Project textbook is not a PDF".to_string());
+        return Err(AppError::validation("Project textbook is not a PDF"));
     }
 
-    let metadata = std::fs::metadata(&target)
-        .map_err(|e| format!("Failed to read textbook metadata: {}", e))?;
+    let metadata = std::fs::metadata(&target)?;
     if metadata.len() > 150_000_000 {
-        return Err("Textbook PDF is too large (over 150 MB)".to_string());
+        return Err(AppError::internal("Textbook PDF is too large (over 150 MB)"));
     }
 
-    let data = std::fs::read(&target)
-        .map_err(|e| format!("Failed to read textbook file: {}", e))?;
+    let data = std::fs::read(&target)?;
 
     Ok(base64::engine::general_purpose::STANDARD.encode(&data))
 }
@@ -516,8 +507,8 @@ fn read_project_textbook(
 fn extract_pdf_toc(
     svc: State<AppServices>,
     path: String,
-) -> Result<Vec<crate::services::textbook::TocEntry>, String> {
-    svc.textbook.extract_pdf_toc(&path).map_err(|e| e.to_string())
+) -> Result<Vec<crate::services::textbook::TocEntry>, AppError> {
+    svc.textbook.extract_pdf_toc(&path)
 }
 
 #[tauri::command]
@@ -527,10 +518,9 @@ fn import_pdf_toc(
     vault_path: String,
     selected_indices: Vec<usize>,
     textbook_title: Option<String>,
-) -> Result<crate::services::textbook::ImportResult, String> {
+) -> Result<crate::services::textbook::ImportResult, AppError> {
     svc.textbook
         .import_pdf_toc(&pdf_path, &vault_path, &selected_indices, textbook_title.as_deref())
-        .map_err(|e| e.to_string())
 }
 
 // ─── Free Textbook Catalog Commands ────────────
@@ -538,16 +528,16 @@ fn import_pdf_toc(
 #[tauri::command]
 fn list_textbook_catalog(
     svc: State<AppServices>,
-) -> Result<Vec<crate::services::textbook::TextbookCatalogEntry>, String> {
-    svc.textbook.list_catalog().map_err(|e| e.to_string())
+) -> Result<Vec<crate::services::textbook::TextbookCatalogEntry>, AppError> {
+    svc.textbook.list_catalog()
 }
 
 #[tauri::command]
 fn get_textbook_license_info(
     svc: State<AppServices>,
     license: String,
-) -> Result<crate::services::textbook::LicenseInfo, String> {
-    svc.textbook.get_license_info(&license).map_err(|e| e.to_string())
+) -> Result<crate::services::textbook::LicenseInfo, AppError> {
+    svc.textbook.get_license_info(&license)
 }
 
 #[tauri::command]
@@ -555,18 +545,18 @@ fn download_free_textbook(
     svc: State<AppServices>,
     catalog_id: String,
     project_id: Option<String>,
-) -> Result<crate::services::textbook::DownloadResult, String> {
+) -> Result<crate::services::textbook::DownloadResult, AppError> {
     let result = svc.textbook
         .download_free_textbook(&catalog_id)
-        .map_err(|e| e.to_string())?;
+        ?;
 
     // If a project_id was provided, update the project's textbook path
     if let Some(pid) = project_id {
-        let mut project = svc.projects.load(&pid).map_err(|e| e.to_string())?;
+        let mut project = svc.projects.load(&pid)?;
         project.textbook_path = Some(result.local_path.clone());
         svc.projects
             .update(&project)
-            .map_err(|e| e.to_string())?;
+            ?;
     }
 
     Ok(result)
@@ -582,25 +572,24 @@ fn index_textbook_pages(
     total_pages: u32,
     pages: Vec<crate::services::textbook::PageContent>,
     complete: bool,
-) -> Result<crate::services::textbook::TextbookIndexMeta, String> {
+) -> Result<crate::services::textbook::TextbookIndexMeta, AppError> {
     svc.textbook
         .index_pages(&textbook_id, title.as_deref(), total_pages, pages, complete)
-        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 fn get_textbook_index_status(
     svc: State<AppServices>,
     textbook_id: String,
-) -> Result<Option<crate::services::textbook::TextbookIndexMeta>, String> {
-    svc.textbook.get_index_status(&textbook_id).map_err(|e| e.to_string())
+) -> Result<Option<crate::services::textbook::TextbookIndexMeta>, AppError> {
+    svc.textbook.get_index_status(&textbook_id)
 }
 
 #[tauri::command]
 fn derive_textbook_id(
     svc: State<AppServices>,
     pdf_path: String,
-) -> Result<String, String> {
+) -> Result<String, AppError> {
     Ok(svc.textbook.derive_textbook_id(&pdf_path))
 }
 
@@ -609,8 +598,8 @@ fn derive_textbook_id(
 #[tauri::command]
 fn get_tool_definitions(
     svc: State<AppServices>,
-) -> Result<Vec<tools::ToolDefinition>, String> {
-    svc.synapse.get_tool_definitions().map_err(|e| e.to_string())
+) -> Result<Vec<tools::ToolDefinition>, AppError> {
+    svc.synapse.get_tool_definitions()
 }
 
 #[tauri::command]
@@ -620,7 +609,7 @@ fn execute_tool(
     tool_name: String,
     arguments: serde_json::Value,
     project_id: Option<String>,
-) -> Result<tools::ToolResult, String> {
+) -> Result<tools::ToolResult, AppError> {
     let vault_path = project_id
         .as_deref()
         .and_then(|pid| svc.projects.load(pid).ok())
@@ -634,7 +623,6 @@ fn execute_tool(
 
     svc.synapse
         .execute_tool(call, vault_path.as_deref(), project_id.as_deref())
-        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -642,8 +630,8 @@ fn synapse_call(
     svc: State<AppServices>,
     tool: String,
     args: serde_json::Value,
-) -> Result<serde_json::Value, String> {
-    svc.synapse.call(&tool, args).map_err(|e| e.to_string())
+) -> Result<serde_json::Value, AppError> {
+    svc.synapse.call(&tool, args)
 }
 
 // ─── Synapse MCP Commands ───────────────────────
@@ -652,22 +640,22 @@ fn synapse_call(
 fn start_synapse_mcp(
     svc: State<AppServices>,
     vault_path: String,
-) -> Result<(), String> {
-    svc.synapse.start(&vault_path).map_err(|e| e.to_string())
+) -> Result<(), AppError> {
+    svc.synapse.start(&vault_path)
 }
 
 #[tauri::command]
 fn stop_synapse_mcp(
     svc: State<AppServices>,
-) -> Result<(), String> {
-    svc.synapse.stop().map_err(|e| e.to_string())
+) -> Result<(), AppError> {
+    svc.synapse.stop()
 }
 
 #[tauri::command]
 fn synapse_mcp_status(
     svc: State<AppServices>,
-) -> Result<crate::services::synapse::SynapseStatus, String> {
-    svc.synapse.status().map_err(|e| e.to_string())
+) -> Result<crate::services::synapse::SynapseStatus, AppError> {
+    svc.synapse.status()
 }
 
 #[tauri::command]
@@ -683,14 +671,14 @@ fn check_synapse_available(
 fn fetch_models(
     svc: State<AppServices>,
     force_refresh: bool,
-) -> Result<models::ModelCatalog, String> {
-    svc.model_catalog.fetch(force_refresh).map_err(|e| e.to_string())
+) -> Result<models::ModelCatalog, AppError> {
+    svc.model_catalog.fetch(force_refresh)
 }
 
 #[tauri::command]
 fn get_cached_models(
     svc: State<AppServices>,
-) -> Result<Option<models::ModelCatalog>, String> {
+) -> Result<Option<models::ModelCatalog>, AppError> {
     Ok(svc.model_catalog.get_cached())
 }
 
