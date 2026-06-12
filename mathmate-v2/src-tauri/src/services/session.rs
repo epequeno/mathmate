@@ -252,19 +252,16 @@ impl SessionService {
 
     /// Append a message to an existing session.
     ///
-    /// Performs one O(1) disk append and returns the updated in-memory
-    /// session.  No fsync — see 14E.1 for the data-safety fix.
+    /// Performs one O(1) disk append with fsync and returns the updated
+    /// in-memory session.  Writes to disk first, then updates memory, so
+    /// a crash between the two steps leaves the session consistent on
+    /// disk (the message is persisted).
     pub fn append(
         &self,
         session_id: &str,
         message: &Message,
     ) -> Result<Session, AppError> {
         let mut session = self.load(session_id)?;
-
-        session.messages.push(message.clone());
-        if let Some(ts) = &message.created_at {
-            session.header.updated_at = ts.clone();
-        }
 
         let path = self.session_path(session_id);
         let line = serde_json::to_string(&SessionLine::Message(message.clone()))
@@ -275,6 +272,15 @@ impl SessionService {
             .map_err(|e| AppError::internal(format!("Failed to open session for append: {}", e)))?;
         writeln!(file, "{}", line)
             .map_err(|e| AppError::internal(format!("Failed to append message: {}", e)))?;
+        // Ensure the write is durable before updating in-memory state.
+        file.sync_all()
+            .map_err(|e| AppError::internal(format!("Failed to fsync session: {}", e)))?;
+
+        // Only update in-memory state after successful disk write + fsync.
+        session.messages.push(message.clone());
+        if let Some(ts) = &message.created_at {
+            session.header.updated_at = ts.clone();
+        }
 
         Ok(session)
     }
