@@ -341,6 +341,19 @@ export async function* runTurn(
     await deps.appendMessage(sessionId, assistantMsg);
   }
 
+  // ── Auto-store session memory ──────────────────────────────────
+  if (input.memoryEnabled) {
+    try {
+      await deps.storeMemory(
+        input.userInputText.substring(0, 500),
+        sessionId,
+      );
+      yield { kind: "memory-stored" };
+    } catch {
+      // Non-fatal.
+    }
+  }
+
   // ── Turn complete ───────────────────────────────────────────────
   yield {
     kind: "status",
