@@ -1,0 +1,252 @@
+/* ─── Phase 14F: Shared UI component classes ───
+ *
+ * These are the 5 most-repeated inline-style patterns
+ * found across the codebase. They replace inline style
+ * objects and onMouseEnter/onMouseLeave JS hover handlers
+ * with GPU-accelerated CSS :hover pseudo-classes.
+ *
+ * All classes use the CSS variable system from theme.css.
+ */
+
+/* ─── Icon button ─────────────────────────────────────────── */
+.btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 3px;
+  border-radius: 4px;
+  color: var(--color-text-tertiary);
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color 0.1s, background 0.1s;
+}
+
+.btn-icon:hover {
+  color: var(--color-text-primary);
+  background: var(--color-hover);
+}
+
+.btn-icon:active {
+  background: var(--color-accent-subtle);
+}
+
+/* Icon button that turns red on hover (delete / danger actions) */
+.btn-icon-danger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 3px;
+  border-radius: 4px;
+  color: var(--color-text-tertiary);
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color 0.1s, background 0.1s;
+}
+
+.btn-icon-danger:hover {
+  color: var(--color-red);
+  background: var(--color-error-bg);
+}
+
+/* ─── Primary action button ───────────────────────────────── */
+.btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--radius-button);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  background: var(--color-accent);
+  color: #fff;
+  transition: background 0.1s, opacity 0.1s;
+}
+
+.btn-primary:hover {
+  opacity: 0.92;
+}
+
+.btn-primary:active {
+  opacity: 0.85;
+}
+
+.btn-primary:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* ─── List row (sidebar project / session rows) ───────────── */
+.list-row {
+  display: flex;
+  align-items: center;
+  margin: 1px 8px;
+  border-radius: 6px;
+  padding: 7px 12px 7px 10px;
+  gap: 8px;
+  cursor: pointer;
+  background: transparent;
+  border-left: 2px solid transparent;
+  transition: background 0.1s;
+}
+
+.list-row:hover {
+  background: var(--color-hover);
+}
+
+.list-row.active {
+  background: var(--color-accent-selected);
+  border-left-color: var(--color-accent-light);
+}
+
+/* ─── Tooltip / popover ───────────────────────────────────── */
+.tooltip {
+  position: absolute;
+  z-index: 100;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+  padding: 6px 10px;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* ─── Menu item (dropdown menus) ──────────────────────────── */
+.menu-item {
+  display: block;
+  width: 100%;
+  padding: 9px 14px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.1s;
+}
+
+.menu-item:hover {
+  background: var(--color-hover);
+}
+
+.menu-item.danger {
+  color: var(--color-red);
+}
+
+.menu-item.danger:hover {
+  background: var(--color-error-bg);
+}
+
+/* ─── Model selector row ─────────────────────────── */
+.model-select-row {
+  padding: 10px 16px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: transparent;
+  border-left: 2px solid transparent;
+  transition: background 0.1s;
+}
+
+.model-select-row:hover {
+  background: var(--color-surface);
+}
+
+.model-select-row-selected {
+  background: var(--color-accent-subtle);
+  border-left-color: var(--color-accent);
+}
+
+.model-select-row-selected:hover {
+  background: var(--color-accent-subtle);
+}
+
+/* ─── Image row (recent images panel) ─────────────── */
+.image-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  background: transparent;
+  transition: background 0.1s;
+}
+
+.image-row:hover {
+  background: var(--color-hover);
+}
+
+/* ─── Textbook catalog card ─────────────────────── */
+.catalog-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  cursor: pointer;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+/* ─── Menu row (dropdown menu items) ──────────────── */
+.menu-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  color: var(--color-text-primary);
+  transition: background 0.1s;
+}
+
+.menu-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.menu-row.menu-row-danger:hover {
+  background: rgba(192, 92, 92, 0.08);
+}
+
+/* ─── Primary action button (large) ──────────────── */
+.btn-primary-large {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  background: var(--color-accent);
+  color: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.btn-primary-large:hover {
+  background: var(--color-accent-light);
+}

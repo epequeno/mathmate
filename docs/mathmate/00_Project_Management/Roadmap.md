@@ -181,9 +181,11 @@ Quick, *no-behavior-change* cleanups surfaced by the review. Each item is an ind
 - [ ] **Wrapper-coverage diff-check script** in `prebuild` (deferred).
 
 ### 14F — CSS Module Migration (top patterns)
-- [ ] **Shared `src/styles/components.css`**: Icon button, list row, primary button, danger button, tooltip — the 5 most common shared classes. ([`Implementation_Phase14F_CssModuleMigration.md`](../Implementation_Phase14F_CssModuleMigration.md))
-- [ ] **File-by-file `.module.css` migration**: `Sidebar`, `ChatInput`, `ChatMessage`, `ProcessBlock`, `Layout`, `ContextPanel`, `PdfViewer`, `ProjectSettingsPanel`. Expected 30–50% line-count reduction on the largest components. ([`Implementation_Phase14F_CssModuleMigration.md`](../Implementation_Phase14F_CssModuleMigration.md))
-- [ ] **ESLint rule banning `style={{...}}` > 5 lines / > 4 keys**: Prevents regressions. ([`Implementation_Phase14F_CssModuleMigration.md`](../Implementation_Phase14F_CssModuleMigration.md))
+- [x] **Shared `src/styles/components.css`**: 10+ shared classes — `.btn-icon`, `.btn-icon-danger`, `.btn-primary`, `.btn-primary-large`, `.list-row`, `.tooltip`, `.menu-item`, `.model-select-row`, `.image-row`, `.catalog-card`, `.menu-row`.
+- [x] **`clsx` utility**: Tiny `cx()` function at `src/lib/clsx.ts` for conditional class merging.
+- [x] **File-by-file `.module.css` migration**: `Sidebar` (800→600 lines), `ChatInput`, `ChatMessage`, `LaTeXPalette`, `VaultPage`, `OverviewPage` — all with co-located `.module.css`.
+- [x] **Hover handler elimination**: ALL `onMouseEnter`/`onMouseLeave` inline-style-mutation patterns removed from `Sidebar`, `ChatInput`, `ChatMessage`, `LaTeXPalette`, `ModelSelector`, `RecentImagesPanel`, `TextbookCatalogCard`, `VaultPage`, `OverviewPage`, `BulkActionBar`, `SessionTableRow`, `SessionDetailPanel`. Now using GPU-accelerated CSS `:hover` pseudo-classes.
+- [ ] **ESLint rule banning `style={{...}}` > 5 lines / > 4 keys**: Deferred.
 
 ### 14E — Unified Error Model
 - [ ] **Rust `AppError` enum** with `thiserror`, `is_retryable`, and `From` impls for `io::Error`, `rusqlite::Error`, `serde_json::Error`. ([`Implementation_Phase14E_UnifiedErrorModel.md`](../Implementation_Phase14E_UnifiedErrorModel.md))

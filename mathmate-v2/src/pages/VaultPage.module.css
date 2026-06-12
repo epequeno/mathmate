@@ -1,0 +1,547 @@
+/* ─── VaultPage.module.css ─────────────────────── */
+
+/* ─── Layout ──────────────────────────────────── */
+
+.vault {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.emptyState {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--color-text-tertiary);
+}
+
+/* ─── Toolbar ─────────────────────────────────── */
+
+.toolbar {
+  background: var(--color-bg-elevated);
+  border-bottom: 1px solid var(--color-border);
+  height: 62px;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.toolbarTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+  flex: 1;
+}
+
+.healthBadge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+}
+
+.healthDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.vaultPath {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 320px;
+  direction: rtl;
+  text-align: left;
+}
+
+.refreshBtn {
+  background: none;
+  border: none;
+  display: flex;
+  padding: 4px;
+  border-radius: 5px;
+  color: var(--color-text-tertiary);
+  transition: opacity 0.1s;
+}
+
+/* ─── Banner ──────────────────────────────────── */
+
+.synapseBanner {
+  padding: 6px 16px;
+  background: rgba(234, 179, 8, 0.08);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.synapseStartBtn {
+  padding: 3px 10px;
+  border-radius: 5px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.errorBanner {
+  padding: 8px 16px;
+  background: rgba(239, 68, 68, 0.08);
+  color: var(--color-red, #ef4444);
+  font-size: 12px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ─── Search bar ──────────────────────────────── */
+
+.searchBar {
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.searchInput {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 13px;
+  color: var(--color-text-primary);
+  font-family: inherit;
+}
+
+.searchClear {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-tertiary);
+  padding: 2px;
+  display: flex;
+}
+
+/* ─── Main split layout ───────────────────────── */
+
+.splitLayout {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* ─── Left panel: note list ───────────────────── */
+
+.noteList {
+  width: 260px;
+  min-width: 260px;
+  border-right: 1px solid var(--color-border);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.folderHeader {
+  padding: 6px 12px 4px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-tertiary);
+}
+
+.noteItem {
+  padding: 7px 12px 7px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--color-border);
+  background: transparent;
+  border-left: 3px solid transparent;
+  transition: background 0.1s;
+}
+
+.noteItem:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.noteItemSelected {
+  background: var(--color-accent-subtle);
+  border-left-color: var(--color-accent);
+}
+
+.noteTitle {
+  font-size: 13px;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.noteTitleSelected {
+  font-weight: 600;
+  color: var(--color-accent-light);
+}
+
+.noteSnippet {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-style: italic;
+}
+
+/* ─── New note button ─────────────────────────── */
+
+.newNoteFooter {
+  padding: 8px 12px;
+  border-top: 1px solid var(--color-border);
+}
+
+.newNoteForm {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.newNoteTitleInput {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+}
+
+.newNoteActions {
+  display: flex;
+  gap: 4px;
+}
+
+.newNoteCreate {
+  flex: 1;
+  padding: 5px 10px;
+  border-radius: 5px;
+  border: none;
+  background: var(--color-accent);
+  color: #fff;
+  font-size: 11px;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.newNoteCreate:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.newNoteCancel {
+  padding: 5px 10px;
+  border-radius: 5px;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-tertiary);
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.newNoteBtn {
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px dashed var(--color-border);
+  background: transparent;
+  color: var(--color-text-tertiary);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.1s, color 0.1s;
+}
+
+.newNoteBtn:hover {
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--color-text-secondary);
+}
+
+/* ─── Right panel: note preview ───────────────── */
+
+.previewPanel {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.previewHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 16px 20px 0;
+  gap: 12px;
+}
+
+.previewTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.previewPath {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  padding: 2px 20px 8px;
+  opacity: 0.7;
+}
+
+.previewContent {
+  flex: 1;
+  padding: 0 20px 20px;
+  overflow: auto;
+}
+
+/* ─── Action buttons bar ──────────────────────── */
+
+.actionBar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.actionBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.actionBtn:hover {
+  background: var(--color-hover);
+}
+
+.actionBtnPrimary {
+  background: var(--color-accent);
+  border: none;
+  color: #fff;
+}
+
+.actionBtnPrimary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.actionBtnPrimary:hover:not(:disabled) {
+  opacity: 0.92;
+}
+
+.toggleGroup {
+  display: flex;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.toggleBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-tertiary);
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.toggleBtnActive {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.deleteBtn {
+  padding: 5px 10px;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.deleteBtnConfirm {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+/* ─── Edit mode textarea ──────────────────────── */
+
+.editTextarea {
+  width: 100%;
+  min-height: 400px;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-family: 'SF Mono', Menlo, Monaco, monospace;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+}
+
+/* ─── Raw view ────────────────────────────────── */
+
+.rawView {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: 'SF Mono', Menlo, Monaco, monospace;
+  margin: 0;
+  background: var(--color-surface);
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+}
+
+/* ─── Backlinks panel ─────────────────────────── */
+
+.backlinks {
+  margin-top: 32px;
+}
+
+.backlinksToggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 6px 0;
+  border-top: 1px solid var(--color-border);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  user-select: none;
+}
+
+.backlinksBody {
+  padding: 4px 0 4px 20px;
+}
+
+.backlinkSection {
+  margin-bottom: 8px;
+}
+
+.backlinkSectionTitle {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-tertiary);
+  margin-bottom: 4px;
+}
+
+.backlinkItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--color-accent-light);
+}
+
+.forwardLinkItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+  font-size: 12px;
+}
+
+.centeredMsg {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-tertiary);
+  font-size: 13px;
+}
+
+/* ─── Misc notification bubbles ──────────────── */
+
+.unsavedBadge {
+  font-size: 11px;
+  color: rgb(234, 179, 8);
+  margin-top: 2px;
+}
+
+.savedBadge {
+  font-size: 11px;
+  color: rgb(34, 197, 94);
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.inlineRowError {
+  margin-top: 8px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: rgba(239, 68, 68, 0.08);
+  color: var(--color-red);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}

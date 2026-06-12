@@ -4,6 +4,8 @@ import { useChatStore } from "../stores/chatStore";
 import type { SessionHeader } from "../lib/types";
 import { Sessions } from "../lib/api";
 import { useNavigate } from "react-router-dom";
+import { cx } from "../lib/clsx";
+import styles from "./OverviewPage.module.css";
 
 // SVG icons
 function ChatIcon({ color = "currentColor" }: { color?: string }) {
@@ -368,18 +370,7 @@ function SessionRow({
   return (
     <div
       onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 12,
-        padding: "10px 14px",
-        borderRadius: 8,
-        cursor: "pointer",
-        backgroundColor: isFirst || hovered ? "var(--color-bg-elevated)" : "transparent",
-        transition: "background-color 0.12s ease",
-      }}
+      className={cx(styles.sessionRow, isFirst && styles.sessionRowFirst)}
     >
       <ChatIcon color="var(--color-text-secondary)" />
       <div style={{

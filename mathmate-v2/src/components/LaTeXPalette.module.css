@@ -1,0 +1,25 @@
+/* ─── LaTeXPalette.module.css ──────────────────── */
+
+.snippet {
+  padding: 6px 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border-left: 2px solid transparent;
+  transition: background 0.1s;
+}
+
+.snippet:hover {
+  background: var(--color-surface);
+}
+
+.snippetSelected {
+  background: var(--color-accent-subtle);
+  border-left-color: var(--color-accent);
+}
+
+.snippetSelected:hover {
+  background: var(--color-accent-subtle);
+}

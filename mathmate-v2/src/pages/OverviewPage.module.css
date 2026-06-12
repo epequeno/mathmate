@@ -1,0 +1,20 @@
+/* ─── OverviewPage.module.css ──────────────────── */
+
+.sessionRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: transparent;
+  transition: background-color 0.12s ease;
+}
+
+.sessionRow:hover {
+  background-color: var(--color-bg-elevated);
+}
+
+.sessionRowFirst {
+  background-color: var(--color-bg-elevated);
+}

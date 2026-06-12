@@ -10,12 +10,14 @@ import { ErrorBoundary } from "./ErrorBoundary";
 import type { Message, MessageSegment } from "../lib/types";
 import { adaptLegacyMessage } from "../lib/types";
 import type { VizSegment, QuizSegment } from "../lib/interactiveSegments";
-import { Brain, Loader2, ChevronDown, ChevronRight, FileText, Bookmark, Save, CheckCircle } from "lucide-react";
+import { Brain, Loader2, FileText, ChevronRight, Bookmark, Save, CheckCircle } from "lucide-react";
 import { ProcessBlock } from "./chat/ProcessBlock";
 import { useConfigStore } from "../stores/configStore";
 import { useVaultStore } from "../stores/vaultStore";
 import { useProjectStore } from "../stores/projectStore";
 import { useChatStore } from "../stores/chatStore";
+import { cx } from "../lib/clsx";
+import styles from "./ChatMessage.module.css";
 
 interface ChatMessageProps {
   message: Message;
@@ -44,12 +46,10 @@ const ChatMessage = memo(function ChatMessage({ message, isStreaming, streamedTe
   }, [lightboxSrc, closeLightbox]);
 
   // ─── Segment-based rendering (Phase 12A) ─────────
-  // Phase 12C: Feature flag controls timeline vs legacy rendering
   const timelineEnabled = useConfigStore((s) => s.timelineEnabled);
 
-  // Use streamSegments during live streaming, otherwise adapt from message
   const effectiveSegments = useMemo(() => {
-    if (!timelineEnabled) return []; // Force legacy when flag is off
+    if (!timelineEnabled) return [];
     if (isStreaming && streamSegments && streamSegments.length > 0) return streamSegments;
     return adaptLegacyMessage(message);
   }, [isStreaming, streamSegments, message, timelineEnabled]);
@@ -75,67 +75,22 @@ const ChatMessage = memo(function ChatMessage({ message, isStreaming, streamedTe
     <div
       role="log"
       aria-label={isUser ? "Your message" : "Assistant message"}
-      style={{
-        display: "flex",
-        justifyContent: isUser ? "flex-end" : "flex-start",
-        marginBottom: 8,
-      }}
+      className={cx(styles.messageRow, isUser ? styles.user : styles.assistant)}
     >
-      <div
-        style={{
-          maxWidth: isUser ? "76%" : "100%",
-          minWidth: 0,
-          width: isUser ? undefined : "100%",
-        }}
-      >
+      <div className={cx(styles.messageBubble, !isUser && styles.fullWidth)}>
         {/* Role label */}
-        <div
-          style={{
-            fontSize: 11,
-            fontWeight: 600,
-            color: isUser ? "var(--color-accent)" : "var(--color-text-secondary)",
-            marginBottom: 4,
-            paddingLeft: isUser ? 0 : 2,
-            textAlign: isUser ? "right" : "left",
-          }}
-        >
+        <div className={cx(styles.roleLabel, isUser ? styles.roleLabelUser : styles.roleLabelAssistant)}>
           {isUser ? "You" : "MathMate"}
         </div>
 
-        {/* Thinking trace (collapsible) — legacy path, shown when segments
-             carry no thinking entry (e.g. very old pre-Phase 12 sessions) */}
+        {/* Thinking trace (collapsible) — legacy path */}
         {isAssistant && hasThinking && thinkingContent &&
          !effectiveSegments.some((s) => s.type === "thinking") && (
-          <details
-            style={{
-              marginBottom: 6,
-              fontSize: 13,
-              color: "var(--color-text-tertiary)",
-            }}
-          >
-            <summary
-              style={{
-                cursor: "pointer",
-                fontWeight: 500,
-                padding: "2px 0",
-                userSelect: "none",
-              }}
-            >
+          <details className={styles.thinkingDetails}>
+            <summary className={styles.thinkingSummary}>
               <span style={{ opacity: 0.7, display: "inline-flex", alignItems: "center", marginRight: 4 }}><Brain size={12} /></span> Thinking trace
             </summary>
-            <div
-              style={{
-                marginTop: 6,
-                padding: "8px 12px",
-                background: "var(--color-surface)",
-                borderRadius: 6,
-                fontSize: 12,
-                lineHeight: 1.4,
-                color: "var(--color-text-secondary)",
-                whiteSpace: "pre-wrap",
-                fontFamily: "'SF Mono', Menlo, Monaco, monospace",
-              }}
-            >
+            <div className={styles.thinkingBody}>
               {thinkingContent}
             </div>
           </details>
@@ -143,15 +98,7 @@ const ChatMessage = memo(function ChatMessage({ message, isStreaming, streamedTe
 
         {/* Image parts — thumbnails, click to expand */}
         {imageParts.length > 0 && (
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 6,
-              justifyContent: isUser ? "flex-end" : "flex-start",
-              marginBottom: displayText ? 6 : 0,
-            }}
-          >
+          <div className={cx(styles.imageStrip, isUser ? styles.user : styles.assistant)} style={{ marginBottom: displayText ? 6 : 0 }}>
             {imageParts.map((img, i) => {
               const src = img.data
                 ? `data:${img.mime || "image/jpeg"};base64,${img.data}`
@@ -162,16 +109,7 @@ const ChatMessage = memo(function ChatMessage({ message, isStreaming, streamedTe
                   src={src}
                   alt="Attached image"
                   onClick={() => openLightbox(src)}
-                  style={{
-                    maxWidth: 260,
-                    maxHeight: 200,
-                    borderRadius: 10,
-                    border: "1px solid var(--color-border)",
-                    objectFit: "contain",
-                    display: "block",
-                    cursor: "zoom-in",
-                    background: "var(--color-surface)",
-                  }}
+                  className={styles.thumbnail}
                 />
               ) : null;
             })}
@@ -205,18 +143,11 @@ const ChatMessage = memo(function ChatMessage({ message, isStreaming, streamedTe
           <>
             {(displayText || isStreaming || !isUser) && <div
               ref={contentRef}
-              style={{
-                padding: isStreaming && !displayText ? 0 : isUser ? "10px 16px" : "6px 0",
-                borderRadius: isUser ? "16px 16px 4px 16px" : 0,
-                background: isUser ? "var(--color-user-bubble)" : "transparent",
-                color: isUser ? "var(--color-user-text)" : "var(--color-text-primary)",
-                fontSize: 14,
-                lineHeight: 1.55,
-                wordBreak: "break-word",
-                overflowWrap: "break-word",
-                border: "none",
-                overflowX: "auto",
-              }}
+              className={cx(
+                styles.contentBubble,
+                isUser ? styles.contentBubbleUser : styles.contentBubbleAssistant,
+                isStreaming && !displayText && !isUser && styles.contentBubbleEmpty
+              )}
             >
               {displayText ? (
                 <div className="markdown-body">
@@ -249,16 +180,7 @@ const ChatMessage = memo(function ChatMessage({ message, isStreaming, streamedTe
 
             {/* Streaming indicator */}
             {isStreaming && !displayText && (
-              <div
-                style={{
-                  padding: "10px 14px",
-                  borderRadius: 12,
-                  background: "var(--color-bg-elevated)",
-                  border: "1px solid var(--color-border)",
-                  fontSize: 14,
-                  color: "var(--color-text-secondary)",
-                }}
-              >
+              <div className={styles.streamingPlaceholder}>
                 <LoadingDots />
               </div>
             )}
@@ -268,51 +190,14 @@ const ChatMessage = memo(function ChatMessage({ message, isStreaming, streamedTe
     </div>
     {/* Lightbox */}
     {lightboxSrc && createPortal(
-      <div
-        onClick={closeLightbox}
-        style={{
-          position: "fixed",
-          inset: 0,
-          zIndex: 9999,
-          background: "rgba(0,0,0,0.85)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          cursor: "zoom-out",
-        }}
-      >
+      <div onClick={closeLightbox} className={styles.lightboxOverlay}>
         <img
           src={lightboxSrc}
           alt="Full size"
           onClick={(e) => e.stopPropagation()}
-          style={{
-            maxWidth: "90vw",
-            maxHeight: "90vh",
-            borderRadius: 12,
-            boxShadow: "0 8px 48px rgba(0,0,0,0.6)",
-            objectFit: "contain",
-            cursor: "default",
-          }}
+          className={styles.lightboxImg}
         />
-        <button
-          onClick={closeLightbox}
-          style={{
-            position: "fixed",
-            top: 20,
-            right: 24,
-            background: "rgba(255,255,255,0.15)",
-            border: "none",
-            borderRadius: "50%",
-            width: 36,
-            height: 36,
-            color: "#fff",
-            fontSize: 20,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
+        <button onClick={closeLightbox} className={styles.lightboxClose}>
           ×
         </button>
       </div>,
@@ -329,7 +214,6 @@ function VaultChips({ message, effectiveSegments, hasSegments }: { message: Mess
   const navigate = useNavigate();
   const synapseRunning = useProjectStore((s) => s.synapseStatus.running);
 
-  // Extract vault tool results from segments
   const vaultResults = useMemo(() => {
     if (!hasSegments) return [];
     const results: { path: string; action: string; title?: string }[] = [];
@@ -354,13 +238,11 @@ function VaultChips({ message, effectiveSegments, hasSegments }: { message: Mess
     navigate("/vault");
   }, [navigate]);
 
-  // Quick save popover state
   const [showSave, setShowSave] = useState(false);
   const [saveTitle, setSaveTitle] = useState("");
   const [saving, setSaving] = useState(false);
   const [savedPath, setSavedPath] = useState<string | null>(null);
 
-  // Extract text content from message
   const textContent = useMemo(() => {
     if (hasSegments) {
       return effectiveSegments
@@ -399,27 +281,9 @@ function VaultChips({ message, effectiveSegments, hasSegments }: { message: Mess
     <>
       {/* Citation chips */}
       {vaultResults.length > 0 && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 4 }}>
+        <div className={styles.vaultChips}>
           {vaultResults.map((vr, i) => (
-            <button
-              key={i}
-              onClick={() => handleNavigate(vr.path)}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 4,
-                padding: "3px 8px",
-                borderRadius: 4,
-                fontSize: 11,
-                border: "1px solid var(--color-border)",
-                background: "var(--color-surface)",
-                color: "var(--color-text-secondary)",
-                cursor: "pointer",
-                fontFamily: "inherit",
-              }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--color-accent-subtle)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--color-surface)"; }}
-            >
+            <button key={i} onClick={() => handleNavigate(vr.path)} className={styles.vaultChip}>
               <FileText size={11} />
               {vr.title ? vr.title : (vr.path.split("/").pop()?.replace(/\.md$/i, "") || "Note")}
               {" "}
@@ -432,19 +296,7 @@ function VaultChips({ message, effectiveSegments, hasSegments }: { message: Mess
 
       {/* Saved confirmation */}
       {savedPath && (
-        <div
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 4,
-            marginTop: 4,
-            padding: "3px 8px",
-            borderRadius: 4,
-            fontSize: 11,
-            background: "rgba(34,197,94,0.1)",
-            color: "rgb(34,197,94)",
-          }}
-        >
+        <div className={styles.savedBadge}>
           <CheckCircle size={11} />
           Saved to vault
         </div>
@@ -452,36 +304,8 @@ function VaultChips({ message, effectiveSegments, hasSegments }: { message: Mess
 
       {/* Quick save button */}
       {synapseRunning && textContent && !showSave && !savedPath && (
-        <div
-          style={{ marginTop: 4 }}
-          onMouseEnter={(e) => {
-            const btn = e.currentTarget.querySelector("button");
-            if (btn) btn.style.opacity = "1";
-          }}
-          onMouseLeave={(e) => {
-            const btn = e.currentTarget.querySelector("button");
-            if (btn) btn.style.opacity = "0";
-          }}
-        >
-          <button
-            onClick={openSavePopover}
-            title="Save to vault"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 4,
-              padding: "2px 8px",
-              borderRadius: 4,
-              border: "1px solid var(--color-border)",
-              background: "var(--color-surface)",
-              color: "var(--color-text-tertiary)",
-              fontSize: 10,
-              cursor: "pointer",
-              opacity: 0,
-              transition: "opacity 0.15s",
-              fontFamily: "inherit",
-            }}
-          >
+        <div className={styles.quickSaveContainer}>
+          <button onClick={openSavePopover} title="Save to vault" className={styles.quickSaveBtn}>
             <Bookmark size={10} />
             Save to vault
           </button>
@@ -490,70 +314,21 @@ function VaultChips({ message, effectiveSegments, hasSegments }: { message: Mess
 
       {/* Quick save popover */}
       {showSave && (
-        <div
-          style={{
-            marginTop: 4,
-            padding: "8px 10px",
-            borderRadius: 6,
-            border: "1px solid var(--color-border)",
-            background: "var(--color-surface)",
-            display: "flex",
-            flexDirection: "column",
-            gap: 6,
-          }}
-        >
-          <div style={{ fontSize: 11, fontWeight: 600, color: "var(--color-text-secondary)" }}>
-            Save to vault
-          </div>
+        <div className={styles.quickSavePopover}>
+          <div className={styles.popoverTitle}>Save to vault</div>
           <input
             value={saveTitle}
             onChange={(e) => setSaveTitle(e.target.value)}
             placeholder="Note title..."
             autoFocus
-            style={{
-              padding: "5px 8px",
-              borderRadius: 4,
-              border: "1px solid var(--color-border)",
-              background: "var(--color-bg)",
-              color: "var(--color-text-primary)",
-              fontSize: 11,
-              fontFamily: "inherit",
-              outline: "none",
-            }}
+            className={styles.popoverInput}
           />
-          <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
-            <button
-              onClick={() => setShowSave(false)}
-              style={{
-                padding: "3px 10px",
-                borderRadius: 4,
-                border: "1px solid var(--color-border)",
-                background: "transparent",
-                color: "var(--color-text-tertiary)",
-                fontSize: 11,
-                fontFamily: "inherit",
-                cursor: "pointer",
-              }}
-            >
-              Cancel
-            </button>
+          <div className={styles.popoverActions}>
+            <button onClick={() => setShowSave(false)} className={styles.popoverCancel}>Cancel</button>
             <button
               onClick={handleQuickSave}
               disabled={saving || !saveTitle.trim()}
-              style={{
-                padding: "3px 10px",
-                borderRadius: 4,
-                border: "none",
-                background: "var(--color-accent)",
-                color: "#fff",
-                fontSize: 11,
-                fontFamily: "inherit",
-                cursor: saving ? "default" : "pointer",
-                opacity: saving || !saveTitle.trim() ? 0.6 : 1,
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-              }}
+              className={styles.popoverSave}
             >
               {saving ? <Loader2 size={11} style={{ animation: "spin 0.8s linear infinite" }} /> : <Save size={11} />}
               Save
@@ -567,22 +342,13 @@ function VaultChips({ message, effectiveSegments, hasSegments }: { message: Mess
 
 export default ChatMessage;
 
-// ─── ContentSegment & LoadingDots (used by both segment and legacy paths) ────
+// ─── ContentSegment & LoadingDots ──────────────────
 
 function ContentSegment({ text, isStreaming }: { text: string; isStreaming?: boolean }) {
   const segments = useMemo(() => extractInteractiveSegments(text), [text]);
 
   return (
-    <div
-      style={{
-        padding: "6px 0",
-        fontSize: 14,
-        lineHeight: 1.55,
-        color: "var(--color-text-primary)",
-        wordBreak: "break-word",
-        overflowWrap: "break-word",
-      }}
-    >
+    <div className={styles.contentSegment}>
       <div className="markdown-body">
         {segments.map((seg, i) => {
           if (seg.type === "html") {
@@ -611,7 +377,7 @@ function ContentSegment({ text, isStreaming }: { text: string; isStreaming?: boo
 
 function LoadingDots() {
   return (
-    <span style={{ display: "inline-flex", gap: 3, alignItems: "center" }}>
+    <span className={styles.loadingDotsWrap}>
       <span className="loading-dot" />
       <span className="loading-dot" style={{ animationDelay: "0.15s" }} />
       <span className="loading-dot" style={{ animationDelay: "0.3s" }} />

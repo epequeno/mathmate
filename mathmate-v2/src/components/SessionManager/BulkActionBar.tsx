@@ -48,9 +48,7 @@ export default function BulkActionBar({
         <>
           <button
             onClick={onArchive}
-            style={actionBtnStyle}
-            onMouseEnter={highlight}
-            onMouseLeave={unhighlight}
+            className="btn-icon" style={{ padding: "5px 10px", borderRadius: 6, border: "1px solid var(--color-border)", fontSize: 11, gap: 5 }}
             title="Archive selected sessions"
           >
             <Archive size={13} />
@@ -58,9 +56,7 @@ export default function BulkActionBar({
           </button>
           <button
             onClick={onDelete}
-            style={{ ...actionBtnStyle, color: "var(--color-red)" }}
-            onMouseEnter={highlightRed}
-            onMouseLeave={unhighlightRed}
+            className="btn-icon-danger" style={{ padding: "5px 10px", borderRadius: 6, border: "1px solid var(--color-border)", fontSize: 11, gap: 5 }}
             title="Delete selected sessions permanently"
           >
             <Trash2 size={13} />
@@ -72,9 +68,7 @@ export default function BulkActionBar({
       {archivedCheckedCount > 0 && (
         <button
           onClick={onPurge}
-          style={{ ...actionBtnStyle, color: "var(--color-red)" }}
-          onMouseEnter={highlightRed}
-          onMouseLeave={unhighlightRed}
+          className="btn-icon-danger" style={{ padding: "5px 10px", borderRadius: 6, border: "1px solid var(--color-border)", fontSize: 11, gap: 5 }}
           title="Permanently purge selected archived sessions"
         >
           <Trash2 size={13} />
@@ -85,30 +79,4 @@ export default function BulkActionBar({
   );
 }
 
-const actionBtnStyle: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: 5,
-  padding: "5px 10px",
-  background: "transparent",
-  border: "1px solid var(--color-border)",
-  borderRadius: 6,
-  color: "var(--color-text-secondary)",
-  cursor: "pointer",
-  fontSize: 11,
-  fontWeight: 500,
-  fontFamily: "inherit",
-};
 
-function highlight(e: React.MouseEvent<HTMLButtonElement>) {
-  (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)";
-}
-function unhighlight(e: React.MouseEvent<HTMLButtonElement>) {
-  (e.currentTarget as HTMLElement).style.background = "transparent";
-}
-function highlightRed(e: React.MouseEvent<HTMLButtonElement>) {
-  (e.currentTarget as HTMLElement).style.background = "rgba(192,92,92,0.08)";
-}
-function unhighlightRed(e: React.MouseEvent<HTMLButtonElement>) {
-  (e.currentTarget as HTMLElement).style.background = "transparent";
-}

@@ -1,5 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { LATEX_CATEGORIES, searchSnippets, getSnippetsByCategory, fillTemplate, LaTeXSnippet } from "../lib/latexSnippets";
+import { cx } from "../lib/clsx";
+import styles from "./LaTeXPalette.module.css";
 
 interface LaTeXPaletteProps {
   onInsert: (latex: string) => void;
@@ -147,21 +149,7 @@ function SnippetRow({
   return (
     <div
       onClick={onClick}
-      style={{
-        padding: "6px 10px",
-        cursor: "pointer",
-        display: "flex",
-        alignItems: "center",
-        gap: 8,
-        background: selected ? "var(--color-accent-subtle)" : "transparent",
-        borderLeft: selected ? "2px solid var(--color-accent)" : "2px solid transparent",
-      }}
-      onMouseEnter={(e) => {
-        if (!selected) (e.currentTarget as HTMLElement).style.background = "var(--color-surface)";
-      }}
-      onMouseLeave={(e) => {
-        if (!selected) (e.currentTarget as HTMLElement).style.background = "transparent";
-      }}
+      className={cx(styles.snippet, selected && styles.snippetSelected)}
     >
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: 13, fontWeight: 500, color: "var(--color-text-primary)" }}>

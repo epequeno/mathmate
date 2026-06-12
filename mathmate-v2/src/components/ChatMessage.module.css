@@ -1,0 +1,329 @@
+/* ─── ChatMessage.module.css ───────────────────── */
+
+/* ─── Layout ──────────────────────────────────── */
+
+.messageRow {
+  display: flex;
+  margin-bottom: 8px;
+}
+
+.messageRow.user {
+  justify-content: flex-end;
+}
+
+.messageRow.assistant {
+  justify-content: flex-start;
+}
+
+.messageBubble {
+  max-width: 76%;
+  min-width: 0;
+}
+
+.messageBubble.fullWidth {
+  max-width: 100%;
+  width: 100%;
+}
+
+/* ─── Role label ──────────────────────────────── */
+
+.roleLabel {
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.roleLabelUser {
+  color: var(--color-accent);
+  text-align: right;
+  padding-left: 0;
+}
+
+.roleLabelAssistant {
+  color: var(--color-text-secondary);
+  text-align: left;
+  padding-left: 2px;
+}
+
+/* ─── Thinking trace ──────────────────────────── */
+
+.thinkingDetails {
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: var(--color-text-tertiary);
+}
+
+.thinkingSummary {
+  cursor: pointer;
+  font-weight: 500;
+  padding: 2px 0;
+  user-select: none;
+}
+
+.thinkingBody {
+  margin-top: 6px;
+  padding: 8px 12px;
+  background: var(--color-surface);
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--color-text-secondary);
+  white-space: pre-wrap;
+  font-family: 'SF Mono', Menlo, Monaco, monospace;
+}
+
+/* ─── Images ──────────────────────────────────── */
+
+.imageStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.imageStrip.user {
+  justify-content: flex-end;
+}
+
+.imageStrip.assistant {
+  justify-content: flex-start;
+}
+
+.thumbnail {
+  max-width: 260px;
+  max-height: 200px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  object-fit: contain;
+  display: block;
+  cursor: zoom-in;
+  background: var(--color-surface);
+}
+
+/* ─── Content bubble (legacy path) ────────────── */
+
+.contentBubble {
+  font-size: 14px;
+  line-height: 1.55;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  border: none;
+  overflow-x: auto;
+}
+
+.contentBubbleUser {
+  padding: 10px 16px;
+  border-radius: 16px 16px 4px 16px;
+  background: var(--color-user-bubble);
+  color: var(--color-user-text);
+}
+
+.contentBubbleAssistant {
+  padding: 6px 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-text-primary);
+}
+
+.contentBubbleEmpty {
+  padding: 0;
+}
+
+/* Streaming placeholder */
+.streamingPlaceholder {
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+/* ─── ContentSegment (Phase 12A) ──────────────── */
+
+.contentSegment {
+  padding: 6px 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--color-text-primary);
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* ─── Vault citation chips ────────────────────── */
+
+.vaultChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.vaultChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.1s;
+}
+
+.vaultChip:hover {
+  background: var(--color-accent-subtle);
+}
+
+/* ─── Quick save ──────────────────────────────── */
+
+.quickSaveContainer {
+  margin-top: 4px;
+}
+
+.quickSaveBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-tertiary);
+  font-size: 10px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+  font-family: inherit;
+}
+
+.quickSaveContainer:hover .quickSaveBtn {
+  opacity: 1;
+}
+
+.quickSavePopover {
+  margin-top: 4px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.popoverTitle {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.popoverInput {
+  padding: 5px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  font-size: 11px;
+  font-family: inherit;
+  outline: none;
+}
+
+.popoverActions {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-end;
+}
+
+.popoverCancel {
+  padding: 3px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-tertiary);
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.popoverSave {
+  padding: 3px 10px;
+  border-radius: 4px;
+  border: none;
+  background: var(--color-accent);
+  color: #fff;
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.popoverSave:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* ─── Saved confirmation ──────────────────────── */
+
+.savedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  background: rgba(34, 197, 94, 0.1);
+  color: rgb(34, 197, 94);
+}
+
+/* ─── Lightbox ────────────────────────────────── */
+
+.lightboxOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+}
+
+.lightboxImg {
+  max-width: 90vw;
+  max-height: 90vh;
+  border-radius: 12px;
+  box-shadow: 0 8px 48px rgba(0, 0, 0, 0.6);
+  object-fit: contain;
+  cursor: default;
+}
+
+.lightboxClose {
+  position: fixed;
+  top: 20px;
+  right: 24px;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ─── Loading dots ────────────────────────────── */
+
+.loadingDotsWrap {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+}

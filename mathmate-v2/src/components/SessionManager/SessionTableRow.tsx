@@ -314,22 +314,8 @@ function MenuItem({
   return (
     <button
       onClick={(e) => { e.stopPropagation(); onClick(); }}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 7,
-        width: "100%",
-        padding: "8px 12px",
-        border: "none",
-        background: "transparent",
-        color: color ?? "var(--color-text-primary)",
-        fontSize: 12,
-        fontFamily: "inherit",
-        cursor: "pointer",
-        textAlign: "left",
-      }}
-      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = color ? "rgba(192,92,92,0.08)" : "rgba(255,255,255,0.05)"; }}
-      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+      className={color ? "menu-row menu-row-danger" : "menu-row"}
+      style={{ color: color ?? "var(--color-text-primary)" }}
     >
       {children}
     </button>

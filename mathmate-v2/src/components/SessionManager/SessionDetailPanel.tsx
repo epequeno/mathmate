@@ -235,9 +235,7 @@ export default function SessionDetailPanel({
       <div style={{ padding: "0 16px", display: "flex", flexDirection: "column", gap: 6 }}>
         <button
           onClick={onOpenInChat}
-          style={primaryBtnStyle}
-          onMouseEnter={highlightBtn}
-          onMouseLeave={unhighlightBtn}
+          className="btn-primary-large"
         >
           <ArrowUpRight size={14} />
           Open in Chat
@@ -329,23 +327,6 @@ const iconBtnStyle: React.CSSProperties = {
   flexShrink: 0,
 };
 
-const primaryBtnStyle: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: 6,
-  padding: "8px 12px",
-  background: "var(--color-accent)",
-  color: "#ffffff",
-  border: "none",
-  borderRadius: 6,
-  cursor: "pointer",
-  fontSize: 12,
-  fontWeight: 600,
-  fontFamily: "inherit",
-  width: "100%",
-  textAlign: "left",
-  boxSizing: "border-box",
-};
 
 const secondaryBtnStyle: React.CSSProperties = {
   display: "flex",
@@ -365,11 +346,3 @@ const secondaryBtnStyle: React.CSSProperties = {
   boxSizing: "border-box",
 };
 
-function highlightBtn(e: React.MouseEvent<HTMLButtonElement>) {
-  const el = e.currentTarget as HTMLElement;
-  el.style.background = "var(--color-accent-light)";
-}
-function unhighlightBtn(e: React.MouseEvent<HTMLButtonElement>) {
-  const el = e.currentTarget as HTMLElement;
-  el.style.background = "var(--color-accent)";
-}

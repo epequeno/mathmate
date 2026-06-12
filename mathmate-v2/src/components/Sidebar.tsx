@@ -4,6 +4,9 @@ import { useProjectStore } from "../stores/projectStore";
 import { useChatStore } from "../stores/chatStore";
 import type { MathProject, SessionHeader } from "../lib/types";
 import { Trash2, RotateCcw } from "lucide-react";
+import { cx } from "../lib/clsx";
+import styles from "./Sidebar.module.css";
+
 
 // ─── Relative time ────────────────────────────────
 
@@ -48,54 +51,22 @@ function ProjectMenu({
   }, [onClose]);
 
   return (
-    <div
-      ref={ref}
-      style={{
-        position: "absolute",
-        top: "calc(100% + 2px)",
-        right: 0,
-        zIndex: 100,
-        background: "var(--color-surface)",
-        border: "1px solid var(--color-border)",
-        borderRadius: 8,
-        boxShadow: "0 4px 16px rgba(0,0,0,0.3)",
-        minWidth: 148,
-        overflow: "hidden",
-      }}
-    >
+    <div ref={ref} className={styles.projectMenu}>
       <button
+        className={styles.menuItem}
         onClick={(e) => { e.stopPropagation(); onArchive(); onClose(); }}
-        style={menuItemStyle}
-        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--color-hover)"; }}
-        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
       >
         Archive project
       </button>
       <button
+        className={styles.menuItemDanger}
         onClick={(e) => { e.stopPropagation(); onDelete(); onClose(); }}
-        style={{ ...menuItemStyle, color: "var(--color-red)" }}
-        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(224,82,82,0.08)"; }}
-        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
       >
         Delete project…
       </button>
     </div>
   );
 }
-
-const menuItemStyle: React.CSSProperties = {
-  display: "block",
-  width: "100%",
-  padding: "9px 14px",
-  background: "transparent",
-  border: "none",
-  cursor: "pointer",
-  fontSize: 12,
-  color: "var(--color-text-secondary)",
-  fontFamily: "inherit",
-  textAlign: "left",
-  transition: "background 0.1s",
-};
 
 // ─── Session row ─────────────────────────────────
 
@@ -121,45 +92,25 @@ function SessionRow({
       onClick={onSelect}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        margin: "1px 8px",
-        borderRadius: 6,
-        padding: "7px 12px 7px 10px",
-        gap: 8,
-        cursor: "pointer",
-        background: isActive ? "var(--color-accent-selected)" : hovered ? "var(--color-hover)" : "transparent",
-        borderLeft: isActive ? "2px solid var(--color-accent-light)" : "2px solid transparent",
-        transition: "background 0.1s",
-      }}
+      className={cx(styles.sessionRow, isActive && styles.sessionRowActive)}
     >
       {/* Session icon */}
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0, opacity: isActive ? 0.8 : 0.4 }}>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className={styles.sessionIcon}>
         <path d="M1 2.5h10M1 5.5h7M1 8.5h8.5" stroke={isActive ? "var(--color-accent-light)" : "var(--color-text-secondary)"} strokeWidth="1.2" strokeLinecap="round"/>
       </svg>
 
       {/* Text */}
-      <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 1 }}>
+      <div className={styles.sessionText}>
         <span
-          style={{
-            fontSize: 13,
-            fontWeight: isActive ? 500 : 400,
-            color: isActive ? "var(--color-accent-light)" : isArchived ? "var(--color-text-tertiary)" : "var(--color-text-primary)",
-            fontStyle: isArchived ? "italic" : "normal",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
+          className={cx(
+            styles.sessionTitle,
+            isActive && styles.sessionTitleActive,
+            isArchived && styles.sessionTitleArchived,
+          )}
         >
           {session.title || "Untitled"}
         </span>
-        <span
-          style={{
-            fontSize: 11,
-            color: "var(--color-text-tertiary)",
-          }}
-        >
+        <span className={styles.sessionTime}>
           {relativeTime(session.updated_at)}
         </span>
       </div>
@@ -169,26 +120,24 @@ function SessionRow({
         <button
           onClick={(e) => { e.stopPropagation(); onDelete(); }}
           title="Delete session"
-          style={iconBtnStyle}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--color-red)"; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--color-text-tertiary)"; }}
+          className="btn-icon-danger"
         >
           <Trash2 size={11} />
         </button>
       )}
       {hovered && isArchived && (
-        <div style={{ display: "flex", gap: 2 }}>
+        <div className={styles.hoverActions}>
           <button
             onClick={(e) => { e.stopPropagation(); onArchive(); }}
             title="Restore session"
-            style={iconBtnStyle}
+            className="btn-icon"
           >
             <RotateCcw size={11} />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
             title="Delete permanently"
-            style={{ ...iconBtnStyle, color: "var(--color-red)" }}
+            className="btn-icon-danger"
           >
             <Trash2 size={11} />
           </button>
@@ -236,23 +185,16 @@ function ProjectSection({
   const [showArchivedSessions, setShowArchivedSessions] = useState(false);
 
   return (
-    <div style={{ marginBottom: 2 }}>
+    <div className={styles.projectSection}>
       {/* Project header row */}
       <div
         onClick={onToggle}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          padding: "6px 16px 6px 12px",
-          gap: 6,
-          cursor: "pointer",
-          position: "relative",
-        }}
+        className={styles.projectRow}
       >
         {/* Chevron */}
-        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0, transition: "transform 0.15s" }}>
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className={styles.projectChevron}>
           {isExpanded
             ? <path d="M2 3.5L5 6.5L8 3.5" stroke="var(--color-text-tertiary)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
             : <path d="M3.5 2L6.5 5L3.5 8" stroke="var(--color-text-tertiary)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -260,19 +202,7 @@ function ProjectSection({
         </svg>
 
         {/* Project name */}
-        <span
-          style={{
-            flex: 1,
-            fontSize: 12,
-            fontWeight: 600,
-            color: "var(--color-text-primary)",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-            letterSpacing: "0.03em",
-            textTransform: "uppercase",
-          }}
-        >
+        <span className={styles.projectName}>
           {project.name}
         </span>
 
@@ -280,16 +210,7 @@ function ProjectSection({
         <button
           onClick={(e) => { e.stopPropagation(); onNewSession(); }}
           title={`New session in ${project.name}`}
-          style={{
-            ...iconBtnStyle,
-            opacity: hovered || menuOpen ? 1 : 0,
-            transition: "opacity 0.1s",
-            background: hovered ? "var(--color-accent-subtle)" : "transparent",
-            color: "var(--color-accent-light)",
-            width: 20,
-            height: 20,
-            borderRadius: 5,
-          }}
+          className={cx(styles.newSessionBtn, !(hovered || menuOpen) && styles.newSessionBtnHidden)}
         >
           <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
             <path d="M5.5 1v9M1 5.5h9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
@@ -300,11 +221,7 @@ function ProjectSection({
         <button
           onClick={(e) => { e.stopPropagation(); setMenuOpen((v) => !v); }}
           title="Project options"
-          style={{
-            ...iconBtnStyle,
-            opacity: hovered || menuOpen ? 1 : 0,
-            transition: "opacity 0.1s",
-          }}
+          className={cx(styles.menuBtn, !(hovered || menuOpen) && styles.menuBtnHidden)}
         >
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
             <circle cx="6.5" cy="2.5" r="1" fill="var(--color-text-secondary)"/>
@@ -325,7 +242,7 @@ function ProjectSection({
 
       {/* Sessions list */}
       {isExpanded && (
-        <div>
+        <div className={styles.sessionsList}>
           {sessions.map((s) => (
             <SessionRow
               key={s.id}
@@ -343,17 +260,9 @@ function ProjectSection({
             <div>
               <div
                 onClick={() => setShowArchivedSessions((v) => !v)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 4,
-                  padding: "4px 12px 4px 22px",
-                  cursor: "pointer",
-                  fontSize: 11,
-                  color: "var(--color-text-tertiary)",
-                }}
+                className={styles.archiveToggle}
               >
-                <span style={{ fontSize: 8 }}>{showArchivedSessions ? "▼" : "▶"}</span>
+                <span className={styles.archiveToggleIcon}>{showArchivedSessions ? "▼" : "▶"}</span>
                 Archived ({archivedSessions.length})
               </div>
               {showArchivedSessions &&
@@ -370,8 +279,6 @@ function ProjectSection({
                 ))}
             </div>
           )}
-
-
         </div>
       )}
     </div>
@@ -402,59 +309,27 @@ function NewProjectForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ padding: "8px 12px" }}>
+    <form onSubmit={handleSubmit} className={styles.newProjectForm}>
       <input
         ref={inputRef}
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="Project name"
         onKeyDown={(e) => e.key === "Escape" && onCancel()}
-        style={{
-          width: "100%",
-          padding: "7px 10px",
-          border: "1px solid var(--color-accent-light)",
-          borderRadius: 7,
-          background: "var(--color-surface)",
-          color: "var(--color-text-primary)",
-          fontSize: 13,
-          fontFamily: "inherit",
-          outline: "none",
-          boxSizing: "border-box",
-          marginBottom: 6,
-        }}
+        className={styles.newProjectInput}
       />
-      <div style={{ display: "flex", gap: 6 }}>
+      <div className={styles.newProjectBtns}>
         <button
           type="submit"
           disabled={!name.trim() || loading}
-          style={{
-            flex: 1,
-            padding: "6px 0",
-            background: name.trim() ? "var(--color-accent)" : "var(--color-surface)",
-            color: name.trim() ? "#fff" : "var(--color-text-tertiary)",
-            border: "none",
-            borderRadius: 6,
-            cursor: name.trim() ? "pointer" : "default",
-            fontSize: 12,
-            fontWeight: 600,
-            fontFamily: "inherit",
-          }}
+          className={styles.btnCreate}
         >
           {loading ? "…" : "Create"}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          style={{
-            padding: "6px 10px",
-            background: "var(--color-surface)",
-            color: "var(--color-text-secondary)",
-            border: "none",
-            borderRadius: 6,
-            cursor: "pointer",
-            fontSize: 12,
-            fontFamily: "inherit",
-          }}
+          className={styles.btnCancel}
         >
           Cancel
         </button>
@@ -480,23 +355,15 @@ function ArchivedProjectRow({
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 6,
-        padding: "6px 16px 6px 12px",
-        fontSize: 12,
-        color: "var(--color-text-tertiary)",
-        fontStyle: "italic",
-      }}
+      className={styles.archivedRow}
     >
-      <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+      <span className={styles.archivedRowName}>
         {project.name}
       </span>
       {hovered && (
-        <div style={{ display: "flex", gap: 4 }}>
-          <button onClick={onRestore} title="Restore" style={iconBtnStyle}><RotateCcw size={11} /></button>
-          <button onClick={onDelete} title="Delete" style={{ ...iconBtnStyle, color: "var(--color-red)" }}><Trash2 size={11} /></button>
+        <div className={styles.archivedHoverActions}>
+          <button onClick={onRestore} title="Restore" className="btn-icon"><RotateCcw size={11} /></button>
+          <button onClick={onDelete} title="Delete" className="btn-icon-danger"><Trash2 size={11} /></button>
         </div>
       )}
     </div>
@@ -559,7 +426,6 @@ export default function Sidebar() {
   }, [projects]);
 
   const toggleProject = (id: string) => {
-    // Also set this project as current so new sessions land in it
     const project = projects.find((p) => p.id === id);
     if (project) setCurrentProject(project);
     setExpandedProjects((prev) => {
@@ -606,17 +472,16 @@ export default function Sidebar() {
   const isSessionManagerActive = location.pathname === "/sessions";
 
   return (
-    <div style={sidebarStyle}>
+    <div className={styles.sidebar}>
       {/* Header */}
-      <div style={headerStyle}>
-        <span style={titleStyle}>MathMate</span>
-  
+      <div className={styles.header}>
+        <span className={styles.title}>MathMate</span>
       </div>
 
-      <div style={{ height: 1, background: "var(--color-border)", flexShrink: 0 }} />
+      <div className={styles.divider} />
 
       {/* Scrollable content */}
-      <div style={{ flex: 1, overflow: "auto", padding: "8px 0", display: "flex", flexDirection: "column" }}>
+      <div className={styles.scrollArea}>
 
         {projects.map((project) => {
           const sessions = sessionList.filter((s) => s.project_id === project.id);
@@ -644,24 +509,13 @@ export default function Sidebar() {
 
         {/* Archived projects */}
         {archivedProjects.length > 0 && (
-          <div style={{ marginTop: 8 }}>
-            <div style={{ height: 1, background: "var(--color-border)", margin: "4px 12px 6px" }} />
+          <div className={styles.archivedSection}>
+            <div className={styles.divider} style={{ margin: "4px 12px 6px" }} />
             <div
               onClick={() => setShowArchivedProjects((v) => !v)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 5,
-                padding: "4px 12px",
-                cursor: "pointer",
-                fontSize: 10,
-                fontWeight: 600,
-                color: "var(--color-text-tertiary)",
-                textTransform: "uppercase",
-                letterSpacing: "0.06em",
-              }}
+              className={styles.archivedToggle}
             >
-              <span style={{ fontSize: 7 }}>{showArchivedProjects ? "▼" : "▶"}</span>
+              <span className={styles.archivedToggleIcon}>{showArchivedProjects ? "▼" : "▶"}</span>
               Archived ({archivedProjects.length})
             </div>
             {showArchivedProjects &&
@@ -680,7 +534,7 @@ export default function Sidebar() {
           </div>
         )}
 
-        <div style={{ flex: 1 }} />
+        <div className={styles.spacer} />
 
         {/* New project */}
         {showNewProjectForm ? (
@@ -690,28 +544,22 @@ export default function Sidebar() {
           />
         ) : (
           <div
-            style={newProjectBtnStyle}
+            className={styles.newProjectBtn}
             onClick={() => setShowNewProjectForm(true)}
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
-            <span style={{ fontSize: 13, fontWeight: 500, fontFamily: "inherit" }}>New Project</span>
+            <span className={styles.newProjectBtnText}>New Project</span>
           </div>
         )}
       </div>
 
-      <div style={{ padding: "8px 12px 12px", flexShrink: 0 }}>
-        <div style={{ height: 1, background: "var(--color-border)", marginBottom: 10 }} />
+      <div className={styles.settingsArea}>
+        <div className={styles.settingsDivider} />
         <button
           onClick={() => navigate("/sessions")}
-          style={{
-            ...settingsBtnStyle,
-            background: isSessionManagerActive ? "var(--color-accent-selected)" : "transparent",
-            color: isSessionManagerActive ? "var(--color-accent-light)" : "var(--color-text-secondary)",
-          }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--color-hover)"; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = isSessionManagerActive ? "var(--color-accent-selected)" : "transparent"; }}
+          className={cx(styles.settingsBtn, isSessionManagerActive && styles.settingsBtnActive)}
         >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <rect x="1" y="1" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.2"/>
@@ -723,9 +571,7 @@ export default function Sidebar() {
         </button>
         <button
           onClick={() => navigate("/settings")}
-          style={settingsBtnStyle}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--color-hover)"; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+          className={styles.settingsBtn}
         >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <circle cx="7" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.2"/>
@@ -737,74 +583,3 @@ export default function Sidebar() {
     </div>
   );
 }
-
-// ─── Styles ───────────────────────────────────────
-
-const sidebarStyle: React.CSSProperties = {
-  width: 240,
-  minWidth: 240,
-  background: "var(--color-bg-elevated)",
-  borderRight: "1px solid var(--color-border)",
-  display: "flex",
-  flexDirection: "column",
-  height: "100vh",
-};
-
-const headerStyle: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  padding: "20px 16px 12px",
-  flexShrink: 0,
-};
-
-const titleStyle: React.CSSProperties = {
-  flex: 1,
-  fontSize: 15,
-  fontWeight: 700,
-  color: "var(--color-text-primary)",
-  letterSpacing: "-0.02em",
-};
-
-const newProjectBtnStyle: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: 8,
-  margin: "12px 12px 0",
-  borderRadius: 8,
-  padding: "9px 12px",
-  background: "var(--color-accent)",
-  color: "#ffffff",
-  cursor: "pointer",
-  userSelect: "none",
-};
-
-const settingsBtnStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "7px 10px",
-  background: "transparent",
-  color: "var(--color-text-secondary)",
-  border: "none",
-  borderRadius: 7,
-  fontSize: 12,
-  cursor: "pointer",
-  textAlign: "left",
-  fontFamily: "inherit",
-  display: "flex",
-  alignItems: "center",
-  gap: 8,
-  transition: "background 0.1s",
-};
-
-const iconBtnStyle: React.CSSProperties = {
-  background: "none",
-  border: "none",
-  cursor: "pointer",
-  color: "var(--color-text-tertiary)",
-  padding: "2px 3px",
-  borderRadius: 4,
-  lineHeight: 1,
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  flexShrink: 0,
-};

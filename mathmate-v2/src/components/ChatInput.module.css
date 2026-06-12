@@ -1,0 +1,228 @@
+/* ─── ChatInput.module.css ─────────────────────── */
+
+.container {
+  border-top: 1px solid var(--color-border);
+  padding: 16px 20px;
+  background: var(--color-bg-elevated);
+  position: relative;
+}
+
+/* ─── Drag overlay ────────────────────────────── */
+
+.dragOverlay {
+  position: absolute;
+  inset: 0;
+  background: var(--color-accent-subtle);
+  border: 2px dashed var(--color-accent);
+  border-radius: 8px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-accent-light);
+  pointer-events: none;
+}
+
+/* ─── Slash command popup ─────────────────────── */
+
+.commandPopup {
+  position: absolute;
+  bottom: 100%;
+  left: 20px;
+  right: 20px;
+  margin-bottom: 4px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.commandPopupHeader {
+  padding: 8px 12px 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.commandItem {
+  padding: 8px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  transition: background 0.1s;
+}
+
+.commandItem:hover {
+  background: var(--color-hover);
+}
+
+.commandName {
+  font-weight: 600;
+  color: var(--color-accent-light);
+  margin-right: 8px;
+}
+
+.commandDesc {
+  color: var(--color-text-secondary);
+}
+
+.commandUsage {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+}
+
+/* ─── Image thumbnail strip ───────────────────── */
+
+.thumbnailStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.thumbnailWrap {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  overflow: visible;
+  flex-shrink: 0;
+}
+
+.thumbnailImg {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  display: block;
+}
+
+.thumbnailRemove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-text-secondary);
+  color: var(--color-bg-elevated);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0;
+}
+
+/* ─── Input pill (the rounded input container) ─── */
+
+.inputPill {
+  display: flex;
+  align-items: flex-end;
+  gap: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 4px 4px 4px 8px;
+}
+
+/* ─── Tool buttons in the input bar ────────────── */
+
+.toolBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-tertiary);
+  padding: 6px 6px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  transition: color 0.1s, background 0.1s;
+}
+
+.toolBtn:hover {
+  color: var(--color-text-primary);
+  background: var(--color-hover);
+}
+
+.toolBtnActive {
+  color: var(--color-accent-light);
+  background: var(--color-accent-subtle);
+}
+
+/* ─── Textarea ─────────────────────────────────── */
+
+.textarea {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  resize: none;
+  padding: 8px 6px;
+  min-height: 28px;
+  max-height: 200px;
+  line-height: 1.5;
+}
+
+/* ─── Send / Stop button ───────────────────────── */
+
+.sendBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  color: #fff;
+  flex-shrink: 0;
+  margin: 4px 4px 4px 0;
+  transition: background 0.15s;
+}
+
+.sendBtnActive {
+  background: var(--color-accent);
+  cursor: pointer;
+}
+
+.sendBtnInactive {
+  background: var(--color-border);
+  cursor: default;
+}
+
+.sendBtnStop {
+  background: var(--color-red);
+  cursor: pointer;
+}
+
+/* ─── Misc ─────────────────────────────────────── */
+
+.errorToast {
+  font-size: 11px;
+  color: var(--color-red);
+  margin-top: 6px;
+  text-align: center;
+}
+
+.disclaimer {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  margin-top: 8px;
+  text-align: center;
+}
