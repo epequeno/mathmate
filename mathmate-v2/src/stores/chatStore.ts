@@ -1,9 +1,12 @@
 import { create } from "zustand";
-import type { Message, MessageSegment, Session, SessionHeader, StreamChunk } from "../lib/types";
+import type { Message, MessageSegment, Session, SessionHeader } from "../lib/types";
 import { makeMessage, makeSegment, makeSessionHeader } from "../lib/types";
 import { buildPayload, buildToolPayload, streamChat, assembleToolCalls } from "../lib/providers";
-import type { AppError } from "../lib/error";
 import { toAppError, isRetryable, isCancelled } from "../lib/error";
+import type { AppError } from "../lib/error";
+import { runTurn } from "../lib/turn/orchestrator";
+import type { TurnInput, TurnDeps, TurnEvent } from "../lib/turn/types";
+import { buildSystemPrompt } from "../lib/turn/prompt";
 import { useConfigStore } from "./configStore";
 import { useProjectStore } from "./projectStore";
 import { executeCommand } from "./commandStore";
@@ -402,285 +405,136 @@ covered in the course.`;
     let attempt = 0;
     let lastError: AppError | null = null;
 
+    // Fetch tool definitions once (before retry loop).
+    let toolDefs: any[] = [];
+    try {
+      toolDefs = await ToolsApi.getDefinitions();
+    } catch (err) {
+      console.warn("[tools] Failed to load tool definitions:", err);
+    }
+
+    // ── Turn input (snapshot of world state) ────────────────────────
+    const turnInput: TurnInput = {
+      sessionId: sess.header.id,
+      messagesWithSystem,
+      model: selectedModel,
+      provider,
+      toolDefinitions: toolDefs,
+      memoryEnabled: get().memoryEnabled,
+      userInputText: inputText,
+      signal: abortController.signal,
+    };
+
+    // ── Turn deps (injected I/O, testable) ──────────────────────────
+    const deps: TurnDeps = {
+      streamChat,
+      appendMessage: async (sid, msg) => {
+        const updated = await Sessions.append(sid, msg);
+        set({ currentSession: updated });
+        return updated as any;
+      },
+      loadSession: async (sid) => {
+        const s = await Sessions.load(sid);
+        set({ currentSession: s });
+        return s as any;
+      },
+      executeTool: async (callId, toolName, args, projectId) => {
+        return await ToolsApi.execute(callId, toolName, args, projectId);
+      },
+      storeMemory: async (content, sid) => {
+        const now = new Date().toISOString();
+        await MemoryApi.storeWithSafety(
+          {
+            id: crypto.randomUUID(),
+            session_id: sid,
+            source_type: "chat",
+            unit_type: "question",
+            content,
+            score: 1.0,
+            created_at: now,
+            tags: ["auto", "question"],
+            provenance: sid,
+          },
+          "balanced",
+        );
+      },
+      buildPayload,
+      buildToolPayload,
+      assembleToolCalls,
+      makeMessage: makeMessage as any,
+      makeSegment: makeSegment as any,
+      uid: () => crypto.randomUUID(),
+      projectId: useProjectStore.getState().currentProject?.id,
+    };
+
+    // ── Retry loop ─────────────────────────────────────────────────
     while (attempt <= maxRetries) {
       try {
-        const payload = buildPayload(messagesWithSystem);
-
-        // ─── Multi-round tool loop (Phase 12B) ───────────
-        const MAX_TOOL_ROUNDS = 3;
-        const TOOL_TIMEOUT_MS = 8000;
-        const MAX_STREAMED_BYTES = 1_048_576; // 1 MB cap per accumulated string
-        let toolRound = 0;
-        let finalSession = sess;
-
-        // Fetch tool definitions from Rust
-        let toolDefs: any[] = [];
-        try {
-          toolDefs = await ToolsApi.getDefinitions();
-        } catch (err) {
-          console.warn("[tools] Failed to load tool definitions:", err);
-        }
-
-        // Build the conversation messages for the loop
-        let conversationMessages = [...payload];
-
-        while (toolRound <= MAX_TOOL_ROUNDS) {
-          let accumulatedText = "";
-          let accumulatedThinking = "";
-          let accumulatedSegments: MessageSegment[] = [];
-          const toolCallDeltas: { index: number; call_id_part?: string; tool_name_part?: string; arguments_part?: string }[] = [];
-
-          // Create a mutable content segment for streaming text
-          let contentSegmentId: string | null = null;
-          let thinkingSegmentId: string | null = null;
-
-          const updateSegments = () => {
-            const segs: MessageSegment[] = [];
-            if (accumulatedThinking) {
-              if (!thinkingSegmentId) thinkingSegmentId = crypto.randomUUID();
-              segs.push({
-                id: thinkingSegmentId,
-                ts: new Date().toISOString(),
-                type: "thinking",
-                content: accumulatedThinking,
+        for await (const event of runTurn(turnInput, deps)) {
+          switch (event.kind) {
+            case "status":
+              set({
+                streaming: event.streaming,
+                streamedText: event.text,
+                streamedThinking: event.thinking,
+                streamSegments: event.segments,
               });
-            }
-            if (accumulatedText) {
-              if (!contentSegmentId) contentSegmentId = crypto.randomUUID();
-              segs.push({
-                id: contentSegmentId,
-                ts: new Date().toISOString(),
-                type: "content",
-                text: accumulatedText,
+              break;
+            case "segments-changed":
+              set({ streamSegments: event.segments });
+              break;
+            case "memory-stored":
+              // Memory auto-stored; no UI change needed.
+              break;
+            case "tool-round-started":
+            case "tool-round-finished":
+              // Round lifecycle — no-op for now.
+              break;
+            case "turn-finished": {
+              // Turn success — finalize state.
+              const currentSess = await Sessions.load(sess.header.id);
+              set({
+                currentSession: currentSess,
+                streaming: false,
+                abortController: null,
+                streamedText: "",
+                streamedThinking: "",
+                streamSegments: [],
+                error: null,
+                retrievedMemories: [],
               });
+              get().loadSessions();
+              return;
             }
-            accumulatedSegments = segs;
-            set({ streamSegments: segs });
-          };
-
-          // Build payload with tools (if available and not first round with only text)
-          const streamPayload = toolDefs.length > 0
-            ? buildToolPayload(conversationMessages, toolDefs)
-            : { messages: conversationMessages };
-
-          for await (const chunk of streamChat(
-            streamPayload,
-            selectedModel,
-            provider,
-            abortController.signal
-          )) {
-            if (chunk.text) {
-              accumulatedText += chunk.text;
-              if (accumulatedText.length > MAX_STREAMED_BYTES) {
-                throw { kind: "server" as const, message: "Response exceeded 1 MB limit", status: 502 };
-              }
-              set({ streamedText: accumulatedText });
-              updateSegments();
-            }
-            if (chunk.thinking) {
-              accumulatedThinking += chunk.thinking;
-              if (accumulatedThinking.length > MAX_STREAMED_BYTES) {
-                throw { kind: "server" as const, message: "Thinking trace exceeded 1 MB limit", status: 502 };
-              }
-              set({ streamedThinking: accumulatedThinking });
-              updateSegments();
-            }
-            const incomingToolDeltas = chunk.tool_call_deltas ?? (chunk.tool_call_delta ? [chunk.tool_call_delta] : []);
-            if (incomingToolDeltas.length > 0) {
-              toolCallDeltas.push(...incomingToolDeltas);
-            }
-            if (chunk.done) break;
-          }
-
-          // Assemble fragmented tool calls into complete calls
-          const assembledCalls = assembleToolCalls(toolCallDeltas);
-
-          // If no tool calls, this is the final response — break the loop
-          if (assembledCalls.length === 0) {
-            const finalText = accumulatedText || "(no response)";
-            const assistantMsg = makeMessage("assistant", finalText);
-            assistantMsg.segments = accumulatedSegments;
-            if (accumulatedThinking) {
-              assistantMsg.thinking = accumulatedThinking;
-            }
-
-            const updated = await Sessions.append(sess.header.id, assistantMsg);
-            finalSession = updated;
-            break;
-          }
-
-          // ─── Tool calls present: execute them ───────────
-          toolRound++;
-
-          // Add tool call segments to the timeline
-          for (const tc of assembledCalls) {
-            accumulatedSegments.push(
-              makeSegment({
-                type: "tool_call",
-                tool_name: tc.tool_name,
-                arguments: tc.arguments,
-                call_id: tc.call_id,
-                status: "running",
-              })
-            );
-          }
-          set({ streamSegments: [...accumulatedSegments] });
-
-          // Save the assistant message with tool call segments
-          const assistantWithTools = makeMessage("assistant", accumulatedText || "");
-          assistantWithTools.segments = [...accumulatedSegments];
-          if (accumulatedThinking) {
-            assistantWithTools.thinking = accumulatedThinking;
-          }
-          const updatedAfterTools = await Sessions.append(sess.header.id, assistantWithTools);
-          finalSession = updatedAfterTools;
-
-          // Execute each tool call
-          const toolResults: { call_id: string; result: unknown; is_error: boolean }[] = [];
-          const currentProjectId = useProjectStore.getState().currentProject?.id;
-
-          for (const tc of assembledCalls) {
-            try {
-              // Add timeout via AbortController-like pattern
-              const resultPromise = ToolsApi.execute(
-                tc.call_id,
-                tc.tool_name,
-                tc.arguments,
-                currentProjectId,
-              );
-
-              const timeoutPromise = new Promise<never>((_, reject) =>
-                setTimeout(() => reject(new Error("Tool execution timed out")), TOOL_TIMEOUT_MS)
-              );
-
-              const result = await Promise.race([resultPromise, timeoutPromise]);
-              toolResults.push(result);
-
-              // Add tool result segment to timeline
-              accumulatedSegments.push(
-                makeSegment({
-                  type: "tool_result",
-                  call_id: tc.call_id,
-                  result: result.result,
-                  is_error: result.is_error,
-                })
-              );
-            } catch (err: any) {
-              // Tool execution failed (timeout or error)
-              toolResults.push({
-                call_id: tc.call_id,
-                result: { error: err.message || "Tool execution failed" },
-                is_error: true,
+            case "turn-aborted": {
+              // User cancelled — save partial message.
+              const partialText = event.partialText || "(cancelled)";
+              const partialMsg = makeMessage("assistant", partialText);
+              try {
+                const updated = await Sessions.append(sess.header.id, partialMsg);
+                set({ currentSession: updated });
+              } catch {}
+              set({
+                streaming: false,
+                abortController: null,
+                streamedText: "",
+                streamedThinking: "",
+                streamSegments: [],
+                error: null,
               });
-              accumulatedSegments.push(
-                makeSegment({
-                  type: "tool_result",
-                  call_id: tc.call_id,
-                  result: { error: err.message || "Tool execution failed" },
-                  is_error: true,
-                })
-              );
+              return;
+            }
+            case "turn-error": {
+              lastError = event.error;
+              throw event.error; // Break to outer catch for retry logic.
             }
           }
-
-          // Mark all tool_call segments as done/error based on results
-          const resultMap = new Map(toolResults.map((r) => [r.call_id, r]));
-          for (const seg of accumulatedSegments) {
-            if (seg.type === "tool_call") {
-              const r = resultMap.get((seg as any).call_id);
-              (seg as any).status = r ? (r.is_error ? "error" : "completed") : "completed";
-            }
-          }
-
-          // Update segments with completed tool results
-          set({ streamSegments: [...accumulatedSegments] });
-
-          // Save tool result messages with tool_call_id persisted on the message
-          for (const tr of toolResults) {
-            const toolResultMsg = makeMessage("tool" as any, JSON.stringify(tr.result));
-            toolResultMsg.tool_call_id = tr.call_id;
-            await Sessions.append(sess.header.id, toolResultMsg);
-          }
-          finalSession = await Sessions.load(sess.header.id);
-
-          // Build conversation messages for the next round
-          // Include assistant tool_calls + tool results
-          conversationMessages = [
-            ...conversationMessages,
-            {
-              role: "assistant",
-              content: "",
-              tool_calls: assembledCalls.map((tc) => ({
-                id: tc.call_id,
-                type: "function",
-                function: {
-                  name: tc.tool_name,
-                  arguments: JSON.stringify(tc.arguments),
-                },
-              })),
-            } as any,
-            ...toolResults.map((tr) => ({
-              role: "tool" as const,
-              content: JSON.stringify(tr.result),
-              tool_call_id: tr.call_id,
-            })),
-          ];
-
-          // Reset streaming state for the next round
-          set({ streamedText: "", streamedThinking: "" });
-
-          // Continue the loop for the next round
         }
-        if (toolRound > MAX_TOOL_ROUNDS) {
-          const assistantMsg = makeMessage(
-            "assistant",
-            `Stopped after ${MAX_TOOL_ROUNDS} tool rounds without a final answer.`
-          );
-          const updated = await Sessions.append(sess.header.id, assistantMsg);
-          finalSession = updated;
-        }
-        const memEnabled = get().memoryEnabled;
-        set({
-          currentSession: finalSession,
-          streaming: false,
-          abortController: null,
-          streamedText: "",
-          streamedThinking: "",
-          streamSegments: [],
-          error: null,
-          retrievedMemories: [], // Clear retrieval indicator after response
-        });
-
-        // ─── Auto-store session memories ────────
-        if (memEnabled) {
-          // Store the user's question as a memory for future retrieval
-          try {
-            const now = new Date().toISOString();
-            await MemoryApi.storeWithSafety(
-              {
-                id: crypto.randomUUID(),
-                session_id: sess.header.id,
-                source_type: "chat",
-                unit_type: "question",
-                content: inputText.substring(0, 500),
-                score: 1.0,
-                created_at: now,
-                tags: ["auto", "question"],
-                provenance: sess.header.id,
-              },
-              "balanced"
-            );
-          } catch (err) {
-            console.error("[synapse] Failed to store session memory:", err);
-          }
-        }
-
-        get().loadSessions();
-        return; // Success — exit the retry loop
+        return; // Generator completed normally (should not reach here).
       } catch (err: any) {
         lastError = toAppError(err);
 
-        // User-initiated cancellation — never retry
+        // User-initiated cancellation — never retry.
         if (abortController.signal.aborted || err.name === "AbortError") {
           const partialText = get().streamedText || "(cancelled)";
           const partialMsg = makeMessage("assistant", partialText);
@@ -699,27 +553,26 @@ covered in the course.`;
           return;
         }
 
-        // Convert to AppError for typed retry/cancel decisions
         const appErr = toAppError(err);
 
-        // Don't retry cancellations
+        // Don't retry cancellations.
         if (isCancelled(appErr)) {
           set({ streaming: false, abortController: null, streamSegments: [] });
           return;
         }
 
-        // Only retry on retryable errors
+        // Only retry on retryable errors.
         const retryable = isRetryable(appErr);
 
         if (attempt < maxRetries && retryable) {
-          const delay = Math.pow(2, attempt) * 1000; // 2s, then 4s
+          const delay = Math.pow(2, attempt) * 1000;
           set({ error: { kind: "internal", message: `Retrying... (attempt ${attempt + 1}/${maxRetries})` } });
           await new Promise((r) => setTimeout(r, delay));
           attempt++;
           continue;
         }
 
-        // Set error on store for the ErrorBanner
+        // Not retryable or out of retries — surface the error.
         set({ error: lastError, streaming: false, abortController: null, streamSegments: [] });
 
         const errMsg = makeMessage("assistant", `**Error**: ${lastError?.message ?? lastError}`);

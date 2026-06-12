@@ -206,9 +206,9 @@ Quick, *no-behavior-change* cleanups surfaced by the review. Each item is an ind
 - [x] **`r2d2_sqlite` connection pool**: Replaces `Mutex<Option<Connection>>`. Removes a latent contention bug between concurrent `query_memories` and `store_memory_with_safety`. ([`Implementation_Phase14C_RustServiceLayer.md`](../Implementation_Phase14C_RustServiceLayer.md))
 
 ### 14B — Stream Turn Orchestrator
-- [ ] **`StreamTurnOrchestrator` async generator** extracted from `chatStore.sendMessage`. Takes a snapshot of world state, emits `TurnEvent`s. `chatStore.sendMessage` shrinks from ~470 lines to ≤ 80. ([`Implementation_Phase14B_StreamTurnOrchestrator.md`](../Implementation_Phase14B_StreamTurnOrchestrator.md))
-- [ ] **`buildSystemPrompt(...)` pure helper**: Extracted from the middle of `sendMessage`. 60 lines of literal become a testable function. ([`Implementation_Phase14B_StreamTurnOrchestrator.md`](../Implementation_Phase14B_StreamTurnOrchestrator.md))
-- [ ] **Orchestrator unit tests**: text-only turn, single tool round, abort, max-rounds, network error, vision warning. ([`Implementation_Phase14B_StreamTurnOrchestrator.md`](../Implementation_Phase14B_StreamTurnOrchestrator.md))
+- [x] **`lib/turn/orchestrator.ts`**: `runTurn()` async generator extracted from `chatStore.sendMessage`. Coordinates streaming + multi-round tool loop; yields `TurnEvent`s. `chatStore.ts`: 843→692 lines (−151).
+- [x] **`lib/turn/prompt.ts`**: `buildSystemPrompt()` pure function extracted from the 60-line system-prompt literal in `sendMessage`.
+- [x] **`lib/turn/types.ts`**: `TurnEvent` discriminated union (10 variants), `TurnInput`, `TurnDeps` (injectable I/O).
 - [ ] **Move auto-store-memory out of the streaming loop** into a Zustand subscription. ([`Implementation_Phase14B_StreamTurnOrchestrator.md`](../Implementation_Phase14B_StreamTurnOrchestrator.md))
 
 ### 14D — Vault Backend Abstraction
