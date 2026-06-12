@@ -11,23 +11,29 @@
 // See: Implementation_Phase14C_RustServiceLayer.md
 
 pub mod path;
+pub mod session;
 
 use crate::error::AppError;
 use path::PathScope;
+use session::SessionService;
 
 /// Central service container managed by Tauri as state.
 pub struct AppServices {
     pub path: PathScope,
+    pub sessions: SessionService,
 }
 
 impl AppServices {
     /// Initialise all services and return the container.
-    ///
-    /// Currently only PathScope is extracted; other services follow in
-    /// subsequent sub-steps (C.6.c–C.6.j).
     pub fn init() -> Result<Self, AppError> {
+        // Base directory is ~/.mathmate
+        let base_dir = dirs_next::home_dir()
+            .ok_or_else(|| AppError::internal("Could not find home directory"))?
+            .join(".mathmate");
+
         Ok(Self {
             path: PathScope::new(),
+            sessions: SessionService::new(base_dir),
         })
     }
 }

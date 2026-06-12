@@ -116,6 +116,7 @@ pub struct InternalPayload {
 
 impl AppError {
     /// Return a stable string identifier (matching the JSON `kind` tag).
+    #[allow(dead_code)] // used in tests, will be used by service layer
     pub fn kind(&self) -> &'static str {
         match self {
             Self::Auth(_) => "auth",
@@ -133,6 +134,7 @@ impl AppError {
     }
 
     /// Whether the caller can reasonably retry this operation.
+    #[allow(dead_code)] // used in tests, will be used by orchestrator
     pub fn is_retryable(&self) -> bool {
         matches!(
             self,
@@ -170,6 +172,7 @@ impl std::error::Error for AppError {}
 
 // ─── Constructors (convenience) ──────────────────────────────────────
 
+#[allow(dead_code)] // constructors used as needed by service modules
 impl AppError {
     pub fn auth(msg: impl Into<String>) -> Self {
         Self::Auth(AuthPayload { message: msg.into() })

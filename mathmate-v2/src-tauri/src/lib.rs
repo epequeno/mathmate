@@ -21,7 +21,7 @@ use config::{AppConfig, AppConfigModels};
 use textbook_catalog::LicenseInfo;
 use memory::MemoryItem;
 use project::MathProject;
-use session::{Message, Session, SessionHeader};
+use crate::services::session::{Message, Session, SessionHeader};
 use std::sync::Mutex;
 use tauri::State;
 use crate::services::AppServices;
@@ -117,82 +117,103 @@ fn get_config_path() -> String {
 // ─── Session Commands ───────────────────────────
 
 #[tauri::command]
-fn load_session(session_id: String) -> Result<Session, String> {
-    session::load_session(&session_id)
+fn load_session(
+    svc: State<AppServices>,
+    session_id: String,
+) -> Result<Session, String> {
+    svc.sessions.load(&session_id).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn list_sessions(project_id: Option<String>) -> Result<Vec<SessionHeader>, String> {
-    session::list_sessions(project_id.as_deref())
+fn list_sessions(
+    svc: State<AppServices>,
+    project_id: Option<String>,
+) -> Result<Vec<SessionHeader>, String> {
+    svc.sessions.list(project_id.as_deref()).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 fn create_session(
+    svc: State<AppServices>,
     header: SessionHeader,
     initial_message: Option<Message>,
 ) -> Result<Session, String> {
-    session::create_session(header, initial_message)
+    svc.sessions.create(header, initial_message).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn append_message(session_id: String, message: Message) -> Result<Session, String> {
-    session::append_message(&session_id, &message)
+fn append_message(
+    svc: State<AppServices>,
+    session_id: String,
+    message: Message,
+) -> Result<Session, String> {
+    svc.sessions.append(&session_id, &message).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn rename_session(session_id: String, title: String) -> Result<Session, String> {
-    session::rename_session(&session_id, &title)
+fn rename_session(
+    svc: State<AppServices>,
+    session_id: String,
+    title: String,
+) -> Result<Session, String> {
+    svc.sessions.rename(&session_id, &title).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn delete_session(session_id: String) -> Result<(), String> {
-    session::delete_session(&session_id)
+fn delete_session(
+    svc: State<AppServices>,
+    session_id: String,
+) -> Result<(), String> {
+    svc.sessions.delete(&session_id).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn archive_session(session_id: String) -> Result<(), String> {
-    session::archive_session(&session_id)
+fn archive_session(
+    svc: State<AppServices>,
+    session_id: String,
+) -> Result<(), String> {
+    svc.sessions.archive(&session_id).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn unarchive_session(session_id: String) -> Result<(), String> {
-    session::unarchive_session(&session_id)
+fn unarchive_session(
+    svc: State<AppServices>,
+    session_id: String,
+) -> Result<(), String> {
+    svc.sessions.unarchive(&session_id).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn list_archived_sessions(project_id: Option<String>) -> Result<Vec<SessionHeader>, String> {
-    session::list_archived_sessions(project_id.as_deref())
+fn list_archived_sessions(
+    svc: State<AppServices>,
+    project_id: Option<String>,
+) -> Result<Vec<SessionHeader>, String> {
+    svc.sessions.list_archived(project_id.as_deref()).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn purge_session(session_id: String) -> Result<(), String> {
-    session::purge_session(&session_id)
+fn purge_session(
+    svc: State<AppServices>,
+    session_id: String,
+) -> Result<(), String> {
+    svc.sessions.purge(&session_id).map_err(|e| e.to_string())
 }
 
 // ─── Last Session Commands ──────────────────────
 
 #[tauri::command]
-fn save_last_session(session_id: String) -> Result<(), String> {
-    let dir = session::session_base_dir();
-    std::fs::create_dir_all(&dir).map_err(|e| format!("Failed to create dir: {}", e))?;
-    let path = dir.join("last_session.json");
-    let data = serde_json::json!({ "session_id": session_id });
-    std::fs::write(&path, serde_json::to_string_pretty(&data).unwrap())
-        .map_err(|e| format!("Failed to write last session: {}", e))
+fn save_last_session(
+    svc: State<AppServices>,
+    session_id: String,
+) -> Result<(), String> {
+    svc.sessions.save_last(&session_id).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn get_last_session() -> Result<Option<String>, String> {
-    let dir = session::session_base_dir();
-    let path = dir.join("last_session.json");
-    if !path.exists() {
-        return Ok(None);
-    }
-    let data = std::fs::read_to_string(&path)
-        .map_err(|e| format!("Failed to read last session: {}", e))?;
-    let parsed: serde_json::Value =
-        serde_json::from_str(&data).map_err(|e| format!("Failed to parse last session: {}", e))?;
-    Ok(parsed["session_id"].as_str().map(|s| s.to_string()))
+fn get_last_session(
+    svc: State<AppServices>,
+) -> Result<Option<String>, String> {
+    svc.sessions.get_last().map_err(|e| e.to_string())
 }
 
 // ─── File Utility Commands ──────────────────────
