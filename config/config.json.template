@@ -1,0 +1,35 @@
+{
+  "latex": {
+    "engine": "katex",
+    "katexOptions": {
+      "displayMode": true,
+      "throwOnError": false,
+      "errorColor": "#cc0000"
+    },
+    "mathjaxOptions": {
+      "tex": {
+        "inlineMath": [["$", "$"], ["\\(", "\\)"]],
+        "displayMath": [["$$", "$$"], ["\\[", "\\]"]]
+      }
+    }
+  },
+  "obsidian": {
+    "vaults": [
+      {
+        "name": "MyVault",
+        "path": "/Users/steven/Documents/Obsidian/MyVault"
+      }
+    ],
+    "studyLogPath": "MathTutor/Logs"
+  },
+  "chat": {
+    "systemPrompt": "You are a helpful math tutor. Explain concepts clearly, show step-by-step solutions, and use proper LaTeX formatting for mathematical expressions.",
+    "maxTokens": 4096,
+    "temperature": 0.7
+  },
+  "ui": {
+    "fontSize": 14,
+    "showLatexPreview": true,
+    "autoScroll": true
+  }
+}

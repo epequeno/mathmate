@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; background: #fff; }
+  #plot { width: 100%; min-height: 260px; height: 100%; }
+  .widget-error {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 240px; font-family: -apple-system, sans-serif;
+    color: #888; font-size: 13px; text-align: center; padding: 20px;
+  }
+</style>
+<script src="function-plot.min.js"></script>
+</head>
+<body>
+<div id="plot"></div>
+
+<script>
+(function () {
+  function reportHeight() {
+    if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.resizeWidget) {
+      var plotEl = document.getElementById('plot');
+      var h = plotEl ? plotEl.getBoundingClientRect().height : 260;
+      h = Math.max(220, Math.min(520, h));
+      window.webkit.messageHandlers.resizeWidget.postMessage(String(h));
+    }
+  }
+
+  function renderFallback(config, title) {
+    var plot = document.getElementById('plot');
+    var expr = config.expression || config.fn || 'f(x)';
+    plot.innerHTML = '<div class="widget-error">' +
+      '<div><strong>' + (title || 'Function Plot') + '</strong><br/>' +
+      'Expression: <code>' + expr + '</code></div>' +
+      '</div>';
+    reportHeight();
+  }
+
+  window.loadWidget = function (spec) {
+    var plot = document.getElementById('plot');
+    plot.innerHTML = '';
+
+    var config = (spec && spec.config && spec.config.raw) ? spec.config.raw : {};
+    var title = spec && spec.title ? spec.title : 'Function Plot';
+
+    if (typeof functionPlot !== 'function') {
+      renderFallback(config, title + ' (library missing)');
+      return;
+    }
+
+    try {
+      var fn = config.expression || config.fn || 'x';
+      functionPlot({
+        target: '#plot',
+        width: Number(config.width || 640),
+        height: Number(config.height || 320),
+        grid: true,
+        data: [{ fn: fn }]
+      });
+      reportHeight();
+    } catch (e) {
+      renderFallback(config, title + ' (render error)');
+    }
+  };
+
+  window.addEventListener('load', reportHeight);
+  if (window.ResizeObserver) {
+    new ResizeObserver(reportHeight).observe(document.body);
+  }
+})();
+</script>
+</body>
+</html>

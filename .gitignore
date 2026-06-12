@@ -1,0 +1,43 @@
+# Environment variables (API keys, secrets)
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+release/
+
+# Tauri / Rust build artifacts
+src-tauri/target/
+
+# Swift / Xcode build artifacts
+.build/
+DerivedData/
+xcuserdata/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Screenshots and transient assets
+screenshot.png
+
+# Swift Package Manager
+.swiftpm/
+
+# Miscellaneous
+.netrc

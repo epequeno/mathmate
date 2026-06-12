@@ -1,0 +1,17 @@
+{
+  "identifier": "default",
+  "description": "Default capabilities for MathMate",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:window:default",
+    "core:window:allow-close",
+    "core:window:allow-set-size",
+    "core:window:allow-set-title",
+    "dialog:default",
+    "fs:default",
+    "core:event:default",
+    "core:event:allow-listen",
+    "core:event:allow-emit"
+  ]
+}

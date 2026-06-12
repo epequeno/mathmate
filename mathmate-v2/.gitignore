@@ -1,0 +1,29 @@
+# Environment variables (API keys, secrets)
+.env
+.env.local
+.env.*.local
+
+# Tauri build artifacts
+src-tauri/target/
+
+# Node modules
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Build output
+dist/
+build/
+release/

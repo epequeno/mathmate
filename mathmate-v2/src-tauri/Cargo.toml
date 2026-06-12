@@ -1,0 +1,33 @@
+[package]
+name = "mathmate"
+version = "2.0.0"
+description = "MathMate v2 — AI math tutoring app"
+authors = ["MathMate"]
+edition = "2021"
+
+[lib]
+name = "mathmate_lib"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+tauri-plugin-shell = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+dirs-next = "2"
+chrono = "0.4"
+regex = "1"
+sha2 = "0.10"
+base64 = "0.22"
+walkdir = "2"
+rusqlite = { version = "0.31", features = ["bundled"] }
+dotenvy = "0.15"
+reqwest = { version = "0.12", features = ["blocking", "json"] }
+meval = "0.2"
+lopdf = "0.34"
+indexmap = "2"

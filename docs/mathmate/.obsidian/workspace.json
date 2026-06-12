@@ -1,0 +1,220 @@
+{
+  "main": {
+    "id": "8d9fa915d6cee274",
+    "type": "split",
+    "children": [
+      {
+        "id": "d0720d70c80ecb6e",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "7b3704e2813a8a08",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Home.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Home"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "21c8b17b5a2f223e",
+    "type": "split",
+    "children": [
+      {
+        "id": "be5900baf36ef96d",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "577d709fba57a07f",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "5abdafa6038200bf",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "a6374693e2eb7ee8",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "339a52eb2af0053f",
+    "type": "split",
+    "children": [
+      {
+        "id": "f4474d8803ba478c",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "783c519516ab006d",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Home.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for Home"
+            }
+          },
+          {
+            "id": "cd6dbecec2f41a27",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Home.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from Home"
+            }
+          },
+          {
+            "id": "35bd4f44bf6bea0a",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "c1c6e1376907c477",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "20324c4afeef57d4",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Home.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of Home"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "7b3704e2813a8a08",
+  "lastOpenFiles": [
+    "03_Dev_Logs/2026-05-22.md",
+    "Implementation_AgentMemory_PhaseD_SafetySanitization.md",
+    "Implementation_AgentMemory_PhaseC_TieringTrust.md",
+    "Implementation_ScrollPerformance.md",
+    "03_Dev_Logs/2026-05-21.md",
+    "00_Project_Management/Final_Status_Summary.md",
+    "Implementation_SynapseIntegration.md",
+    "Implementation_FreeTextbooks.md",
+    "Implementation_PDFProcessing.md",
+    "ManagedAPI_Vendor_DueDiligence_Matrix.md",
+    "Implementation_ManagedAPI_BYOK.md",
+    "Implementation_UserDefinedSkills.md",
+    "Implementation_NativeTeachingPrimitives.md",
+    "Implementation_LaTeXElementPalette.md",
+    "Implementation_InlineLaTeXComposer.md",
+    "03_Dev_Logs/2026-05-20.md",
+    "Implementation_LearnerLevels.md",
+    "Implementation_Collaboration_Classroom.md",
+    "Implementation_AgentMemory_PhaseB.md",
+    "Implementation_SessionBranching_Execution.md",
+    "Implementation_QuizSlashCommand.md",
+    "Implementation_VaultSearchRetrieval.md",
+    "Implementation_MathQualityTools.md",
+    "models.json",
+    "Implementation_SessionBranching.md",
+    "01_Design_Specs/Design_Style_Guide.md",
+    "01_Design_Specs/UI_Redesign_Implementation_Plan.md",
+    "03_Dev_Logs",
+    "02_Research",
+    "01_Design_Specs",
+    "00_Project_Management"
+  ]
+}

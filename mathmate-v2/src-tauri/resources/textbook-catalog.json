@@ -1,0 +1,520 @@
+{
+  "catalog_version": "1.0",
+  "updated_at": "2026-06-09",
+  "description": "Curated collection of free, open-access mathematics textbooks. List compiled from the AIM Open Textbook Initiative, Open Textbook Library, PreTeXt Gallery, and community recommendations.",
+  "entries": [
+    {
+      "id": "openstax-college-algebra",
+      "title": "College Algebra 2e",
+      "authors": ["Jay Abramson"],
+      "edition": "2nd",
+      "subject": "algebra",
+      "publisher": "OpenStax / Rice University",
+      "license": "cc-by",
+      "description": "Comprehensive college algebra textbook covering linear equations, functions, polynomials, exponential and logarithmic functions, trigonometry, and analytic geometry. Part of the OpenStax free textbook series.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://openstax.org/details/books/college-algebra-2e",
+        "epub": null,
+        "html": "https://openstax.org/books/college-algebra-2e/pages/1-introduction-to-prerequisites"
+      },
+      "file_size_hint": null,
+      "page_count_hint": null,
+      "recommended_for": ["College Algebra", "Precalculus"]
+    },
+    {
+      "id": "openstax-calculus-v1",
+      "title": "Calculus Volume 1",
+      "authors": ["Edwin Herman", "Gilbert Strang"],
+      "edition": null,
+      "subject": "calculus",
+      "publisher": "OpenStax / Rice University",
+      "license": "cc-by-nc-sa",
+      "description": "First of three volumes covering single-variable calculus: limits, derivatives, integration, and applications. Written in the accessible OpenStax style with worked examples and exercises.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://openstax.org/details/books/calculus-volume-1",
+        "epub": null,
+        "html": "https://openstax.org/books/calculus-volume-1/pages/1-introduction"
+      },
+      "file_size_hint": null,
+      "page_count_hint": null,
+      "recommended_for": ["Calculus I"]
+    },
+    {
+      "id": "openstax-calculus-v2",
+      "title": "Calculus Volume 2",
+      "authors": ["Edwin Herman", "Gilbert Strang"],
+      "edition": null,
+      "subject": "calculus",
+      "publisher": "OpenStax / Rice University",
+      "license": "cc-by-nc-sa",
+      "description": "Second of three volumes covering integration techniques, parametric equations, polar coordinates, sequences, series, and differential equations.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://openstax.org/details/books/calculus-volume-2",
+        "epub": null,
+        "html": "https://openstax.org/books/calculus-volume-2/pages/1-introduction"
+      },
+      "file_size_hint": null,
+      "page_count_hint": null,
+      "recommended_for": ["Calculus II"]
+    },
+    {
+      "id": "openstax-calculus-v3",
+      "title": "Calculus Volume 3",
+      "authors": ["Edwin Herman", "Gilbert Strang"],
+      "edition": null,
+      "subject": "calculus",
+      "publisher": "OpenStax / Rice University",
+      "license": "cc-by-nc-sa",
+      "description": "Third of three volumes covering parametric equations, polar coordinates, vectors, functions of several variables, multiple integration, and second-order differential equations.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://openstax.org/details/books/calculus-volume-3",
+        "epub": null,
+        "html": "https://openstax.org/books/calculus-volume-3/pages/1-introduction"
+      },
+      "file_size_hint": null,
+      "page_count_hint": null,
+      "recommended_for": ["Calculus III", "Multivariable Calculus"]
+    },
+    {
+      "id": "active-calculus-single",
+      "title": "Active Calculus — Single Variable",
+      "authors": ["Matthew Boelkins"],
+      "edition": "2023",
+      "subject": "calculus",
+      "publisher": "Grand Valley State University",
+      "license": "cc-by-sa",
+      "description": "A modern, active-learning approach to single-variable calculus. Free PDF download and interactive HTML version. Designed for an active learning classroom with engaging exercises.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://activecalculus.org/single/book.pdf",
+        "epub": null,
+        "html": "https://activecalculus.org/single/frontmatter.html"
+      },
+      "file_size_hint": null,
+      "page_count_hint": null,
+      "recommended_for": ["Calculus I", "Calculus II"]
+    },
+    {
+      "id": "active-calculus-multi",
+      "title": "Active Calculus — Multivariable",
+      "authors": ["Matthew Boelkins", "Steven Schlicker", "David Austin"],
+      "edition": "2023",
+      "subject": "calculus",
+      "publisher": "Grand Valley State University",
+      "license": "cc-by-sa",
+      "description": "Continuation of Active Calculus to multivariable functions. Covers vectors, partial derivatives, multiple integrals, and vector calculus.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://activecalculus.org/multi/book.pdf",
+        "epub": null,
+        "html": "https://activecalculus.org/multi/frontmatter.html"
+      },
+      "file_size_hint": null,
+      "page_count_hint": null,
+      "recommended_for": ["Calculus III", "Multivariable Calculus"]
+    },
+    {
+      "id": "clp-calculus-1",
+      "title": "CLP-1 Differential Calculus",
+      "authors": ["Joel Feldman", "Andrew Rechnitzer", "Elyse Yeager"],
+      "edition": null,
+      "subject": "calculus",
+      "publisher": "University of British Columbia",
+      "license": "cc-by-nc-sa",
+      "description": "First of three CLP calculus textbooks from UBC. Covers limits, derivatives, and applications. Free PDF and HTML versions available.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://www.math.ubc.ca/~CLP/CLP1/clp_1_dc.pdf",
+        "epub": null,
+        "html": "https://www.math.ubc.ca/~CLP/CLP1/"
+      },
+      "file_size_hint": null,
+      "page_count_hint": null,
+      "recommended_for": ["Calculus I"]
+    },
+    {
+      "id": "clp-calculus-2",
+      "title": "CLP-2 Integral Calculus",
+      "authors": ["Joel Feldman", "Andrew Rechnitzer", "Elyse Yeager"],
+      "edition": null,
+      "subject": "calculus",
+      "publisher": "University of British Columbia",
+      "license": "cc-by-nc-sa",
+      "description": "Second CLP calculus textbook. Covers integration techniques, applications, sequences, and series.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://www.math.ubc.ca/~CLP/CLP2/clp_2_ic.pdf",
+        "epub": null,
+        "html": "https://www.math.ubc.ca/~CLP/CLP2/"
+      },
+      "file_size_hint": null,
+      "page_count_hint": null,
+      "recommended_for": ["Calculus II"]
+    },
+    {
+      "id": "clp-calculus-3",
+      "title": "CLP-3 Multivariable Calculus",
+      "authors": ["Joel Feldman", "Andrew Rechnitzer", "Elyse Yeager"],
+      "edition": null,
+      "subject": "calculus",
+      "publisher": "University of British Columbia",
+      "license": "cc-by-nc-sa",
+      "description": "Third CLP calculus textbook. Covers vectors, partial derivatives, multiple integrals, and vector calculus.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://www.math.ubc.ca/~CLP/CLP3/clp_3_mc.pdf",
+        "epub": null,
+        "html": "https://www.math.ubc.ca/~CLP/CLP3/"
+      },
+      "file_size_hint": null,
+      "page_count_hint": null,
+      "recommended_for": ["Calculus III", "Multivariable Calculus"]
+    },
+    {
+      "id": "strang-calculus",
+      "title": "Calculus",
+      "authors": ["Gilbert Strang"],
+      "edition": null,
+      "subject": "calculus",
+      "publisher": "MIT / Wellesley-Cambridge Press",
+      "license": "cc-by-nc-sa",
+      "description": "Gilbert Strang's classic calculus textbook, available freely via MIT OpenCourseWare. Covers single variable and multivariable calculus with rich applications.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://ocw.mit.edu/ans7870/resources/Strang/Edited/Calculus/Calculus.pdf",
+        "epub": null,
+        "html": "https://ocw.mit.edu/courses/res-18-001-calculus-online-textbook-spring-2005/"
+      },
+      "file_size_hint": null,
+      "page_count_hint": null,
+      "recommended_for": ["Calculus I", "Calculus II", "Calculus III"]
+    },
+    {
+      "id": "linear-algebra-done-right",
+      "title": "Linear Algebra Done Right",
+      "authors": ["Sheldon Axler"],
+      "edition": "4th",
+      "subject": "linear-algebra",
+      "publisher": "Springer (open access)",
+      "license": "cc-by-sa",
+      "description": "The definitive open linear algebra textbook. Takes a modern, proof-based approach emphasizing linear maps over determinants. Widely adopted at top universities. Free PDF from the author's website.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://linear.axler.net/LADR4e.pdf",
+        "epub": null,
+        "html": "https://linear.axler.net/"
+      },
+      "file_size_hint": null,
+      "page_count_hint": null,
+      "recommended_for": ["Linear Algebra"]
+    },
+    {
+      "id": "strang-linear-algebra",
+      "title": "Introduction to Linear Algebra",
+      "authors": ["Gilbert Strang"],
+      "edition": "5th",
+      "subject": "linear-algebra",
+      "publisher": "Wellesley-Cambridge Press / MIT",
+      "license": "free-online",
+      "description": "Gilbert Strang's renowned linear algebra textbook, companion to his MIT OCW lecture series. Applications-focused approach with clear geometric intuition.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://math.mit.edu/~gs/linearalgebra/",
+        "epub": null,
+        "html": "https://math.mit.edu/~gs/linearalgebra/"
+      },
+      "file_size_hint": null,
+      "page_count_hint": null,
+      "recommended_for": ["Linear Algebra"]
+    },
+    {
+      "id": "beezer-linear-algebra",
+      "title": "A First Course in Linear Algebra",
+      "authors": ["Robert A. Beezer"],
+      "edition": null,
+      "subject": "linear-algebra",
+      "publisher": "University of Puget Sound",
+      "license": "gpl",
+      "description": "A well-organized linear algebra textbook with carefully constructed examples, full exercise sets with solutions, and ~90 Sage examples integrated throughout. Available in PDF and HTML.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://linear.ups.edu/download/fcla-3.50-tablet.pdf",
+        "epub": null,
+        "html": "https://linear.ups.edu/"
+      },
+      "file_size_hint": null,
+      "page_count_hint": null,
+      "recommended_for": ["Linear Algebra"]
+    },
+    {
+      "id": "hefferon-linear-algebra",
+      "title": "Linear Algebra",
+      "authors": ["Jim Hefferon"],
+      "edition": null,
+      "subject": "linear-algebra",
+      "publisher": "St. Michael's College",
+      "license": "cc-by-sa",
+      "description": "A free, open-source linear algebra textbook covering Gauss's Method, vector spaces, linear maps, determinants, eigenvalues, and eigenvectors. Extensive exercise sets with worked answers.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://hefferon.net/linearalgebra/linearalgebra.pdf",
+        "epub": null,
+        "html": "https://hefferon.net/linearalgebra/"
+      },
+      "file_size_hint": null,
+      "page_count_hint": null,
+      "recommended_for": ["Linear Algebra"]
+    },
+    {
+      "id": "notes-on-diffy-qs",
+      "title": "Notes on Diffy Qs: Differential Equations for Engineers",
+      "authors": ["Jiří Lebl"],
+      "edition": null,
+      "subject": "differential-equations",
+      "publisher": "Oklahoma State University",
+      "license": "cc-by-nc-sa",
+      "description": "A free, open-source textbook for a one- or two-semester first course in ordinary differential equations. Used at many universities with video lecture versions available.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://www.jirka.org/diffyqs/diffyqs.pdf",
+        "epub": null,
+        "html": "https://www.jirka.org/diffyqs/"
+      },
+      "file_size_hint": null,
+      "page_count_hint": null,
+      "recommended_for": ["Differential Equations"]
+    },
+    {
+      "id": "trench-diff-eq",
+      "title": "Elementary Differential Equations",
+      "authors": ["William F. Trench"],
+      "edition": null,
+      "subject": "differential-equations",
+      "publisher": "Trinity University",
+      "license": "cc-by-nc-sa",
+      "description": "A classic first course in ordinary differential equations, previously published by Brooks/Cole. Free PDF and LaTeX source available. Also available with boundary value problems.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://digitalcommons.trinity.edu/cgi/viewcontent.cgi?article=1008&context=mono",
+        "epub": null,
+        "html": "https://digitalcommons.trinity.edu/mono/8/"
+      },
+      "file_size_hint": null,
+      "page_count_hint": null,
+      "recommended_for": ["Differential Equations"]
+    },
+    {
+      "id": "discrete-math-open-intro",
+      "title": "Discrete Mathematics: An Open Introduction",
+      "authors": ["Oscar Levin"],
+      "edition": "4th",
+      "subject": "discrete-math",
+      "publisher": "University of Northern Colorado",
+      "license": "cc-by-sa",
+      "description": "A free, open-source textbook for a first or second year undergraduate discrete math course. Features an interactive ebook version. Covers logic, set theory, combinatorics, graph theory, and more.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://discrete.openmathbooks.org/pdfs/dmoi4.pdf",
+        "epub": null,
+        "html": "https://discrete.openmathbooks.org/dmoi4.html"
+      },
+      "file_size_hint": null,
+      "page_count_hint": null,
+      "recommended_for": ["Discrete Mathematics", "Combinatorics"]
+    },
+    {
+      "id": "book-of-proof",
+      "title": "Book of Proof",
+      "authors": ["Richard Hammack"],
+      "edition": "3rd",
+      "subject": "other",
+      "publisher": "Virginia Commonwealth University",
+      "license": "cc-by-nd",
+      "description": "An introduction to the standard methods of proving mathematical theorems. Extremely popular for transition-to-proof courses. Covers logic, sets, induction, relations, functions, cardinality, and more.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://richardhammack.github.io/BookOfProof/BookOfProof.pdf",
+        "epub": null,
+        "html": "https://richardhammack.github.io/BookOfProof/"
+      },
+      "file_size_hint": null,
+      "page_count_hint": null,
+      "recommended_for": ["Introduction to Proofs", "Mathematical Reasoning"]
+    },
+    {
+      "id": "openintro-stats",
+      "title": "OpenIntro Statistics",
+      "authors": ["David M. Diez", "Christopher D. Barr", "Mine Çetinkaya-Rundel"],
+      "edition": "4th",
+      "subject": "statistics",
+      "publisher": "OpenIntro",
+      "license": "cc-by-sa",
+      "description": "A traditional introduction to statistics at the college level. Covers data collection, exploratory data analysis, probability, inference, and regression. Free PDF download.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://www.openintro.org/book/os/",
+        "epub": null,
+        "html": "https://www.openintro.org/book/os/"
+      },
+      "file_size_hint": null,
+      "page_count_hint": null,
+      "recommended_for": ["Statistics"]
+    },
+    {
+      "id": "islr",
+      "title": "An Introduction to Statistical Learning (ISLR)",
+      "authors": ["Gareth James", "Daniela Witten", "Trevor Hastie", "Robert Tibshirani"],
+      "edition": "2nd",
+      "subject": "statistics",
+      "publisher": "Springer (open access)",
+      "license": "other",
+      "description": "The definitive introduction to statistical learning and machine learning, with applications in R. Covers linear regression, classification, resampling, tree-based methods, SVM, deep learning, and more. Free PDF from authors.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://www.statlearning.com/",
+        "epub": null,
+        "html": "https://www.statlearning.com/"
+      },
+      "file_size_hint": null,
+      "page_count_hint": null,
+      "recommended_for": ["Statistical Learning", "Machine Learning", "Data Science"]
+    },
+    {
+      "id": "grinstead-probability",
+      "title": "Introduction to Probability",
+      "authors": ["Charles M. Grinstead", "J. Laurie Snell"],
+      "edition": "2nd",
+      "subject": "probability",
+      "publisher": "American Mathematical Society",
+      "license": "gpl",
+      "description": "A well-established probability textbook covering combinatorial probability, conditional probability, random variables, distributions, limit theorems, and Markov chains.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://math.dartmouth.edu/~prob/prob/prob.pdf",
+        "epub": null,
+        "html": "https://math.dartmouth.edu/~prob/prob/prob.html"
+      },
+      "file_size_hint": null,
+      "page_count_hint": null,
+      "recommended_for": ["Probability"]
+    },
+    {
+      "id": "judson-abstract-algebra",
+      "title": "Abstract Algebra: Theory and Applications",
+      "authors": ["Thomas W. Judson"],
+      "edition": null,
+      "subject": "other",
+      "publisher": "Stephen F. Austin State University",
+      "license": "cc-by-sa",
+      "description": "The gold standard open abstract algebra textbook. Covers groups, rings, fields, and Galois theory. Includes Sage integration throughout. Used at many universities nationwide.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://abstract.ups.edu/download/aata-20241230.pdf",
+        "epub": null,
+        "html": "https://abstract.ups.edu/"
+      },
+      "file_size_hint": null,
+      "page_count_hint": null,
+      "recommended_for": ["Abstract Algebra"]
+    },
+    {
+      "id": "lebl-real-analysis",
+      "title": "Basic Analysis: Introduction to Real Analysis",
+      "authors": ["Jiří Lebl"],
+      "edition": null,
+      "subject": "other",
+      "publisher": "Oklahoma State University",
+      "license": "cc-by-nc-sa",
+      "description": "A free undergraduate real analysis textbook covering the real numbers, sequences, continuity, differentiation, integration, sequences of functions, and metric spaces. Well-organized and readable.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://www.jirka.org/ra/realanal.pdf",
+        "epub": null,
+        "html": "https://www.jirka.org/ra/"
+      },
+      "file_size_hint": null,
+      "page_count_hint": null,
+      "recommended_for": ["Real Analysis"]
+    },
+    {
+      "id": "axler-measure",
+      "title": "Measure, Integration & Real Analysis",
+      "authors": ["Sheldon Axler"],
+      "edition": null,
+      "subject": "other",
+      "publisher": "Springer (open access)",
+      "license": "other",
+      "description": "A graduate-level real analysis textbook published via Springer's Open Access program. Covers measure theory, Lebesgue integration, Banach and Hilbert spaces, and more. Reader-friendly style.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://measure.axler.net/MIRA.pdf",
+        "epub": null,
+        "html": "https://measure.axler.net/"
+      },
+      "file_size_hint": null,
+      "page_count_hint": null,
+      "recommended_for": ["Real Analysis", "Measure Theory"]
+    },
+    {
+      "id": "complex-analysis-beck",
+      "title": "A First Course in Complex Analysis",
+      "authors": ["Matthias Beck", "Gerald Marchesi", "Dennis Pixton", "Lucas Sabalka"],
+      "edition": null,
+      "subject": "other",
+      "publisher": "San Francisco State University / Binghamton University",
+      "license": "cc-by-sa",
+      "description": "A one-semester undergraduate complex analysis textbook. Covers complex numbers, analytic functions, integration, series, residues, and conformal maps.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://matthbeck.github.io/complex.html",
+        "epub": null,
+        "html": "https://matthbeck.github.io/complex.html"
+      },
+      "file_size_hint": null,
+      "page_count_hint": null,
+      "recommended_for": ["Complex Analysis"]
+    },
+    {
+      "id": "math-for-ml",
+      "title": "Mathematics for Machine Learning",
+      "authors": ["Marc Peter Deisenroth", "A. Aldo Faisal", "Cheng Soon Ong"],
+      "edition": null,
+      "subject": "other",
+      "publisher": "Cambridge University Press (open access)",
+      "license": "cc-by-nc-sa",
+      "description": "Comprehensive introduction to the mathematical foundations of machine learning. Covers linear algebra, analytic geometry, matrix decompositions, vector calculus, probability, and optimization.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://mml-book.github.io/book/mml-book.pdf",
+        "epub": null,
+        "html": "https://mml-book.github.io/"
+      },
+      "file_size_hint": null,
+      "page_count_hint": null,
+      "recommended_for": ["Machine Learning", "Data Science"]
+    },
+    {
+      "id": "understanding-linear-algebra",
+      "title": "Understanding Linear Algebra",
+      "authors": ["David Austin"],
+      "edition": null,
+      "subject": "linear-algebra",
+      "publisher": "Grand Valley State University",
+      "license": "cc-by",
+      "description": "A first course in linear algebra emphasizing geometric intuition and conceptual understanding. Built with PreTeXt, with an interactive HTML version and a clean, example-driven exposition. Covers vectors, matrices, linear transformations, eigenvalues, and orthogonality.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://understandinglinearalgebra.org/ula.pdf",
+        "epub": null,
+        "html": "https://understandinglinearalgebra.org/"
+      },
+      "file_size_hint": null,
+      "page_count_hint": null,
+      "recommended_for": ["Linear Algebra"]
+    }
+  ]
+}

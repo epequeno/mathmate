@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <radialGradient id="bgGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"  stop-color="#7C4FD4" stop-opacity="0.38"/>
+      <stop offset="45%" stop-color="#7C4FD4" stop-opacity="0.12"/>
+      <stop offset="72%" stop-color="#7C4FD4" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="piGlow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="18" result="blur"/>
+      <feComposite in="blur" in2="SourceGraphic" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Dark slate background with rounded corners -->
+  <rect x="0" y="0" width="1024" height="1024" rx="230" ry="230" fill="#1B1929"/>
+
+  <!-- Amethyst radial glow -->
+  <rect x="0" y="0" width="1024" height="1024" rx="230" ry="230" fill="url(#bgGlow)"/>
+
+  <!-- Pi glyph — glow bloom layer -->
+  <text
+    x="512" y="690"
+    text-anchor="middle"
+    font-family="STIX Two Math"
+    font-size="660"
+    fill="#7C4FD4"
+    opacity="0.55"
+    filter="url(#piGlow)"
+  >π</text>
+
+  <!-- Pi glyph — crisp foreground -->
+  <text
+    x="512" y="690"
+    text-anchor="middle"
+    font-family="STIX Two Math"
+    font-size="660"
+    fill="#C4B0F5"
+  >π</text>
+</svg>
