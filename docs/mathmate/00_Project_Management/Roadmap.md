@@ -191,10 +191,10 @@ Quick, *no-behavior-change* cleanups surfaced by the review. Each item is an ind
 - [x] **Rust `AppError` enum** in `src-tauri/src/error.rs`: 11 variants with `#[serde(tag = "kind")]`, `is_retryable()`, `From` impls for `io::Error`, `rusqlite::Error`, `serde_json::Error`. 9 tests. (14E.0)
 - [x] **TS `AppError` union** in `src/lib/error.ts`: 12 variants (`auth`..`unknown`), `toAppError(err: unknown)`, `isRetryable`, `isAuth`, `isCancelled`, `errorFromStatus(status, msg, opts?)`. 24 tests. (14E.0)
 - [x] **Map `StreamError` → `AppError`**: `providers.ts` now throws typed `AppError` objects from every error path via `errorFromStatus()`. Internal `StreamError` instances (abort reasons) are converted before re-throw. `chatStore.ts` retry logic uses `isRetryable(appErr)` instead of `err instanceof StreamError`. (14E.0)
-- [ ] **`<ErrorBanner>` component** with kind-specific icons and actions (Retry for `network`/`rate_limit`/`server`/`unavailable`, "Switch key" for `auth`, Dismiss for the rest). ([`Implementation_Phase14E_UnifiedErrorModel.md`](../Implementation_Phase14E_UnifiedErrorModel.md))
-- [ ] **Migrate Rust commands to return `Result<T, AppError>`** (replace `Result<T, String>`). (14E.1, deferred to after 14C service extraction)
+- [x] **`<ErrorBanner>` component** with kind-specific icons and actions (Retry for `network`/`rate_limit`/`server`/`unavailable`, Dismiss for the rest). ([`Implementation_Phase14E_UnifiedErrorModel.md`](../Implementation_Phase14E_UnifiedErrorModel.md))
+- [x] **All Rust commands return `Result<T, AppError>`** (zero `map_err(|e| e.to_string())` boilerplate). (14E.1)
 - [ ] **Fix `session.append_message` data-loss risk**: Add `fsync` to `append_message`; coordinate in-memory and on-disk updates. ([`Implementation_Phase14E_UnifiedErrorModel.md`](../Implementation_Phase14E_UnifiedErrorModel.md))
-- [ ] **Migrate stores to typed errors**: Replace `error: string | null` with `error: AppError | null` in all stores. (14E.1)
+- [x] **chatStore + configStore + vaultStore**: error fields use `AppError`; catch blocks use `toAppError(err).message`. (14E.1)
 
 ### 14C — Rust Service Layer
 - [x] **`services/path.rs` with centralized `PathScope::guard`**: Replaces 4 inline reimplementations in `lib.rs`. `guard(raw_path, project_id, check_extension) -> Result<PathBuf, AppError>` + `guard_soft` for two-step `open_path` flow + `open_with_system` co-located + `build_allowed_roots` moved from lib.rs. 7 tests.
