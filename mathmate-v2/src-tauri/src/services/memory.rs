@@ -27,6 +27,7 @@ pub use crate::memory::{MemoryItem, SafetyMode, ScanResult, ScanResultKind};
 // ─── MemoryService ───────────────────────────────────────────────────
 
 pub struct MemoryService {
+    #[allow(dead_code)]
     db_path: PathBuf,
     pool: Pool<SqliteConnectionManager>,
 }
