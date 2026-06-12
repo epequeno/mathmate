@@ -2,6 +2,8 @@ import { create } from "zustand";
 import type { MathProject } from "../lib/types";
 
 import { Projects } from "../lib/api";
+import { SynapseBackend } from "../lib/vault";
+import { useVaultStore } from "./vaultStore";
 
 interface SynapseStatus {
   running: boolean;
@@ -135,13 +137,21 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     if (prev?.vault_path) {
       Projects.stopSynapse().catch(() => {});
       set({ synapseStatus: { running: false, vault_path: null, tool_count: 0 } });
+      // Clear vault backend
+      useVaultStore.getState().setBackend(null);
     }
 
     set({ currentProject: project });
 
-    // Auto-start Synapse when switching to a project with a vault
+    // Construct the appropriate vault backend
     if (project?.vault_path) {
+      // Always prefer Synapse for vault-enabled projects.
+      // LegacyBackend is used when Synapse is not available.
+      const backend = new SynapseBackend();
+      useVaultStore.getState().setBackend(backend);
       get().startSynapse();
+    } else {
+      useVaultStore.getState().setBackend(null);
     }
   },
 
@@ -171,8 +181,11 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     try {
       const status = await Projects.synapseStatus();
       set({ synapseStatus: status });
+      // Notify vault store so the SynapseBackend reflects actual state.
+      useVaultStore.getState().notifySynapseRunning(status.running);
     } catch {
       set({ synapseStatus: { running: false, vault_path: null, tool_count: 0 } });
+      useVaultStore.getState().notifySynapseRunning(false);
     }
   },
 }));
