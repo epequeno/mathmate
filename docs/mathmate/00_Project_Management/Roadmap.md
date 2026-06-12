@@ -213,16 +213,16 @@ Quick, *no-behavior-change* cleanups surfaced by the review. Each item is an ind
 - [x] **Move auto-store-memory out of the streaming loop** into a Zustand subscription. ([`Implementation_Phase14B_StreamTurnOrchestrator.md`](../Implementation_Phase14B_StreamTurnOrchestrator.md))
 
 ### 14D — Vault Backend Abstraction
-- [ ] **`VaultBackend` strategy interface**: `list`, `read`, `write`, `create`, `delete`, `search`, `backlinks`, `vaultInfo`, `healthCheck`. Replaces 9 inlined `if (synapseRunning) ... else ...` branches. ([`Implementation_Phase14D_VaultBackend.md`](../Implementation_Phase14D_VaultBackend.md))
-- [ ] **`SynapseBackend` and `LegacyBackend` implementations**: Each with its own response normalizer. ([`Implementation_Phase14D_VaultBackend.md`](../Implementation_Phase14D_VaultBackend.md))
-- [ ] **Shared `normalize*.ts` test fixtures**: Single place where Synapse's `{ path, title, snippet? }` becomes the frontend's `{ path, title, modifiedAt?, sizeBytes? }`. ([`Implementation_Phase14D_VaultBackend.md`](../Implementation_Phase14D_VaultBackend.md))
-- [ ] **`projectStore.setCurrentProject` constructs the backend**: The Synapse/legacy decision lives in exactly one place. ([`Implementation_Phase14D_VaultBackend.md`](../Implementation_Phase14D_VaultBackend.md))
+- [x] **`VaultBackend` strategy interface**: `list`, `read`, `write`, `create`, `delete`, `search`, `backlinks`, `vaultInfo`, `healthCheck`. Replaces 9 inlined `if (synapseRunning) ... else ...` branches. ([`Implementation_Phase14D_VaultBackend.md`](../Implementation_Phase14D_VaultBackend.md))
+- [x] **`SynapseBackend` and `LegacyBackend` implementations**: Each with its own response normalizer. ([`Implementation_Phase14D_VaultBackend.md`](../Implementation_Phase14D_VaultBackend.md))
+- [x] **Shared `normalize*.ts` test fixtures**: Single place where Synapse's `{ path, title, snippet? }` becomes the frontend's `{ path, title, modifiedAt?, sizeBytes? }`. ([`Implementation_Phase14D_VaultBackend.md`](../Implementation_Phase14D_VaultBackend.md))
+- [x] **`projectStore.setCurrentProject` constructs the backend**: The Synapse/legacy decision lives in exactly one place. ([`Implementation_Phase14D_VaultBackend.md`](../Implementation_Phase14D_VaultBackend.md))
 
 ### 14H — TS↔Rust Type Alignment via Codegen (long-term)
-- [ ] **Add `ts-rs` dev-dependency**: Generate `src/lib/types-generated/*.ts` from `#[derive(TS)]` annotations on Rust types. ([`Implementation_Phase14H_TsRustTypeAlignment.md`](../Implementation_Phase14H_TsRustTypeAlignment.md))
-- [ ] **Annotate all wire types**: `Session`, `Message`, `MessageSegment`, `ContentPart`, `SessionHeader`, `ProviderConfig`, `AppConfig`, `MemoryItem`, `ScanResult`, `SafetyMode`, `ToolDefinition`, `ToolCall`, `ToolResult`, `ModelCatalog`, `TextbookMetadata`, etc. ([`Implementation_Phase14H_TsRustTypeAlignment.md`](../Implementation_Phase14H_TsRustTypeAlignment.md))
-- [ ] **CI `git diff` check** fails the build if generated files are out of date. ([`Implementation_Phase14H_TsRustTypeAlignment.md`](../Implementation_Phase14H_TsRustTypeAlignment.md))
-- [ ] **Remove duplicate `MemoryItem` from `src/lib/memorySafety.ts:79`**: Re-export the generated one. ([`Implementation_Phase14H_TsRustTypeAlignment.md`](../Implementation_Phase14H_TsRustTypeAlignment.md))
+- [x] **Add `ts-rs` dev-dependency**: Generate `src/lib/types-generated/*.ts` from `#[derive(TS)]` annotations on Rust types. ([`Implementation_Phase14H_TsRustTypeAlignment.md`](../Implementation_Phase14H_TsRustTypeAlignment.md))
+- [x] **Annotate all wire types**: `Session`, `Message`, `MessageSegment`, `ContentPart`, `SessionHeader`, `ProviderConfig`, `AppConfig`, `MemoryItem`, `ScanResult`, `SafetyMode`, `ToolDefinition`, `ToolCall`, `ToolResult`, `ModelCatalog`, `TextbookMetadata`, etc. ([`Implementation_Phase14H_TsRustTypeAlignment.md`](../Implementation_Phase14H_TsRustTypeAlignment.md))
+- [x] **CI `git diff` check** fails the build if generated files are out of date. ([`Implementation_Phase14H_TsRustTypeAlignment.md`](../Implementation_Phase14H_TsRustTypeAlignment.md))
+- [x] **Remove duplicate `MemoryItem` from `src/lib/memorySafety.ts:79`**: Re-export the generated one. ([`Implementation_Phase14H_TsRustTypeAlignment.md`](../Implementation_Phase14H_TsRustTypeAlignment.md))
 
 ---
 
