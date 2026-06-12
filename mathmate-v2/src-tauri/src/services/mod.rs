@@ -10,15 +10,18 @@
 //
 // See: Implementation_Phase14C_RustServiceLayer.md
 
+pub mod memory;
 pub mod path;
 pub mod session;
 
 use crate::error::AppError;
+use memory::MemoryService;
 use path::PathScope;
 use session::SessionService;
 
 /// Central service container managed by Tauri as state.
 pub struct AppServices {
+    pub memory: MemoryService,
     pub path: PathScope,
     pub sessions: SessionService,
 }
@@ -32,6 +35,7 @@ impl AppServices {
             .join(".mathmate");
 
         Ok(Self {
+            memory: MemoryService::new(base_dir.clone()),
             path: PathScope::new(),
             sessions: SessionService::new(base_dir),
         })

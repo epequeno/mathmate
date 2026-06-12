@@ -19,33 +19,20 @@ mod wrapup;
 
 use config::{AppConfig, AppConfigModels};
 use textbook_catalog::LicenseInfo;
-use memory::MemoryItem;
 use project::MathProject;
 use crate::services::session::{Message, Session, SessionHeader};
-use std::sync::Mutex;
 use tauri::State;
 use crate::services::AppServices;
 
-// ─── App State ──────────────────────────────────
+// ─── App State (legacy `db` moved to services::memory::MemoryService) ──
 
 pub struct AppState {
     pub models_config: Mutex<Option<AppConfigModels>>,
     pub app_config: Mutex<Option<AppConfig>>,
-    pub db: Mutex<Option<rusqlite::Connection>>,
     pub mcp_client: Mutex<Option<mcp_client::McpClient>>,
 }
 
-// (build_allowed_roots has moved to services::path::build_allowed_roots)
-
-impl AppState {
-    fn get_db(&self) -> Result<std::sync::MutexGuard<'_, Option<rusqlite::Connection>>, String> {
-        let mut guard = self.db.lock().map_err(|e| e.to_string())?;
-        if guard.is_none() {
-            *guard = Some(memory::open_db()?);
-        }
-        Ok(guard)
-    }
-}
+use std::sync::Mutex;
 
 // ─── Environment Variable Commands ──────────────
 
@@ -457,53 +444,58 @@ fn evict_session_images(session_id: String) -> Result<(), String> {
 // ─── Memory Commands ────────────────────────────
 
 #[tauri::command]
-fn store_memory(state: State<AppState>, memory: MemoryItem) -> Result<(), String> {
-    let db_guard = state.get_db()?;
-    let conn = db_guard.as_ref().ok_or("Database not initialized")?;
-    memory::store_memory(conn, &memory)
+fn store_memory(
+    svc: State<AppServices>,
+    memory: crate::services::memory::MemoryItem,
+) -> Result<(), String> {
+    svc.memory.store(&memory).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 fn store_memory_with_safety(
-    state: State<AppState>,
-    memory: MemoryItem,
-    mode: memory::SafetyMode,
-) -> Result<memory::ScanResult, String> {
-    let db_guard = state.get_db()?;
-    let conn = db_guard.as_ref().ok_or("Database not initialized")?;
-    memory::store_memory_with_safety(conn, &memory, &mode)
+    svc: State<AppServices>,
+    memory: crate::services::memory::MemoryItem,
+    mode: crate::services::memory::SafetyMode,
+) -> Result<crate::services::memory::ScanResult, String> {
+    svc.memory
+        .store_with_safety(&memory, &mode)
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 fn query_memories(
-    state: State<AppState>,
+    svc: State<AppServices>,
     query: String,
     limit: usize,
-) -> Result<Vec<MemoryItem>, String> {
-    let db_guard = state.get_db()?;
-    let conn = db_guard.as_ref().ok_or("Database not initialized")?;
-    memory::query_memories(conn, &query, limit)
+) -> Result<Vec<crate::services::memory::MemoryItem>, String> {
+    svc.memory.query(&query, limit).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn forget_memory(state: State<AppState>, memory_id: String) -> Result<(), String> {
-    let db_guard = state.get_db()?;
-    let conn = db_guard.as_ref().ok_or("Database not initialized")?;
-    memory::forget_memory(conn, &memory_id)
+fn forget_memory(
+    svc: State<AppServices>,
+    memory_id: String,
+) -> Result<(), String> {
+    svc.memory.forget(&memory_id).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn get_profile(state: State<AppState>, key: String) -> Result<Option<String>, String> {
-    let db_guard = state.get_db()?;
-    let conn = db_guard.as_ref().ok_or("Database not initialized")?;
-    memory::get_profile(conn, &key)
+fn get_profile(
+    svc: State<AppServices>,
+    key: String,
+) -> Result<Option<String>, String> {
+    svc.memory.get_profile(&key).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn set_profile(state: State<AppState>, key: String, value: String) -> Result<(), String> {
-    let db_guard = state.get_db()?;
-    let conn = db_guard.as_ref().ok_or("Database not initialized")?;
-    memory::set_profile(conn, &key, &value)
+fn set_profile(
+    svc: State<AppServices>,
+    key: String,
+    value: String,
+) -> Result<(), String> {
+    svc.memory
+        .set_profile(&key, &value)
+        .map_err(|e| e.to_string())
 }
 
 // ─── Wrap-Up Commands ───────────────────────────
@@ -842,7 +834,6 @@ pub fn run() {
         .manage(AppState {
             models_config: Mutex::new(None),
             app_config: Mutex::new(None),
-            db: Mutex::new(None),
             mcp_client: Mutex::new(None),
         })
         .manage(services::AppServices::init().expect("Failed to init AppServices"))

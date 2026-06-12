@@ -61,13 +61,18 @@ fn db_path() -> PathBuf {
     p
 }
 
-/// Open the database and ensure schema exists.
-pub fn open_db() -> Result<Connection, String> {
-    let path = db_path();
-    let conn = Connection::open(&path).map_err(|e| format!("Failed to open memory.db: {}", e))?;
+/// Open the database at a specific path and ensure schema exists.
+pub fn open_db_at(path: &PathBuf) -> Result<Connection, String> {
+    let conn = Connection::open(path).map_err(|e| format!("Failed to open memory.db: {}", e))?;
     init_schema(&conn)?;
     run_idempotent_migrations(&conn)?;
     Ok(conn)
+}
+
+/// Open the database at the default ~/.mathmate/memory.db path.
+#[allow(dead_code)] // kept for backward compat; MemoryService uses open_db_at
+pub fn open_db() -> Result<Connection, String> {
+    open_db_at(&db_path())
 }
 
 fn init_schema(conn: &Connection) -> Result<(), String> {
