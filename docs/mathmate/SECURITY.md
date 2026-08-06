@@ -54,10 +54,10 @@ We aim to acknowledge reports within 48 hours and ship a fix within 7 days for c
 
 ## Related Security Plans
 
-- [No `eval`/`new Function` on Model Output](Implementation_Security_NoEvalOnModelOutput.md) — ✅ Completed
-- [OS Keychain for API Keys](Implementation_Security_KeychainKeyStorage.md) — Deferred
-- [Path Scoping for `read_file_as_base64`](Implementation_Security_PathScopeGuard.md) — ✅ Completed
-- [Path Scoping for `open_path`](Implementation_Security_PathScopeGuard.md) — ✅ Completed
-- [Sanitizer URL Allowlist](Implementation_Security_SanitizerHardening.md) — ✅ Completed
-- [Memory → Prompt Isolation](Implementation_Security_MemoryPromptIsolation.md) — ✅ Completed
-- [Study-Log Path Containment](Implementation_Security_StudyLogPathContainment.md) — ✅ Completed
+- [No `eval`/`new Function` on Model Output](archive/Implementation_Security_NoEvalOnModelOutput.md) — ✅ Completed
+- [OS Keychain for API Keys](archive/Implementation_Security_KeychainKeyStorage.md) — Deferred
+- [Path Scoping for `read_file_as_base64`](archive/Implementation_Security_PathScopeGuard.md) — ✅ Completed
+- [Path Scoping for `open_path`](archive/Implementation_Security_PathScopeGuard.md) — ✅ Completed
+- [Sanitizer URL Allowlist](archive/Implementation_SanitizerHardening.md) — ✅ Completed
+- [Memory → Prompt Isolation](archive/Implementation_Security_MemoryPromptIsolation.md) — ✅ Completed
+- [Study-Log Path Containment](archive/Implementation_Security_StudyLogPathContainment.md) — ✅ Completed

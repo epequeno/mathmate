@@ -772,7 +772,7 @@ All notable changes to MathMate are tracked here.
 
 ### Planning
 - **Visualization Intent Compiler (Phase 9)**: Added full implementation plan and roadmap entry for inverting the model-as-JSON-engineer architecture to model-as-director. The new `visualize(description, pedagogical_goal, type_hint)` tool lets models describe visualizations in natural language; MathMate's Intent Compiler builds validated native primitive specs internally. Includes MCP server design for ecosystem access. Phase 9 sub-phases: 9A (Intent Compiler + `visualize` tool), 9B (MCP Server), 9C (Cleanup). Explicitly defers fine-tuning as the wrong solution for schema compliance.
-  - Plan: [`Implementation_IntentCompiler.md`](./Implementation_IntentCompiler.md)
+  - Plan: [`Implementation_IntentCompiler.md`](archive/Implementation_IntentCompiler.md)
   - Roadmap: [`Roadmap.md`](./00_Project_Management/Roadmap.md)
 
 ## 2026-05-21
@@ -853,7 +853,7 @@ All notable changes to MathMate are tracked here.
 - Session persistence format extended to support mixed entry types
 
 ### Planning
-- Full implementation plan: [`Implementation_SessionBranching.md`](./Implementation_SessionBranching.md)
+- Full implementation plan: [`Implementation_SessionBranching.md`](archive/Implementation_SessionBranching.md)
 - Design references: pi session branching implementation
 
 ## 2026-05-19 (Slash Commands + Context Compaction)
