@@ -1,6 +1,6 @@
 {
   "catalog_version": "1.0",
-  "updated_at": "2026-06-09",
+  "updated_at": "2026-06-18",
   "description": "Curated collection of free, open-access mathematics textbooks. List compiled from the AIM Open Textbook Initiative, Open Textbook Library, PreTeXt Gallery, and community recommendations.",
   "entries": [
     {
@@ -515,6 +515,632 @@
       "file_size_hint": null,
       "page_count_hint": null,
       "recommended_for": ["Linear Algebra"]
+    },
+    {
+      "id": "infinite-descent",
+      "title": "An Infinite Descent into Pure Mathematics",
+      "authors": ["Clive Newstead"],
+      "edition": "v0.6",
+      "subject": "other",
+      "publisher": "Self-published / infinitedescent.org",
+      "license": "cc-by-sa",
+      "description": "A free and open-source introductory pure mathematics textbook with a focus on logical reasoning, proof-writing, and problem-solving. Covers logic, set theory, number theory, abstract algebra, and more.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://infinitedescent.org/download",
+        "epub": null,
+        "html": "https://infinitedescent.org/"
+      },
+      "file_size_hint": 2516582,
+      "page_count_hint": null,
+      "recommended_for": ["Introduction to Proofs", "Mathematical Reasoning", "Abstract Algebra", "Number Theory"]
+    },
+    {
+      "id": "evan-napkin",
+      "title": "An Infinitely Large Napkin",
+      "authors": ["Evan Chen"],
+      "edition": null,
+      "subject": "olympiad-general",
+      "publisher": null,
+      "license": "cc-by-sa",
+      "description": "A 900-page journey through competition and advanced mathematics: olympiad algebra, combinatorics, complex analysis, topology, algebraic geometry, and beyond. Written for high school students preparing for the Putnam or IMO, and curious undergraduates. One of the most comprehensive free resources in olympiad mathematics.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://web.evanchen.cc/upload/napkin.pdf",
+        "html": "https://web.evanchen.cc/napkin.html"
+      },
+      "file_size_hint": 12000000,
+      "page_count_hint": 900,
+      "recommended_for": ["USAMO", "Putnam", "IMO", "Advanced Undergraduates"]
+    },
+    {
+      "id": "evan-otis-excerpts",
+      "title": "OTIS Excerpts",
+      "authors": ["Evan Chen"],
+      "edition": null,
+      "subject": "olympiad-general",
+      "publisher": null,
+      "license": "cc-by-sa",
+      "description": "202 curated olympiad problems with full solutions, drawn from Evan Chen's OTIS (Olympiad Training for Individual Study) coaching program. Covers all four olympiad areas (combinatorics, algebra, number theory, geometry) at USAMO/IMO level.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://web.evanchen.cc/textbooks/OTIS-Excerpts.pdf"
+      },
+      "file_size_hint": 3000000,
+      "page_count_hint": 202,
+      "recommended_for": ["USAMO", "IMO", "HMMT", "Putnam"]
+    },
+    {
+      "id": "evan-bary",
+      "title": "Barycentric Coordinates in Olympiad Geometry",
+      "authors": ["Evan Chen"],
+      "edition": null,
+      "subject": "olympiad-geometry",
+      "publisher": null,
+      "license": "cc-by-sa",
+      "description": "A comprehensive tutorial on using barycentric coordinates to solve olympiad geometry problems. Covers standard techniques including Conway's notation, normalized coordinates, distance formulas, and applications to concurrency, collinearity, and cyclic quadrilaterals.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://web.evanchen.cc/handouts/bary/bary-full.pdf"
+      },
+      "file_size_hint": 500000,
+      "page_count_hint": 60,
+      "recommended_for": ["USAMO", "IMO", "Olympiad Geometry"]
+    },
+    {
+      "id": "evan-cmplx",
+      "title": "Bashing Geometry with Complex Numbers",
+      "authors": ["Evan Chen"],
+      "edition": null,
+      "subject": "olympiad-geometry",
+      "publisher": null,
+      "license": "cc-by-sa",
+      "description": "A practical guide to solving geometry problems using complex numbers. Covers the unit circle approach, spiral similarities, the complex cross-ratio, and systematic methods for proving concurrency, collinearity, and cyclic quadrilaterals.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://web.evanchen.cc/handouts/cmplx/en-cmplx.pdf"
+      },
+      "file_size_hint": 400000,
+      "page_count_hint": 40,
+      "recommended_for": ["USAMO", "IMO", "Olympiad Geometry"]
+    },
+    {
+      "id": "evan-ineq",
+      "title": "Olympiad Inequalities",
+      "authors": ["Evan Chen"],
+      "edition": null,
+      "subject": "olympiad-algebra",
+      "publisher": null,
+      "license": "cc-by-sa",
+      "description": "An introduction to the most common inequality techniques used in olympiad mathematics. Covers AM-GM, Cauchy-Schwarz, Jensen, rearrangement, Chebyshev, Schur, Muirhead, the SOS method, the UVW method, and tangent line techniques.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://web.evanchen.cc/handouts/Ineq/en.pdf"
+      },
+      "file_size_hint": 350000,
+      "page_count_hint": 40,
+      "recommended_for": ["USAMO", "IMO", "Olympiad Algebra"]
+    },
+    {
+      "id": "evan-funceq",
+      "title": "Introduction to Functional Equations",
+      "authors": ["Evan Chen"],
+      "edition": null,
+      "subject": "olympiad-algebra",
+      "publisher": null,
+      "license": "cc-by-sa",
+      "description": "A systematic introduction to solving functional equations for olympiad competitions. Covers Cauchy's equation, injectivity/surjectivity tricks, fixed point methods, monomials, and classifying solutions by common forms.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://web.evanchen.cc/handouts/FuncEq-Intro/FuncEq-Intro.pdf"
+      },
+      "file_size_hint": 300000,
+      "page_count_hint": 25,
+      "recommended_for": ["USAMO", "IMO", "Olympiad Algebra"]
+    },
+    {
+      "id": "evan-orpr",
+      "title": "Orders Modulo a Prime",
+      "authors": ["Evan Chen"],
+      "edition": null,
+      "subject": "olympiad-number-theory",
+      "publisher": null,
+      "license": "cc-by-sa",
+      "description": "A focused handout on the theory of orders modulo a prime, a fundamental tool in olympiad number theory. Covers primitive roots, lifting the exponent lemma, Wilson's theorem, and applications to number theory problems.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://web.evanchen.cc/handouts/ORPR/ORPR.pdf"
+      },
+      "file_size_hint": 250000,
+      "page_count_hint": 20,
+      "recommended_for": ["USAMO", "IMO", "Olympiad Number Theory"]
+    },
+    {
+      "id": "evan-prob-method",
+      "title": "Expected Uses of Probability",
+      "authors": ["Evan Chen"],
+      "edition": null,
+      "subject": "olympiad-combinatorics",
+      "publisher": null,
+      "license": "cc-by-sa",
+      "description": "A tutorial on using probabilistic methods in olympiad combinatorics. Covers linearity of expectation, the probabilistic method for existence proofs, Lovász local lemma, and applications to graph theory and extremal combinatorics.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://web.evanchen.cc/handouts/ProbabilisticMethod/ProbabilisticMethod.pdf"
+      },
+      "file_size_hint": 300000,
+      "page_count_hint": 25,
+      "recommended_for": ["USAMO", "IMO", "Olympiad Combinatorics"]
+    },
+    {
+      "id": "evan-monsters",
+      "title": "Monsters",
+      "authors": ["Evan Chen"],
+      "edition": null,
+      "subject": "olympiad-algebra",
+      "publisher": null,
+      "license": "cc-by-sa",
+      "description": "A collection of pathological functional equations and their solutions. Useful for understanding edge cases, exotic functions, and the full range of behavior possible in functional equations. A companion to the main functional equations handout.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://web.evanchen.cc/handouts/Monsters/Monsters.pdf"
+      },
+      "file_size_hint": 200000,
+      "page_count_hint": 15,
+      "recommended_for": ["USAMO", "IMO", "Olympiad Algebra"]
+    },
+    {
+      "id": "evan-syllabus",
+      "title": "Unofficial Syllabus for Math Olympiads",
+      "authors": ["Evan Chen"],
+      "edition": null,
+      "subject": "olympiad-general",
+      "publisher": null,
+      "license": "cc-by-sa",
+      "description": "A comprehensive syllabus and study guide for olympiad mathematics. Covers all major topics across algebra, combinatorics, geometry, and number theory, organized by difficulty from AMC through IMO level. Essential for building a structured training plan.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://web.evanchen.cc/handouts/Syllabus/Syllabus.pdf"
+      },
+      "file_size_hint": 350000,
+      "page_count_hint": 30,
+      "recommended_for": ["AMC", "AIME", "USAMO", "IMO", "Olympiad Preparation"]
+    },
+    {
+      "id": "shoup-ntb",
+      "title": "A Computational Introduction to Number Theory and Algebra",
+      "authors": ["Victor Shoup"],
+      "edition": "2nd",
+      "subject": "number-theory",
+      "publisher": "Cambridge University Press",
+      "license": "cc-by-nc-nd",
+      "description": "A rigorous university-level introduction to computational number theory and abstract algebra, with all the necessary mathematical background. Covers integer arithmetic, congruences, finite fields, polynomial arithmetic, primality testing, and computational aspects of groups and rings. Published by Cambridge University Press; the author provides a free PDF under a Creative Commons license.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://shoup.net/ntb/ntb-v2.pdf",
+        "html": "https://shoup.net/ntb/"
+      },
+      "file_size_hint": 3647756,
+      "page_count_hint": 598,
+      "recommended_for": ["Number Theory", "Abstract Algebra", "Computational Mathematics", "Cryptography", "Graduate/Advanced Undergraduate"]
+    },
+    {
+      "id": "goodman-algebra-abstract-concrete",
+      "title": "Algebra: Abstract and Concrete",
+      "authors": ["Frederick M. Goodman"],
+      "edition": "2.6",
+      "subject": "abstract-algebra",
+      "publisher": "University of Iowa",
+      "license": "free",
+      "description": "A thorough introduction to modern (abstract) algebra at a level suitable for upper-level undergraduates and beginning graduate students. Covers the conventional topics — groups, rings, fields, and linear algebra — with symmetry as a unifying theme. Offered free of charge by the author for anyone interested in learning abstract algebra.",
+      "thumbnail_url": "https://homepage.divms.uiowa.edu/~goodman/algebrabook.dir/cover.jpg",
+      "download_urls": {
+        "pdf": "https://homepage.divms.uiowa.edu/~goodman/algebrabook.dir/book.2.6.pdf",
+        "epub": null,
+        "html": "https://homepage.divms.uiowa.edu/~goodman/algebrabook.dir/download.htm"
+      },
+      "file_size_hint": 6186598,
+      "page_count_hint": null,
+      "recommended_for": ["Abstract Algebra", "Group Theory", "Ring Theory", "Field Theory", "Linear Algebra", "Upper-level Undergraduate", "Beginning Graduate"]
+    },
+    {
+      "id": "bruckner-real-analysis",
+      "title": "Real Analysis",
+      "authors": ["Andrew M. Bruckner", "Judith B. Bruckner", "Brian S. Thomson"],
+      "edition": "2nd",
+      "subject": "real-analysis",
+      "publisher": "ClassicalRealAnalysis.com",
+      "license": "free",
+      "description": "A graduate-level real analysis textbook covering measure theory, Lebesgue integration, differentiation, normed spaces, function spaces, and more. Formerly published by Prentice Hall (1997), this second edition includes many corrections and additions. Suitable for a two-semester graduate course.",
+      "thumbnail_url": "https://classicalrealanalysis.info/com/images/BBTBookCoverImage.jpg",
+      "download_urls": {
+        "pdf": "https://classicalrealanalysis.info/com/documents/BBT-AlllChapters-Landscape.pdf",
+        "epub": null,
+        "html": "https://www.classicalrealanalysis.info/com/Real-Analysis.php"
+      },
+      "file_size_hint": 6013715,
+      "page_count_hint": 660,
+      "recommended_for": ["Real Analysis", "Graduate Real Analysis", "Measure Theory"]
+    },
+    {
+      "id": "thomson-elementary-real-analysis",
+      "title": "Elementary Real Analysis",
+      "authors": ["Brian S. Thomson", "Judith B. Bruckner", "Andrew M. Bruckner"],
+      "edition": "2nd",
+      "subject": "real-analysis",
+      "publisher": "ClassicalRealAnalysis.com",
+      "license": "free",
+      "description": "An undergraduate real analysis textbook formerly published by Prentice Hall (2001). Covers the real numbers, sequences, continuity, differentiation, integration, infinite series, sequences of functions, and metric spaces. Designed as a user-friendly text suitable for a one-year course.",
+      "thumbnail_url": "https://classicalrealanalysis.info/com/images/TBB-BookCoverImage.jpg",
+      "download_urls": {
+        "pdf": "https://classicalrealanalysis.info/com/documents/TBB-AllChapters-Landscape.pdf",
+        "epub": null,
+        "html": "https://www.classicalrealanalysis.info/com/Elementary-Real-Analysis.php"
+      },
+      "file_size_hint": 6251892,
+      "page_count_hint": 740,
+      "recommended_for": ["Real Analysis", "Upper-level Undergraduate"]
+    },
+    {
+      "id": "bruckner-mathematical-discovery",
+      "title": "Mathematical Discovery",
+      "authors": ["Andrew M. Bruckner", "Brian S. Thomson", "Judith B. Bruckner"],
+      "edition": null,
+      "subject": "other",
+      "publisher": "ClassicalRealAnalysis.com",
+      "license": "free",
+      "description": "A book about mathematics appreciation via discovery. Explores problems that resist ordinary arithmetic, algebraic, or geometric techniques and guides the reader through creative discovery methods. Covers history, unsolved problems, and includes numerous examples, illustrations, problems, and projects. Suitable for students with minimal background.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://classicalrealanalysis.info/com/documents/BTB-LandscapeA.pdf",
+        "epub": null,
+        "html": "https://www.classicalrealanalysis.info/com/Mathematical-Discovery.php"
+      },
+      "file_size_hint": 3272515,
+      "page_count_hint": 266,
+      "recommended_for": ["Mathematical Discovery", "Problem Solving", "General Mathematics"]
+    },
+    {
+      "id": "thomson-calculus-integral",
+      "title": "The Calculus Integral",
+      "authors": ["Brian S. Thomson"],
+      "edition": null,
+      "subject": "calculus",
+      "publisher": "ClassicalRealAnalysis.com",
+      "license": "free",
+      "description": "An elementary introduction to integration theory on the real line, at the level of an honor's calculus or first undergraduate real analysis course. Covers the Riemann integral and prepares the student for a graduate course in Lebesgue integration.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://classicalrealanalysis.info/com/documents/T-CalculusIntegral-AllChapters-Portrait.pdf",
+        "epub": null,
+        "html": "https://www.classicalrealanalysis.info/com/The-Calculus-Integral.php"
+      },
+      "file_size_hint": 1606035,
+      "page_count_hint": 304,
+      "recommended_for": ["Calculus", "Real Analysis", "Integration Theory"]
+    },
+    {
+      "id": "thomson-theory-of-the-integral",
+      "title": "Theory of the Integral",
+      "authors": ["Brian S. Thomson"],
+      "edition": null,
+      "subject": "real-analysis",
+      "publisher": "ClassicalRealAnalysis.com",
+      "license": "free",
+      "description": "A rigorous treatise on integration theory covering the Riemann integral, the Lebesgue integral, and the Henstock-Kurzweil integral. Serves as a sequel to The Calculus Integral. Suitable for an advanced undergraduate or graduate course.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://classicalrealanalysis.info/com/documents/toti-screen-Feb9-2013.pdf",
+        "epub": null,
+        "html": "https://www.classicalrealanalysis.info/com/Theory-of-the-Integral.php"
+      },
+      "file_size_hint": 2816337,
+      "page_count_hint": 422,
+      "recommended_for": ["Real Analysis", "Integration Theory", "Graduate Real Analysis"]
+    },
+    {
+      "id": "huber-probability-adventures",
+      "title": "Probability Adventures",
+      "authors": ["Mark Huber"],
+      "edition": null,
+      "subject": "probability",
+      "publisher": "Mark Huber",
+      "license": "free",
+      "description": "A one-semester probability text for students who have completed a one-semester college linear algebra course. Written in the style of a tabletop role-playing game, it builds probability on logic rather than set theory, with the set-theoretic approach introduced once the reader is ready. Free to download and use. Version 2023-07-21.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://d71b37a6-f420-4d99-8d4f-f64245d5a10b.filesusr.com/ugd/c2b9b6_ec6b6996afd84189bbd95c19cd0a2fde.pdf",
+        "epub": null,
+        "html": "https://autotomic.wixsite.com/markhubernews/probability-textbook"
+      },
+      "file_size_hint": 87089864,
+      "page_count_hint": 171,
+      "recommended_for": ["Probability", "Upper-level Undergraduate"]
+    },
+    {
+      "id": "huber-probability-lectures-labs",
+      "title": "Probability: Lectures and Labs",
+      "authors": ["Mark Huber"],
+      "edition": null,
+      "subject": "probability",
+      "publisher": "Mark Huber",
+      "license": "free",
+      "description": "A one-semester probability text for students who have completed a one-semester college linear algebra course. Designed for a partially flipped classroom: roughly two-thirds lectures and one-third laboratory experiments in R. Moves rapidly through prerequisites such as set notation. Free to download and use. Version 2023-07-06.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://d71b37a6-f420-4d99-8d4f-f64245d5a10b.filesusr.com/ugd/c2b9b6_8e0fbc80cfa64a0aa0c393840b0d50f8.pdf",
+        "epub": null,
+        "html": "https://autotomic.wixsite.com/markhubernews/probability-textbook"
+      },
+      "file_size_hint": 7677930,
+      "page_count_hint": 379,
+      "recommended_for": ["Probability", "Upper-level Undergraduate"]
+    },
+    {
+      "id": "lane-online-statistics",
+      "title": "Online Statistics: An Interactive Multimedia Course of Study",
+      "authors": ["David M. Lane"],
+      "edition": null,
+      "subject": "statistics",
+      "publisher": "Rice University",
+      "license": "free",
+      "description": "An introductory statistics resource developed at Rice University, the University of Houston-Clear Lake, and Tufts University. Presented in textbook format alongside video presentations, interactive demonstrations and simulations, case studies, and an analysis lab. The work is in the public domain, with downloadable PDF and ePub editions plus an interactive web version.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://onlinestatbook.com/Online_Statistics_Education.pdf",
+        "epub": "https://onlinestatbook.com/Online_Statistics_Education.epub",
+        "html": "https://onlinestatbook.com/"
+      },
+      "file_size_hint": 34118287,
+      "page_count_hint": 692,
+      "recommended_for": ["Statistics", "Introductory Undergraduate"]
+    },
+    {
+      "id": "daom-art-and-sculpture",
+      "title": "Discovering the Art of Mathematics: Art & Sculpture",
+      "authors": ["Julian F. Fleron", "Volker Ecke", "Christine von Renesse", "Philip K. Hotchkiss"],
+      "edition": null,
+      "subject": "geometry",
+      "publisher": "Westfield State University",
+      "license": "free",
+      "description": "An inquiry-based learning (IBL) guide exploring mathematics through art and sculpture: origami folding, sliceforms, the geometry of surfaces, symmetry, and the visual structure of two- and three-dimensional forms. Part of the Discovering the Art of Mathematics (DAoM) liberal-arts series from Westfield State University.",
+      "thumbnail_url": "https://www.artofmathematics.org/sites/default/files/books/01-daom-art-and-sculpture-book-cover.jpg",
+      "download_urls": {
+        "pdf": "https://www.artofmathematics.org/sites/default/files/books/artsculpture-2017-09-01.pdf",
+        "epub": null,
+        "html": "https://www.artofmathematics.org/books/art-and-sculpture"
+      },
+      "file_size_hint": 2690176,
+      "page_count_hint": 117,
+      "recommended_for": ["Liberal Arts Mathematics", "Inquiry-Based Learning", "Geometry", "Introductory Undergraduate"]
+    },
+    {
+      "id": "daom-ideas-of-calculus",
+      "title": "Discovering the Art of Mathematics: Ideas of Calculus",
+      "authors": ["Julian F. Fleron", "Philip K. Hotchkiss", "Christine von Renesse", "Volker Ecke"],
+      "edition": null,
+      "subject": "calculus",
+      "publisher": "Westfield State University",
+      "license": "free",
+      "description": "An inquiry-based learning (IBL) introduction to the big ideas of calculus — limits, rates of change, accumulation, and the fundamental theorem — developed through guided exploration rather than lecture. Part of the Discovering the Art of Mathematics (DAoM) liberal-arts series from Westfield State University.",
+      "thumbnail_url": "https://www.artofmathematics.org/sites/default/files/books/02-daom-calculus-book-cover.jpg",
+      "download_urls": {
+        "pdf": "https://www.artofmathematics.org/sites/default/files/books/calculus-2015-09-07-reduced.pdf",
+        "epub": null,
+        "html": "https://www.artofmathematics.org/books/ideas-of-calculus"
+      },
+      "file_size_hint": 2096551,
+      "page_count_hint": 130,
+      "recommended_for": ["Liberal Arts Mathematics", "Inquiry-Based Learning", "Calculus", "Introductory Undergraduate"]
+    },
+    {
+      "id": "daom-dance",
+      "title": "Discovering the Art of Mathematics: Dance",
+      "authors": ["Christine von Renesse", "Volker Ecke", "Julian F. Fleron", "Philip K. Hotchkiss"],
+      "edition": null,
+      "subject": "other",
+      "publisher": "Westfield State University",
+      "license": "free",
+      "description": "An inquiry-based learning (IBL) guide investigating connections between mathematics and dance: symmetry and transformational geometry of movement, rhythm and pattern, and choreographic structures as mathematical objects. Part of the Discovering the Art of Mathematics (DAoM) liberal-arts series from Westfield State University.",
+      "thumbnail_url": "https://www.artofmathematics.org/sites/default/files/books/03-daom-dance-book-cover.jpg",
+      "download_urls": {
+        "pdf": "https://www.artofmathematics.org/sites/default/files/books/dance-12-27-2016.pdf",
+        "epub": null,
+        "html": "https://www.artofmathematics.org/books/dance"
+      },
+      "file_size_hint": 1423111,
+      "page_count_hint": 76,
+      "recommended_for": ["Liberal Arts Mathematics", "Inquiry-Based Learning", "Introductory Undergraduate"]
+    },
+    {
+      "id": "daom-games-and-puzzles",
+      "title": "Discovering the Art of Mathematics: Games & Puzzles",
+      "authors": ["Volker Ecke", "Christine von Renesse", "Julian F. Fleron", "Philip K. Hotchkiss"],
+      "edition": null,
+      "subject": "discrete-math",
+      "publisher": "Westfield State University",
+      "license": "free",
+      "description": "An inquiry-based learning (IBL) guide using games and puzzles to develop combinatorial reasoning, strategy analysis, induction, and mathematical thinking. Covers two-player games, Nim-style puzzles, and the mathematics of play. Part of the Discovering the Art of Mathematics (DAoM) liberal-arts series from Westfield State University.",
+      "thumbnail_url": "https://www.artofmathematics.org/sites/default/files/books/04-daom-games-and-puzzles-book-cover.jpg",
+      "download_urls": {
+        "pdf": "https://www.artofmathematics.org/sites/default/files/books/games-2018-07-14.pdf",
+        "epub": null,
+        "html": "https://www.artofmathematics.org/books/games-and-puzzles"
+      },
+      "file_size_hint": 2308996,
+      "page_count_hint": 130,
+      "recommended_for": ["Liberal Arts Mathematics", "Inquiry-Based Learning", "Discrete Math", "Introductory Undergraduate"]
+    },
+    {
+      "id": "daom-geometry",
+      "title": "Discovering the Art of Mathematics: Geometry",
+      "authors": ["Julian F. Fleron", "Volker Ecke", "Philip K. Hotchkiss", "Christine von Renesse"],
+      "edition": null,
+      "subject": "geometry",
+      "publisher": "Westfield State University",
+      "license": "free",
+      "description": "An inquiry-based learning (IBL) guide to geometry, starting in the imaginary world of Flatland and moving through how we see what we see, the analysis and construction of three-dimensional forms, and the geometry of space. Part of the Discovering the Art of Mathematics (DAoM) liberal-arts series from Westfield State University.",
+      "thumbnail_url": "https://www.artofmathematics.org/sites/default/files/books/05-daom-geometry-book-cover.jpg",
+      "download_urls": {
+        "pdf": "https://www.artofmathematics.org/sites/default/files/books/geometry_reduced_2015_09_03.pdf",
+        "epub": null,
+        "html": "https://www.artofmathematics.org/books/geometry"
+      },
+      "file_size_hint": 5817100,
+      "page_count_hint": 172,
+      "recommended_for": ["Liberal Arts Mathematics", "Inquiry-Based Learning", "Geometry", "Introductory Undergraduate"]
+    },
+    {
+      "id": "daom-knot-theory",
+      "title": "Discovering the Art of Mathematics: Knot Theory",
+      "authors": ["Philip K. Hotchkiss", "Volker Ecke", "Julian F. Fleron", "Christine von Renesse"],
+      "edition": null,
+      "subject": "other",
+      "publisher": "Westfield State University",
+      "license": "free",
+      "description": "An inquiry-based learning (IBL) introduction to the mathematical theory of knots using Tangles, exploring knot invariants, connections to well-known puzzles, and an unsolved million-dollar problem. Part of the Discovering the Art of Mathematics (DAoM) liberal-arts series from Westfield State University.",
+      "thumbnail_url": "https://www.artofmathematics.org/sites/default/files/books/06-daom-knot-theory-book-cover.jpg",
+      "download_urls": {
+        "pdf": "https://www.artofmathematics.org/sites/default/files/books/knotbook-2015-01-07.pdf",
+        "epub": null,
+        "html": "https://www.artofmathematics.org/books/knot-theory"
+      },
+      "file_size_hint": 3688119,
+      "page_count_hint": 116,
+      "recommended_for": ["Liberal Arts Mathematics", "Inquiry-Based Learning", "Topology", "Introductory Undergraduate"]
+    },
+    {
+      "id": "daom-music",
+      "title": "Discovering the Art of Mathematics: Music",
+      "authors": ["Christine von Renesse", "Julian F. Fleron", "Philip K. Hotchkiss", "Volker Ecke"],
+      "edition": null,
+      "subject": "other",
+      "publisher": "Westfield State University",
+      "license": "free",
+      "description": "An inquiry-based learning (IBL) guide exploring the mathematics of music: rhythm and palindromes, tuning and intervals, scales, and the wave/number theory behind musical sound. Part of the Discovering the Art of Mathematics (DAoM) liberal-arts series from Westfield State University.",
+      "thumbnail_url": "https://www.artofmathematics.org/sites/default/files/books/07-daom-music-book-cover.jpg",
+      "download_urls": {
+        "pdf": "https://www.artofmathematics.org/sites/default/files/books/music_09_04_2015.pdf",
+        "epub": null,
+        "html": "https://www.artofmathematics.org/books/music"
+      },
+      "file_size_hint": 1922356,
+      "page_count_hint": 75,
+      "recommended_for": ["Liberal Arts Mathematics", "Inquiry-Based Learning", "Introductory Undergraduate"]
+    },
+    {
+      "id": "daom-number-theory",
+      "title": "Discovering the Art of Mathematics: Number Theory",
+      "authors": ["Julian F. Fleron", "Philip K. Hotchkiss", "Volker Ecke", "Christine von Renesse"],
+      "edition": null,
+      "subject": "number-theory",
+      "publisher": "Westfield State University",
+      "license": "free",
+      "description": "An inquiry-based learning (IBL) guide to number theory, investigating the intricate patterns and relationships among the integers — divisibility, primes, modular arithmetic, and classical number-theoretic ideas — through guided exploration. Part of the Discovering the Art of Mathematics (DAoM) liberal-arts series from Westfield State University.",
+      "thumbnail_url": "https://www.artofmathematics.org/sites/default/files/books/08-daom-number-theory-book-cover.jpg",
+      "download_urls": {
+        "pdf": "https://www.artofmathematics.org/sites/default/files/books/numbthy_reduced_2015_09_03.pdf",
+        "epub": null,
+        "html": "https://www.artofmathematics.org/books/number-theory"
+      },
+      "file_size_hint": 1983800,
+      "page_count_hint": 143,
+      "recommended_for": ["Liberal Arts Mathematics", "Inquiry-Based Learning", "Number Theory", "Introductory Undergraduate"]
+    },
+    {
+      "id": "daom-patterns",
+      "title": "Discovering the Art of Mathematics: Patterns",
+      "authors": ["Julian F. Fleron", "Philip K. Hotchkiss", "Volker Ecke", "Christine von Renesse"],
+      "edition": null,
+      "subject": "other",
+      "publisher": "Westfield State University",
+      "license": "free",
+      "description": "An inquiry-based learning (IBL) guide exploring how mathematics uses pattern to give structure to ideas: the naming of very large numbers (millinillitrillions), the mathematics of Islamic art, spirographs, and recurring numerical and visual patterns. Part of the Discovering the Art of Mathematics (DAoM) liberal-arts series from Westfield State University.",
+      "thumbnail_url": "https://www.artofmathematics.org/sites/default/files/books/09-daom-patterns-book-cover.jpg",
+      "download_urls": {
+        "pdf": "https://www.artofmathematics.org/sites/default/files/books/patternsbook-2018-06-01-www.pdf",
+        "epub": null,
+        "html": "https://www.artofmathematics.org/books/patterns"
+      },
+      "file_size_hint": 28109990,
+      "page_count_hint": 204,
+      "recommended_for": ["Liberal Arts Mathematics", "Inquiry-Based Learning", "Introductory Undergraduate"]
+    },
+    {
+      "id": "daom-the-infinite",
+      "title": "Discovering the Art of Mathematics: The Infinite",
+      "authors": ["Julian F. Fleron", "Philip K. Hotchkiss", "Volker Ecke", "Christine von Renesse"],
+      "edition": null,
+      "subject": "other",
+      "publisher": "Westfield State University",
+      "license": "free",
+      "description": "An inquiry-based learning (IBL) guide to the mathematics of the infinite: very large numbers and their meaning, classical paradoxes (Zeno, the wheel of Aristotle), convergence and divergence, and the rigour surrounding infinite processes. Part of the Discovering the Art of Mathematics (DAoM) liberal-arts series from Westfield State University.",
+      "thumbnail_url": "https://www.artofmathematics.org/sites/default/files/books/10-daom-the-infinite-book-cover.jpg",
+      "download_urls": {
+        "pdf": "https://www.artofmathematics.org/sites/default/files/books/infinitebook-2015-01-07.pdf",
+        "epub": null,
+        "html": "https://www.artofmathematics.org/books/the-infinite"
+      },
+      "file_size_hint": 1696560,
+      "page_count_hint": 113,
+      "recommended_for": ["Liberal Arts Mathematics", "Inquiry-Based Learning", "Introductory Undergraduate"]
+    },
+    {
+      "id": "daom-truth-reasoning-certainty-proof",
+      "title": "Discovering the Art of Mathematics: Truth, Reasoning, Certainty, & Proof",
+      "authors": ["Julian F. Fleron", "Philip K. Hotchkiss", "Volker Ecke", "Christine von Renesse"],
+      "edition": null,
+      "subject": "discrete-math",
+      "publisher": "Westfield State University",
+      "license": "free",
+      "description": "An inquiry-based learning (IBL) guide to the distinguishing feature of mathematics — rigorous proof. Explores paradoxes, optical illusions, logical reasoning, axioms and foundations, and what it means to establish certainty and proof in mathematics. Part of the Discovering the Art of Mathematics (DAoM) liberal-arts series from Westfield State University.",
+      "thumbnail_url": "https://www.artofmathematics.org/sites/default/files/books/11-daom-reasoning-book-cover.jpg",
+      "download_urls": {
+        "pdf": "https://www.artofmathematics.org/sites/default/files/books/reasoning-book-december-2013.pdf",
+        "epub": null,
+        "html": "https://www.artofmathematics.org/books/truth-reasoning-certainty-and-proof"
+      },
+      "file_size_hint": 7787793,
+      "page_count_hint": 136,
+      "recommended_for": ["Liberal Arts Mathematics", "Inquiry-Based Learning", "Logic & Proof", "Introductory Undergraduate"]
+    },
+    {
+      "id": "evans-rosenthal-probability-statistics",
+      "title": "Probability and Statistics - The Science of Uncertainty",
+      "authors": ["Michael J. Evans", "Jeffrey S. Rosenthal"],
+      "edition": "2nd",
+      "subject": "statistics",
+      "publisher": null,
+      "license": "free",
+      "description": "A comprehensive upper-level introduction to mathematical statistics from the University of Toronto. Develops probability models, random variables, expectation, and sampling distributions, then builds the core of statistical inference: likelihood, Bayesian, and optimal inference, model checking, regression, and stochastic processes. Available as a single PDF or by chapter; a solutions manual is also provided. May be copied and distributed without alteration, with attribution, free of charge.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://utstat.toronto.edu/mikevans/jeffrosenthal/book.pdf",
+        "epub": null,
+        "html": "https://utstat.toronto.edu/mikevans/jeffrosenthal/"
+      },
+      "file_size_hint": 18374586,
+      "page_count_hint": null,
+      "recommended_for": ["Probability", "Statistics", "Mathematical Statistics", "Upper-level Undergraduate"]
+    },
+    {
+      "id": "callahan-calculus-in-context",
+      "title": "Calculus in Context",
+      "authors": ["James Callahan", "David Cox", "Kenneth Hoffman", "Donal O'Shea", "Harriet Pollatsek", "Lester Senechal"],
+      "edition": null,
+      "subject": "calculus",
+      "publisher": "Five College Calculus Project",
+      "license": "free",
+      "description": "The Five College Calculus Course, a collaborative reform-calculus textbook emphasizing applications and context over rote manipulation. Covers single-variable calculus (including differential equations early) and extends through multivariable functions, dynamical systems, and series. The complete text is freely downloadable as one PDF or in Calculus I / Calculus II splits, with individual chapters also available.",
+      "thumbnail_url": null,
+      "download_urls": {
+        "pdf": "https://www.science.smith.edu/~callahan/cic/book.pdf",
+        "epub": null,
+        "html": "https://www.science.smith.edu/~callahan/intromine.html"
+      },
+      "file_size_hint": 8428129,
+      "page_count_hint": 845,
+      "recommended_for": ["Calculus I", "Calculus II", "Multivariable Calculus"]
     }
   ]
 }

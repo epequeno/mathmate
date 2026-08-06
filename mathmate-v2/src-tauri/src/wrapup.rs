@@ -1,20 +1,12 @@
 #![allow(dead_code)]
 use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::path::PathBuf;
 
 use crate::{audit, pathscope, session};
+use crate::services::wrapup::WrapUpResult;
 
-/// Result of a wrap-up generation.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct WrapUpResult {
-    pub session_id: String,
-    pub title: String,
-    pub study_log_path: Option<String>,
-    pub content: String,
-    pub created_at: String,
-}
+
 
 /// Banner prefix for all auto-generated study logs.
 const AUTO_GENERATED_BANNER: &str =
@@ -81,7 +73,7 @@ pub fn generate_wrap_up(session_id: &str) -> Result<WrapUpResult, String> {
             m.content
                 .iter()
                 .filter_map(|part| match part {
-                    session::ContentPart::Text { text } => Some(text.as_str()),
+                    crate::services::session::ContentPart::Text { text } => Some(text.as_str()),
                     _ => None,
                 })
                 .collect::<Vec<_>>()

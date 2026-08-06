@@ -17,10 +17,131 @@ use chrono::Utc;
 use serde::{Deserialize, Serialize};
 
 use crate::error::AppError;
+use std::collections::HashMap;
 
-// Re-export the public data model types so Tauri commands in lib.rs
-// can import them from a single place.
-pub use crate::session::{Message, Session, SessionHeader, ContentPart, ToolCallStatus, MessageSegment, SegmentKind};
+#[cfg(feature = "export-types")]
+use ts_rs::TS;
+
+// ─── Public data model ───────────────────────────────────────────────────────
+
+/// Mirrors the Swift `SessionHeader` model for backward compat.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "session.ts"))]
+pub struct SessionHeader {
+    pub id: String,
+    pub title: String,
+    pub model: String,
+    pub provider: String,
+    pub created_at: String,
+    pub updated_at: String,
+    pub project_id: Option<String>,
+    pub tutor_style: Option<String>,
+    pub flags: Option<HashMap<String, bool>>,
+    /// Number of hints used during an olympiad problem session (Phase 16A).
+    pub hints_used: Option<i32>,
+    /// Whether the problem was solved (Phase 16A).
+    pub solved: Option<bool>,
+}
+
+/// A content part within a message (text or image).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "session.ts"))]
+pub enum ContentPart {
+    #[serde(rename = "text")]
+    Text { text: String },
+    #[serde(rename = "image")]
+    Image {
+        /// Optional disk-reference filename (from save_image). May be absent
+        /// when image data is sent inline via the `data` field.
+        #[serde(default)]
+        url: Option<String>,
+        mime: Option<String>,
+        data: Option<String>,
+    },
+}
+
+// ─── Timeline segment types (Phase 12A) ─────────────────────────────────────
+
+/// Status of a tool call in the timeline.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "session.ts"))]
+pub enum ToolCallStatus {
+    Pending,
+    Running,
+    Completed,
+    Error,
+}
+
+/// The kind/type of a message segment.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "session.ts"))]
+pub enum SegmentKind {
+    Thinking {
+        content: String,
+    },
+    ToolCall {
+        tool_name: String,
+        arguments: serde_json::Value,
+        call_id: String,
+        status: ToolCallStatus,
+    },
+    ToolResult {
+        call_id: String,
+        result: serde_json::Value,
+        is_error: bool,
+    },
+    Content {
+        text: String,
+    },
+}
+
+/// An ordered segment within an assistant message's timeline.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "session.ts"))]
+pub struct MessageSegment {
+    pub id: String,
+    pub ts: String,
+    #[serde(flatten)]
+    pub kind: SegmentKind,
+}
+
+/// A single message in the conversation.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "session.ts"))]
+pub struct Message {
+    pub id: String,
+    pub role: String,
+    #[serde(default)]
+    pub segments: Vec<MessageSegment>,
+    pub content: Vec<ContentPart>,
+    pub created_at: Option<String>,
+    pub flags: Option<HashMap<String, bool>>,
+    /// Legacy thinking field — preserved for backward compat reads.
+    /// New messages should use `segments` with type "thinking" instead.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub thinking: Option<String>,
+    /// For role="tool" messages: the ID of the tool call this result satisfies.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tool_call_id: Option<String>,
+}
+
+/// Full session — header + messages.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "session.ts"))]
+pub struct Session {
+    pub header: SessionHeader,
+    pub messages: Vec<Message>,
+}
 
 // ─── On-disk line types (JSONL helpers, shared with session.rs) ──────
 
@@ -313,6 +434,36 @@ impl SessionService {
         Ok(session)
     }
 
+    /// Update hint-ladder outcome metadata (Phase 16A).
+    pub fn update_hint_outcome(
+        &self,
+        session_id: &str,
+        hints_used: Option<i32>,
+        solved: Option<bool>,
+    ) -> Result<Session, AppError> {
+        let path = self.session_path(session_id);
+        let target = if path.exists() {
+            path
+        } else {
+            self.load(session_id)?;
+            if self.session_path(session_id).exists() {
+                self.session_path(session_id)
+            } else {
+                return Err(AppError::not_found(format!(
+                    "Session {} not found",
+                    session_id
+                )));
+            }
+        };
+
+        let mut session = self.read_jsonl(&target)?;
+        session.header.hints_used = hints_used;
+        session.header.solved = solved;
+        session.header.updated_at = Utc::now().to_rfc3339();
+        self.write_jsonl(&target, &session)?;
+        Ok(session)
+    }
+
     /// Delete an active session.
     pub fn delete(&self, session_id: &str) -> Result<(), AppError> {
         let jsonl = self.session_path(session_id);
@@ -433,7 +584,6 @@ fn cleanup_stale_tmp(dir: &PathBuf) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::session::ContentPart;
 
     fn temp_service() -> (SessionService, PathBuf) {
         use std::sync::atomic::{AtomicU32, Ordering};
@@ -457,6 +607,8 @@ mod tests {
             project_id: None,
             tutor_style: None,
             flags: None,
+            hints_used: None,
+            solved: None,
         }
     }
 

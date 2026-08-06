@@ -33,6 +33,10 @@ lopdf = "0.34"
 indexmap = "2"
 r2d2_sqlite = "0.24"
 r2d2 = "0.8"
+rand = "0.8"
+axum = "0.8"
+tokio = { version = "1", features = ["net", "sync", "fs", "io-util"] }
+tokio-util = { version = "0.7", features = ["io"] }
 ts-rs = { version = "10", optional = true, features = ["serde-json-impl"] }
 
 [features]

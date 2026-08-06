@@ -1,19 +1,66 @@
 #![allow(dead_code)]
 use chrono::Utc;
-use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
+use crate::services::project::{MathProject, VaultRef, VaultKind};
 
-/// A named project grouping sessions, vault, and textbook.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MathProject {
-    pub id: String,
-    pub name: String,
-    pub vault_path: Option<String>,
-    pub textbook_path: Option<String>,
-    pub default_model: Option<String>,
-    pub tutor_style: Option<String>,
-    pub created_at: String,
-    pub updated_at: String,
+pub fn migrate_project(project: &mut MathProject) {
+    // ── v0 → v2: promote vault_path → vaults[0] ─────────────────────
+    if let Some(ref vp) = project.vault_path {
+        if project.vaults.is_empty() {
+            let vault = VaultRef {
+                id: uuid_v4(),
+                name: "Vault".to_string(),
+                path: vp.clone(),
+                kind: VaultKind::Synapse,
+                read_only: false,
+                position: 0,
+            };
+            project.vaults.push(vault);
+        }
+    }
+
+    // ── Ensure every vault has an id ────────────────────────────────
+    for v in project.vaults.iter_mut() {
+        if v.id.is_empty() {
+            v.id = uuid_v4();
+        }
+    }
+
+    // ── Normalise positions ─────────────────────────────────────────
+    project.vaults.sort_by_key(|v| v.position);
+    for (i, v) in project.vaults.iter_mut().enumerate() {
+        v.position = i as u16;
+    }
+
+    // ── Repair missing / invalid active_vault_id ────────────────────
+    if project.vaults.is_empty() {
+        project.active_vault_id = None;
+    } else {
+        let valid = project.active_vault_id.as_deref().map_or(false, |aid| {
+            project.vaults.iter().any(|v| v.id == aid)
+        });
+        if !valid {
+            project.active_vault_id = Some(project.vaults[0].id.clone());
+        }
+    }
+
+    project.schema_version = Some(2);
+}
+
+/// Resolve the active `VaultRef` for this project, if any.
+pub fn active_vault(project: &MathProject) -> Option<&VaultRef> {
+    let aid = project.active_vault_id.as_deref()?;
+    project.vaults.iter().find(|v| v.id == aid)
+}
+
+/// Get the active vault path string, if any (for backward compat).
+pub fn active_vault_path(project: &MathProject) -> Option<&str> {
+    active_vault(project).map(|v| v.path.as_str())
+}
+
+/// Get all vault paths (for allowed-roots computation).
+pub fn all_vault_paths(project: &MathProject) -> Vec<&str> {
+    project.vaults.iter().map(|v| v.path.as_str()).collect()
 }
 
 fn archived_projects_dir() -> PathBuf {
@@ -48,16 +95,34 @@ pub fn create_project(
     tutor_style: Option<String>,
 ) -> Result<MathProject, String> {
     let now = Utc::now().to_rfc3339();
-    let project = MathProject {
+    let mut vaults = Vec::new();
+    let mut active_vault_id: Option<String> = None;
+    if let Some(ref vp) = vault_path {
+        let v = VaultRef {
+            id: uuid_v4(),
+            name: "Vault".to_string(),
+            path: vp.clone(),
+            kind: VaultKind::Synapse,
+            read_only: false,
+            position: 0,
+        };
+        active_vault_id = Some(v.id.clone());
+        vaults.push(v);
+    }
+    let mut project = MathProject {
         id: uuid_v4(),
         name,
         vault_path,
+        vaults,
+        active_vault_id,
         textbook_path,
         default_model,
         tutor_style,
+        schema_version: Some(2),
         created_at: now.clone(),
         updated_at: now,
     };
+    migrate_project(&mut project);
     save_project(&project)?;
     Ok(project)
 }
@@ -123,21 +188,26 @@ pub fn delete_project(id: &str) -> Result<(), String> {
 }
 
 /// Load a single project by ID.
+/// Load a single project by ID (runs migration if needed).
 pub fn load_project(id: &str) -> Result<MathProject, String> {
     let active = project_path(id);
-    if active.exists() {
+    let mut project = if active.exists() {
         let data = std::fs::read_to_string(&active)
             .map_err(|e| format!("Failed to read project: {}", e))?;
-        return serde_json::from_str(&data).map_err(|e| format!("Failed to parse project: {}", e));
-    }
-    let archived = archived_project_path(id);
-    if archived.exists() {
-        let data = std::fs::read_to_string(&archived)
-            .map_err(|e| format!("Failed to read archived project: {}", e))?;
-        return serde_json::from_str(&data)
-            .map_err(|e| format!("Failed to parse archived project: {}", e));
-    }
-    Err(format!("Project {} not found", id))
+        serde_json::from_str::<MathProject>(&data).map_err(|e| format!("Failed to parse project: {}", e))?
+    } else {
+        let archived = archived_project_path(id);
+        if archived.exists() {
+            let data = std::fs::read_to_string(&archived)
+                .map_err(|e| format!("Failed to read archived project: {}", e))?;
+            serde_json::from_str::<MathProject>(&data)
+                .map_err(|e| format!("Failed to parse archived project: {}", e))?
+        } else {
+            return Err(format!("Project {} not found", id));
+        }
+    };
+    migrate_project(&mut project);
+    Ok(project)
 }
 
 /// Delete a project and all of its sessions (active + archived).
@@ -178,7 +248,7 @@ pub fn list_projects() -> Result<Vec<MathProject>, String> {
 }
 
 /// Simple UUID v4 generator (no external dep needed).
-fn uuid_v4() -> String {
+pub fn uuid_v4() -> String {
     use std::time::{SystemTime, UNIX_EPOCH};
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)

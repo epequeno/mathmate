@@ -1,114 +1,14 @@
 #![allow(dead_code)]
-use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 #[cfg(feature = "export-types")]
 use ts_rs::TS;
 
-// ─── Provider Config ────────────────────────────
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "export-types", derive(TS))]
-#[cfg_attr(feature = "export-types", ts(export, export_to = "config.ts"))]
-pub struct ProviderConfig {
-    pub name: String,
-    #[serde(default = "default_enabled")]
-    pub enabled: bool,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub env_key: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub stored_api_key: Option<String>,
-    pub base_url: String,
-    #[serde(default)]
-    pub models: Vec<String>,
-    pub default_model: String,
-    #[serde(default)]
-    pub fetch_models: bool,
-}
-
-fn default_enabled() -> bool {
-    true
-}
-
-impl ProviderConfig {
-    /// Resolve environment variable name for the API key.
-    pub fn resolved_env_key(&self) -> String {
-        self.env_key
-            .clone()
-            .unwrap_or_else(|| self.name.to_uppercase().replace('-', "_") + "_API_KEY")
-    }
-
-    /// Read the API key: stored value takes precedence over env var.
-    pub fn api_key(&self) -> Option<String> {
-        self.stored_api_key
-            .clone()
-            .or_else(|| std::env::var(self.resolved_env_key()).ok())
-    }
-}
-
-// ─── App Config Models ──────────────────────────
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "export-types", derive(TS))]
-#[cfg_attr(feature = "export-types", ts(export, export_to = "config.ts"))]
-pub struct AppConfigModels {
-    pub providers: Vec<ProviderConfig>,
-}
-
-// ─── App Config ─────────────────────────────────
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "export-types", derive(TS))]
-#[cfg_attr(feature = "export-types", ts(export, export_to = "config.ts"))]
-pub struct AppConfig {
-    pub latex: LaTeXConfig,
-    pub synapse: SynapseConfig,
-    pub chat: Option<ChatConfig>,
-    pub ui: Option<UIConfig>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "export-types", derive(TS))]
-#[cfg_attr(feature = "export-types", ts(export, export_to = "config.ts"))]
-pub struct LaTeXConfig {
-    pub engine: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "export-types", derive(TS))]
-#[cfg_attr(feature = "export-types", ts(export, export_to = "config.ts"))]
-pub struct SynapseConfig {
-    pub vaults: Option<Vec<VaultConfig>>,
-    pub study_log_path: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "export-types", derive(TS))]
-#[cfg_attr(feature = "export-types", ts(export, export_to = "config.ts"))]
-pub struct VaultConfig {
-    pub name: String,
-    pub path: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "export-types", derive(TS))]
-#[cfg_attr(feature = "export-types", ts(export, export_to = "config.ts"))]
-pub struct ChatConfig {
-    pub system_prompt: Option<String>,
-    pub max_tokens: Option<u32>,
-    pub temperature: Option<f64>,
-    pub safety_mode: Option<String>,
-    pub safety_min_trust: Option<f64>,
-    pub safety_max_total_bytes: Option<u32>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "export-types", derive(TS))]
-#[cfg_attr(feature = "export-types", ts(export, export_to = "config.ts"))]
-pub struct UIConfig {
-    pub font_size: Option<u32>,
-}
+use crate::services::config::{
+    AppConfig, AppConfigModels, LaTeXConfig, ProviderConfig, SynapseConfig,
+};
 
 // ─── Config Loading ─────────────────────────────
+
 
 /// Get the mathmate config directory: ~/.mathmate
 pub fn config_dir() -> PathBuf {

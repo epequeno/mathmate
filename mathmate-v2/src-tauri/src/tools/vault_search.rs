@@ -80,7 +80,7 @@ pub fn execute(
         .map(|s| s.to_string())
         .collect();
 
-    let mut scored: Vec<(f64, &crate::vault::VaultNote, String)> = Vec::new();
+    let mut scored: Vec<(f64, &crate::services::vault::VaultNote, String)> = Vec::new();
 
     for note in &notes {
         // Read note content

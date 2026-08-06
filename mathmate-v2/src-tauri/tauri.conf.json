@@ -22,7 +22,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: asset:; font-src 'self' data:; connect-src 'self' blob: ipc: https://ipc.localhost https://openrouter.ai https://api.openai.com https://api.anthropic.com; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'; frame-src 'none'; worker-src 'self' blob:; media-src 'self' blob:; manifest-src 'self'"
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: asset:; font-src 'self' data:; connect-src 'self' blob: ipc: https://ipc.localhost http://127.0.0.1:* https://openrouter.ai https://api.openai.com https://api.anthropic.com; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'; frame-src 'none'; worker-src 'self' blob:; media-src 'self' blob:; manifest-src 'self'"
     }
   },
   "bundle": {

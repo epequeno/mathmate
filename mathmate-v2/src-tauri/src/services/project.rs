@@ -13,9 +13,49 @@
 use std::path::PathBuf;
 
 use chrono::Utc;
-pub use crate::project::MathProject;
-
+use serde::{Deserialize, Serialize};
 use crate::error::AppError;
+
+/// A named project grouping sessions, vault, and textbook.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MathProject {
+    pub id: String,
+    pub name: String,
+    pub vault_path: Option<String>,  // deprecated; migrated to vaults[0] on load
+    #[serde(default)]
+    pub vaults: Vec<VaultRef>,
+    pub active_vault_id: Option<String>,
+    pub textbook_path: Option<String>,
+    pub default_model: Option<String>,
+    pub tutor_style: Option<String>,
+    pub schema_version: Option<u32>,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+/// Vault backend kind.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum VaultKind {
+    #[serde(rename = "synapse")]
+    Synapse,
+    #[serde(rename = "legacy")]
+    Legacy,
+    #[serde(rename = "classroom")]
+    Classroom,
+}
+
+/// A single vault reference within a project.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VaultRef {
+    pub id: String,
+    pub name: String,
+    pub path: String,
+    pub kind: VaultKind,
+    #[serde(default)]
+    pub read_only: bool,
+    #[serde(default)]
+    pub position: u16,
+}
 
 // ─── ProjectService ──────────────────────────────────────────────────
 
@@ -102,16 +142,34 @@ impl ProjectService {
         tutor_style: Option<String>,
     ) -> Result<MathProject, AppError> {
         let now = Utc::now().to_rfc3339();
-        let project = MathProject {
-            id: uuid_v4(),
+        let mut vaults = Vec::new();
+        let mut active_vault_id: Option<String> = None;
+        if let Some(ref vp) = vault_path {
+            let v = VaultRef {
+                id: crate::project::uuid_v4(),
+                name: "Vault".to_string(),
+                path: vp.clone(),
+                kind: VaultKind::Synapse,
+                read_only: false,
+                position: 0,
+            };
+            active_vault_id = Some(v.id.clone());
+            vaults.push(v);
+        }
+        let mut project = MathProject {
+            id: crate::project::uuid_v4(),
             name,
             vault_path,
+            vaults,
+            active_vault_id,
             textbook_path,
             default_model,
             tutor_style,
+            schema_version: Some(2),
             created_at: now.clone(),
             updated_at: now,
         };
+        crate::project::migrate_project(&mut project);
         self.save(&project)?;
         Ok(project)
     }
@@ -207,29 +265,6 @@ impl ProjectService {
     }
 }
 
-// ─── UUID v4 (no external dep) ──────────────────────────────────────
-
-fn uuid_v4() -> String {
-    use std::time::{SystemTime, UNIX_EPOCH};
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default();
-    let secs = now.as_secs();
-    let nanos = now.subsec_nanos();
-    format!("p{:08x}{:08x}{:04x}", secs, nanos, rand_u16())
-}
-
-fn rand_u16() -> u16 {
-    use std::time::SystemTime;
-    let seed = SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_nanos() as u64;
-    ((seed
-        .wrapping_mul(6364136223846793005)
-        .wrapping_add(1442695040888963407))
-        >> 48) as u16
-}
 
 // ─── Tests ───────────────────────────────────────────────────────────
 

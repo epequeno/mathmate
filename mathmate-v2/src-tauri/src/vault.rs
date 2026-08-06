@@ -1,18 +1,7 @@
 #![allow(dead_code)]
-use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
+use crate::services::vault::VaultNote;
 
-/// A markdown note from a vault.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct VaultNote {
-    pub path: String,
-    pub filename: String,
-    pub title: String,
-    pub tags: Vec<String>,
-    pub created_at: Option<String>,
-    pub modified_at: Option<String>,
-    pub size_bytes: u64,
-}
 
 /// Scan a directory recursively for markdown files.
 /// Skips hidden directories.

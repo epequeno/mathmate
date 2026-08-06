@@ -4,8 +4,20 @@
 // free functions for the AI‑generation logic.
 //
 // See: Implementation_Phase14C_RustServiceLayer.md § C.6
+use serde::{Deserialize, Serialize};
+#[cfg(feature = "export-types")]
+use ts_rs::TS;
 
-pub use crate::wrapup::WrapUpResult;
+/// Result of a wrap-up generation.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WrapUpResult {
+    pub session_id: String,
+    pub title: String,
+    pub study_log_path: Option<String>,
+    pub content: String,
+    pub created_at: String,
+}
+
 
 use crate::error::AppError;
 

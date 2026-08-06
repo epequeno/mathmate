@@ -10,6 +10,9 @@
 //
 // See: Implementation_Phase14C_RustServiceLayer.md § C.6
 
+use serde::{Deserialize, Serialize};
+#[cfg(feature = "export-types")]
+use ts_rs::TS;
 use std::path::PathBuf;
 
 use r2d2_sqlite::SqliteConnectionManager;
@@ -20,9 +23,65 @@ use crate::error::AppError;
 // Import the low-level module under an alias so the public re-exports
 // don't collide with the private-use names.
 use crate::memory as mem;
-// Re-export the data types so Tauri commands can import them from here.
-#[allow(unused_imports)] // ScanResultKind used in tests only
-pub use crate::memory::{MemoryItem, SafetyMode, ScanResult, ScanResultKind};
+// ─── Scan Result Types ──────────────────────────
+
+/// Result of scanning memory content for injection patterns.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "memory.ts"))]
+#[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "memory.ts"))]
+pub enum ScanResultKind {
+    Accepted,
+    AcceptedWithRedaction,
+    Rejected,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "memory.ts"))]
+pub struct ScanResult {
+    pub kind: ScanResultKind,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reason: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub redacted: Option<String>,
+}
+
+/// Safety mode for memory scanning.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "snake_case")]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "memory.ts"))]
+pub enum SafetyMode {
+    Strict,
+    Balanced,
+    Off,
+}
+
+// ─── Memory Item ────────────────────────────────
+
+/// A memory item in the learner profile.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "memory.ts"))]
+pub struct MemoryItem {
+    pub id: String,
+    pub session_id: Option<String>,
+    pub source_type: String,
+    pub unit_type: String,
+    pub content: String,
+    pub score: f64,
+    pub created_at: String,
+    pub tags: Vec<String>,
+    pub provenance: Option<String>,
+    /// Scan status persisted at write time ("accepted", "accepted_with_redaction",
+    /// "rejected"). Written by `store_memory_with_safety`; absent for legacy items.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub scan_status: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub scan_reason: Option<String>,
+}
 
 // ─── MemoryService ───────────────────────────────────────────────────
 

@@ -6,8 +6,22 @@
 // vault logic.
 //
 // See: Implementation_Phase14C_RustServiceLayer.md § C.6
+use serde::{Deserialize, Serialize};
+#[cfg(feature = "export-types")]
+use ts_rs::TS;
 
-pub use crate::vault::VaultNote;
+/// A markdown note from a vault.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VaultNote {
+    pub path: String,
+    pub filename: String,
+    pub title: String,
+    pub tags: Vec<String>,
+    pub created_at: Option<String>,
+    pub modified_at: Option<String>,
+    pub size_bytes: u64,
+}
+
 
 use crate::error::AppError;
 

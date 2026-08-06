@@ -115,6 +115,20 @@ pub fn get_license_info(license: &str) -> Result<LicenseInfo, String> {
             attribution_required: true,
             description: "Creative Commons Attribution-NoDerivatives — no modifications".into(),
         }),
+        "cc-by-nc-nd" => Ok(LicenseInfo {
+            license: "cc-by-nc-nd".into(),
+            label: "CC BY-NC-ND 4.0".into(),
+            url: Some("https://creativecommons.org/licenses/by-nc-nd/4.0/".into()),
+            attribution_required: true,
+            description: "Creative Commons Attribution-NonCommercial-NoDerivatives — no modifications, non-commercial".into(),
+        }),
+        "free" => Ok(LicenseInfo {
+            license: "free".into(),
+            label: "Free Access".into(),
+            url: None,
+            attribution_required: true,
+            description: "Offered freely by the author without a Creative Commons license — attribution requested".into(),
+        }),
         "gpl" => Ok(LicenseInfo {
             license: "gpl".into(),
             label: "GNU GPL".into(),

@@ -1,68 +1,8 @@
 use rusqlite::{params, Connection};
-use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 #[cfg(feature = "export-types")]
 use ts_rs::TS;
-
-// ─── Scan Result Types ──────────────────────────
-
-/// Result of scanning memory content for injection patterns.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[cfg_attr(feature = "export-types", derive(TS))]
-#[cfg_attr(feature = "export-types", ts(export, export_to = "memory.ts"))]
-#[serde(rename_all = "snake_case")]
-#[cfg_attr(feature = "export-types", ts(export, export_to = "memory.ts"))]
-pub enum ScanResultKind {
-    Accepted,
-    AcceptedWithRedaction,
-    Rejected,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "export-types", derive(TS))]
-#[cfg_attr(feature = "export-types", ts(export, export_to = "memory.ts"))]
-pub struct ScanResult {
-    pub kind: ScanResultKind,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub reason: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub redacted: Option<String>,
-}
-
-/// Safety mode for memory scanning.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "snake_case")]
-#[cfg_attr(feature = "export-types", derive(TS))]
-#[cfg_attr(feature = "export-types", ts(export, export_to = "memory.ts"))]
-pub enum SafetyMode {
-    Strict,
-    Balanced,
-    Off,
-}
-
-// ─── Memory Item ────────────────────────────────
-
-/// A memory item in the learner profile.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "export-types", derive(TS))]
-#[cfg_attr(feature = "export-types", ts(export, export_to = "memory.ts"))]
-pub struct MemoryItem {
-    pub id: String,
-    pub session_id: Option<String>,
-    pub source_type: String,
-    pub unit_type: String,
-    pub content: String,
-    pub score: f64,
-    pub created_at: String,
-    pub tags: Vec<String>,
-    pub provenance: Option<String>,
-    /// Scan status persisted at write time ("accepted", "accepted_with_redaction",
-    /// "rejected"). Written by `store_memory_with_safety`; absent for legacy items.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub scan_status: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub scan_reason: Option<String>,
-}
+use crate::services::memory::{MemoryItem, SafetyMode, ScanResult, ScanResultKind};
 
 fn db_path() -> PathBuf {
     let mut p = dirs_next::home_dir().unwrap_or_else(|| PathBuf::from("/tmp"));

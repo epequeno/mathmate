@@ -1,4 +1,5 @@
 mod audit;
+mod book_stream;
 mod config;
 mod error;
 mod images;
@@ -7,6 +8,7 @@ mod memory;
 mod models;
 mod pathscope;
 mod pdf_import;
+mod problem_bank;
 mod project;
 mod services;
 
@@ -17,6 +19,7 @@ pub mod types_export {
     pub use crate::services::config::*;
     pub use crate::services::memory::*;
     pub use crate::services::synapse::*;
+    pub use crate::services::problem_bank::*;
 }
 mod session;
 mod textbook;
@@ -27,7 +30,7 @@ mod vault;
 mod wrapup;
 
 use crate::services::session::{Message, Session, SessionHeader};
-use tauri::State;
+use tauri::{Manager, State};
 use crate::error::AppError;
 use crate::services::AppServices;
 
@@ -121,6 +124,16 @@ fn rename_session(
     title: String,
 ) -> Result<Session, AppError> {
     svc.sessions.rename(&session_id, &title)
+}
+
+#[tauri::command]
+fn update_session_hint_outcome(
+    svc: State<AppServices>,
+    session_id: String,
+    hints_used: Option<i32>,
+    solved: Option<bool>,
+) -> Result<Session, AppError> {
+    svc.sessions.update_hint_outcome(&session_id, hints_used, solved)
 }
 
 #[tauri::command]
@@ -301,6 +314,93 @@ fn list_archived_projects(
     svc: State<AppServices>,
 ) -> Result<Vec<crate::services::project::MathProject>, AppError> {
     svc.projects.list_archived()
+}
+
+// ─── Vault management (Multi-Vault Phase 15E) ────────────────────────
+
+#[tauri::command]
+fn set_active_vault(
+    project_id: String,
+    vault_id: String,
+) -> Result<crate::services::project::MathProject, String> {
+    let mut project = crate::project::load_project(&project_id)?;
+    if !project.vaults.iter().any(|v| v.id == vault_id) {
+        return Err(format!("Vault {} not found in project", vault_id));
+    }
+    project.active_vault_id = Some(vault_id);
+    crate::project::update_project(&project)?;
+    Ok(project)
+}
+
+#[tauri::command]
+fn add_vault(
+    project_id: String,
+    name: String,
+    path: String,
+    kind: String, // "synapse" | "legacy" | "classroom"
+) -> Result<crate::services::project::MathProject, String> {
+    let mut project = crate::project::load_project(&project_id)?;
+    let vault_kind = match kind.as_str() {
+        "synapse" => crate::services::project::VaultKind::Synapse,
+        "legacy" => crate::services::project::VaultKind::Legacy,
+        "classroom" => crate::services::project::VaultKind::Classroom,
+        _ => return Err(format!("Unknown vault kind: {}", kind)),
+    };
+    let vault = crate::services::project::VaultRef {
+        id: crate::project::uuid_v4(),
+        name,
+        path,
+        kind: vault_kind,
+        read_only: false,
+        position: project.vaults.len() as u16,
+    };
+    if project.active_vault_id.is_none() {
+        project.active_vault_id = Some(vault.id.clone());
+    }
+    project.vaults.push(vault);
+    crate::project::migrate_project(&mut project);
+    crate::project::update_project(&project)?;
+    Ok(project)
+}
+
+#[tauri::command]
+fn remove_vault(
+    project_id: String,
+    vault_id: String,
+) -> Result<crate::services::project::MathProject, String> {
+    let mut project = crate::project::load_project(&project_id)?;
+    project.vaults.retain(|v| v.id != vault_id);
+    crate::project::migrate_project(&mut project); // repairs active_vault_id
+    crate::project::update_project(&project)?;
+    Ok(project)
+}
+
+#[tauri::command]
+fn rename_vault(
+    project_id: String,
+    vault_id: String,
+    name: String,
+) -> Result<crate::services::project::MathProject, String> {
+    let mut project = crate::project::load_project(&project_id)?;
+    if let Some(v) = project.vaults.iter_mut().find(|v| v.id == vault_id) {
+        v.name = name;
+    } else {
+        return Err(format!("Vault {} not found in project", vault_id));
+    }
+    crate::project::update_project(&project)?;
+    Ok(project)
+}
+
+#[tauri::command]
+fn update_project_vaults(
+    project_id: String,
+    vaults: Vec<crate::services::project::VaultRef>,
+) -> Result<crate::services::project::MathProject, String> {
+    let mut project = crate::project::load_project(&project_id)?;
+    project.vaults = vaults;
+    crate::project::migrate_project(&mut project);
+    crate::project::update_project(&project)?;
+    Ok(project)
 }
 
 #[tauri::command]
@@ -602,6 +702,15 @@ fn derive_textbook_id(
     Ok(svc.textbook.derive_textbook_id(&pdf_path))
 }
 
+// ─── Book Stream Commands ──────────────────────────
+
+#[tauri::command]
+fn get_book_stream_info(
+    book_stream: State<book_stream::BookStreamServer>,
+) -> Result<book_stream::BookStreamInfo, AppError> {
+    Ok(book_stream.info())
+}
+
 // ─── Tool Commands ──────────────────────────────
 
 #[tauri::command]
@@ -691,6 +800,87 @@ fn get_cached_models(
     Ok(svc.model_catalog.get_cached())
 }
 
+// ─── Problem Bank Commands (Phase 16B) ──────────
+
+#[tauri::command]
+fn list_problems(
+    svc: State<AppServices>,
+    filter: problem_bank::ProblemFilter,
+) -> Result<Vec<problem_bank::CompProblem>, AppError> {
+    svc.problem_bank.list_problems(filter)
+}
+
+#[tauri::command]
+fn get_problem(
+    svc: State<AppServices>,
+    problem_id: String,
+) -> Result<problem_bank::CompProblem, AppError> {
+    svc.problem_bank.get_problem(&problem_id)
+}
+
+#[tauri::command]
+fn random_problem(
+    svc: State<AppServices>,
+    filter: problem_bank::ProblemFilter,
+) -> Result<problem_bank::CompProblem, AppError> {
+    svc.problem_bank.random_problem(filter)
+}
+
+#[tauri::command]
+fn save_problem_attempt(
+    svc: State<AppServices>,
+    attempt: problem_bank::ProblemAttempt,
+) -> Result<(), AppError> {
+    svc.problem_bank.save_attempt(attempt)
+}
+
+#[tauri::command]
+fn list_problem_attempts(
+    svc: State<AppServices>,
+    problem_id: Option<String>,
+) -> Result<Vec<problem_bank::ProblemAttempt>, AppError> {
+    svc.problem_bank.list_attempts(problem_id.as_deref())
+}
+
+#[tauri::command]
+fn save_problem_attempt_note(
+    svc: State<AppServices>,
+    problem_id: String,
+    source: String,
+    year: u32,
+    number: u8,
+    difficulty: String,
+    topics: Vec<String>,
+    statement: String,
+    outcome: String,
+    hints_used: u8,
+    elapsed_seconds: u32,
+    notes: String,
+    vault_path: String,
+) -> Result<String, AppError> {
+    svc.problem_bank.save_attempt_note(
+        &problem_id,
+        &source,
+        year,
+        number,
+        &difficulty,
+        &topics,
+        &statement,
+        &outcome,
+        hints_used,
+        elapsed_seconds,
+        &notes,
+        &vault_path,
+    )
+}
+
+#[tauri::command]
+fn get_attempt_stats(
+    svc: State<AppServices>,
+) -> Result<problem_bank::AttemptStats, AppError> {
+    svc.problem_bank.get_attempt_stats()
+}
+
 // ─── App Builder ────────────────────────────────
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -700,6 +890,14 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_shell::init())
         .manage(services::AppServices::init().expect("Failed to init AppServices"))
+        .setup(|app| {
+            let services = app.state::<services::AppServices>();
+            let base_dir = services.base_dir.clone();
+            let server = book_stream::BookStreamServer::start(base_dir)
+                .expect("Failed to start book stream HTTP server");
+            app.manage(server);
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             // Environment variables
             get_env_var,
@@ -715,6 +913,7 @@ pub fn run() {
             create_session,
             append_message,
             rename_session,
+            update_session_hint_outcome,
             delete_session,
             archive_session,
             unarchive_session,
@@ -736,10 +935,17 @@ pub fn run() {
             list_archived_projects,
             delete_project_cascade,
             list_projects,
+            // Book Stream
+            get_book_stream_info,
             // Vault
             scan_vault,
             read_note,
             init_vault,
+            set_active_vault,
+            add_vault,
+            remove_vault,
+            rename_vault,
+            update_project_vaults,
             // Images
             save_image,
             load_image,
@@ -772,6 +978,14 @@ pub fn run() {
             // Model catalog
             fetch_models,
             get_cached_models,
+            // Problem bank (Phase 16B)
+            list_problems,
+            get_problem,
+            random_problem,
+            save_problem_attempt,
+            list_problem_attempts,
+            save_problem_attempt_note,
+            get_attempt_stats,
             // Tools (Phase 12B)
             get_tool_definitions,
             execute_tool,

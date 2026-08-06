@@ -1,128 +1,14 @@
 #![allow(dead_code)]
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::io::{BufRead, BufReader, Write};
 use std::path::PathBuf;
 #[cfg(feature = "export-types")]
 use ts_rs::TS;
+use crate::services::session::{
+    Message, Session, SessionHeader,
+};
 
-// ─── Public data model ───────────────────────────────────────────────────────
-
-/// Mirrors the Swift `SessionHeader` model for backward compat.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "export-types", derive(TS))]
-#[cfg_attr(feature = "export-types", ts(export, export_to = "session.ts"))]
-pub struct SessionHeader {
-    pub id: String,
-    pub title: String,
-    pub model: String,
-    pub provider: String,
-    pub created_at: String,
-    pub updated_at: String,
-    pub project_id: Option<String>,
-    pub tutor_style: Option<String>,
-    pub flags: Option<HashMap<String, bool>>,
-}
-
-/// A content part within a message (text or image).
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "type")]
-#[cfg_attr(feature = "export-types", derive(TS))]
-#[cfg_attr(feature = "export-types", ts(export, export_to = "session.ts"))]
-pub enum ContentPart {
-    #[serde(rename = "text")]
-    Text { text: String },
-    #[serde(rename = "image")]
-    Image {
-        /// Optional disk-reference filename (from save_image). May be absent
-        /// when image data is sent inline via the `data` field.
-        #[serde(default)]
-        url: Option<String>,
-        mime: Option<String>,
-        data: Option<String>,
-    },
-}
-
-// ─── Timeline segment types (Phase 12A) ─────────────────────────────────────
-
-/// Status of a tool call in the timeline.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "snake_case")]
-#[cfg_attr(feature = "export-types", derive(TS))]
-#[cfg_attr(feature = "export-types", ts(export, export_to = "session.ts"))]
-pub enum ToolCallStatus {
-    Pending,
-    Running,
-    Completed,
-    Error,
-}
-
-/// The kind/type of a message segment.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "snake_case")]
-#[cfg_attr(feature = "export-types", derive(TS))]
-#[cfg_attr(feature = "export-types", ts(export, export_to = "session.ts"))]
-pub enum SegmentKind {
-    Thinking {
-        content: String,
-    },
-    ToolCall {
-        tool_name: String,
-        arguments: serde_json::Value,
-        call_id: String,
-        status: ToolCallStatus,
-    },
-    ToolResult {
-        call_id: String,
-        result: serde_json::Value,
-        is_error: bool,
-    },
-    Content {
-        text: String,
-    },
-}
-
-/// An ordered segment within an assistant message's timeline.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "export-types", derive(TS))]
-#[cfg_attr(feature = "export-types", ts(export, export_to = "session.ts"))]
-pub struct MessageSegment {
-    pub id: String,
-    pub ts: String,
-    #[serde(flatten)]
-    pub kind: SegmentKind,
-}
-
-/// A single message in the conversation.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "export-types", derive(TS))]
-#[cfg_attr(feature = "export-types", ts(export, export_to = "session.ts"))]
-pub struct Message {
-    pub id: String,
-    pub role: String, // "user" | "assistant" | "system" | "tool"
-    #[serde(default)]
-    pub segments: Vec<MessageSegment>,
-    pub content: Vec<ContentPart>,
-    pub created_at: Option<String>,
-    pub flags: Option<HashMap<String, bool>>,
-    /// Legacy thinking field — preserved for backward compat reads.
-    /// New messages should use `segments` with type "thinking" instead.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub thinking: Option<String>,
-    /// For role="tool" messages: the ID of the tool call this result satisfies.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub tool_call_id: Option<String>,
-}
-
-/// Full session — header + messages.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "export-types", derive(TS))]
-#[cfg_attr(feature = "export-types", ts(export, export_to = "session.ts"))]
-pub struct Session {
-    pub header: SessionHeader,
-    pub messages: Vec<Message>,
-}
 
 // ─── JSONL line types (internal) ─────────────────────────────────────────────
 //
@@ -425,17 +311,47 @@ pub fn create_session(
     Ok(session)
 }
 
+/// Update hint-ladder outcome metadata on a session (Phase 16A).
+/// Requires a full JSONL rewrite since the header line changes.
+pub fn update_session_hint_outcome(
+    id: &str,
+    hints_used: Option<i32>,
+    solved: Option<bool>,
+) -> Result<Session, String> {
+    let path = {
+        let jsonl = session_path(id);
+        let _archived_jsonl = archived_path(id);
+        if jsonl.exists() {
+            jsonl
+        } else {
+            load_session(id)?;
+            if session_path(id).exists() {
+                session_path(id)
+            } else {
+                return Err(format!("Session {} not found", id));
+            }
+        }
+    };
+
+    let mut session = read_jsonl(&path)?;
+    session.header.hints_used = hints_used;
+    session.header.solved = solved;
+    session.header.updated_at = Utc::now().to_rfc3339();
+    write_jsonl(&path, &session)?;
+    Ok(session)
+}
+
 /// Rename a session (updates title + updated_at; requires a full JSONL rewrite
 /// since the header line changes — acceptable as renaming is infrequent).
 pub fn rename_session(id: &str, title: &str) -> Result<Session, String> {
     // load_session handles migration from .json if needed.
     let path = {
         let jsonl = session_path(id);
-        let archived_jsonl = archived_path(id);
+        let _archived_jsonl = archived_path(id);
         if jsonl.exists() {
             jsonl
-        } else if archived_jsonl.exists() {
-            archived_jsonl
+        } else if _archived_jsonl.exists() {
+            _archived_jsonl
         } else {
             // Trigger migration (load_session writes the JSONL).
             load_session(id)?;
@@ -550,6 +466,7 @@ pub fn purge_session(id: &str) -> Result<(), String> {
 
 #[cfg(test)]
 mod tests {
+    use crate::types_export::{ContentPart, MessageSegment, SegmentKind, ToolCallStatus};
     use super::*;
 
     #[test]
