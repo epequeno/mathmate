@@ -2,187 +2,208 @@
 
 ## Objective
 
-Replace `currentProject.vault_path: string | null` with `currentProject.vaults: VaultRef[]`, allowing a project to reference multiple vaults. This enables:
-1. A per-chapter vault alongside the main project vault
-2. A shared classroom vault (read-only) alongside a personal vault
-3. Synapse + legacy vaults coexisting in the same project
+Replace single-vault project state (`vault_path`) with multi-vault project state (`vaults[] + active_vault_id`) so one project can attach multiple vault references and switch an active vault at runtime.
 
-The `VaultBackend` strategy (Phase 14D) provides the foundation; this plan extends the project data model and updates the frontend to show a vault switcher.
+## Scope Decisions (locked before implementation)
+
+1. **Single active vault at a time** for all read/write/tool operations.
+2. **One Synapse MCP process at a time**, bound to the active Synapse vault path.
+3. Switching active vault:
+   - Synapse → Synapse (different path): restart Synapse on new path
+   - Synapse → Legacy/Classroom: stop Synapse
+   - Legacy/Classroom → Synapse: start Synapse on selected path
+4. Rust enum name will be **`VaultKind`** (avoid collision with frontend `VaultBackend` interface).
 
 ## Current Pain
 
-- `vault_path: string | null` on `MathProject` stores exactly one vault path
-- Switching vaults requires a full project change (different project = different vault)
-- `vaultStore` operations all go through the current project's single vault path
-- The vault switcher in the sidebar is effectively one vault per project
-
-Real use cases that don't work:
-- "I want my calculus notes in one vault and my linear algebra notes in another, both under the same project"
-- "My teacher shared a read-only vault with class resources — I want it alongside my personal vault"
-- "I use Synapse for my main notes but want a legacy vault for PDF exports"
+- `MathProject.vault_path` stores exactly one vault.
+- Switching vaults requires changing projects.
+- Backend selection is project-level, not active-vault-level.
+- `vault_path` is hard-wired in multiple Rust/TS paths (`tools`, `pathscope`, `wrapup`, stores/pages).
 
 ## Proposed Design
 
 ### E.1 Data model
 
-```ts
-// In Rust (src-tauri/src/project.rs)
+```rust
+// src-tauri/src/project.rs
 
-// VaultRef replaces the single vault_path field
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "export-types", derive(TS))]
+#[cfg_attr(feature = "export-types", derive(ts_rs::TS))]
 #[cfg_attr(feature = "export-types", ts(export, export_to = "project.ts"))]
-pub struct VaultRef {
-    pub id: String,           // UUID, stable identity
-    pub name: String,         // user-visible short name: "Calculus Notes"
-    pub path: PathBuf,        // absolute path on disk
-    pub backend: VaultBackend, // "synapse" | "legacy" | "classroom"
-    pub read_only: bool,      // classroom shared vault
-    pub position: u8,         // tab order in vault switcher
+pub enum VaultKind {
+    Synapse,
+    Legacy,
+    Classroom,
 }
 
-// Project.vaults replaces project.vault_path
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "export-types", derive(ts_rs::TS))]
+#[cfg_attr(feature = "export-types", ts(export, export_to = "project.ts"))]
+pub struct VaultRef {
+    pub id: String,
+    pub name: String,
+    pub path: String,
+    pub kind: VaultKind,
+    pub read_only: bool,
+    pub position: u16,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MathProject {
     pub id: String,
     pub name: String,
     pub vaults: Vec<VaultRef>,
-    pub active_vault_id: String,  // which vault is currently selected
-    // ... rest of existing fields
+    pub active_vault_id: Option<String>,
+    pub schema_version: Option<u32>,
+    // existing fields...
 }
 ```
 
-### E.2 Migration
+### E.2 Migration invariants
 
-```ts
-// In Rust: on project load from JSON
-// If project.vault_path is non-null and project.vaults is empty:
-//   project.vaults = [{ id: uuid!, name: "Main Vault", path: old_vault_path,
-//                       backend: "synapse", read_only: false, position: 0 }]
-//   project.active_vault_id = vault_ref.id
-// If project.vault_path is non-null and project.vaults is non-empty:
-//   migrate: add missing VaultRef entries (keep old path as first entry)
+Run migration in project load path (`project.rs` + `services/project.rs`):
+
+- If old `vault_path` exists and `vaults` empty:
+  - create `vaults[0]` from old path (`kind = Synapse`, `read_only = false`, `position = 0`)
+  - set `active_vault_id = Some(vaults[0].id)`
+- If `vaults` non-empty and `active_vault_id` missing/invalid:
+  - set to first vault by `position`
+- Ensure each vault has non-empty `id`; generate if missing
+- Normalize `position` to contiguous sequence
+- If `vaults` empty, force `active_vault_id = None`
+- Set `schema_version = Some(2)` after migration
+
+### E.3 Backend routing model
+
+Routing moves from project-level to active-vault-level:
+
+```text
+project.vaults + project.active_vault_id
+  -> active VaultRef
+  -> backend factory by VaultRef.kind
+  -> SynapseBackend | LegacyBackend | ClassroomBackend (read-only wrapper)
 ```
 
-This is a **one-time data migration** in the JSON load path. The on-disk JSON format gets the new field; old JSON files get the migration applied at read time.
+`projectStore.setCurrentProject` and `setActiveVault` become the only places that construct/swap backends.
 
-### E.3 Rust service changes
+### E.4 Cross-cutting backend changes (must be in plan, not discovered mid-PR)
 
-```ts
-// In services/project.rs
+#### Rust
+- `src-tauri/src/project.rs` and `src-tauri/src/services/project.rs`
+  - new structs/enums + migration
+- `src-tauri/src/lib.rs`
+  - add vault management commands
+  - update tool execution path to resolve **active** vault path (not `project.vault_path`)
+- `src-tauri/src/services/path.rs`
+  - `build_allowed_roots()` must include all project vault paths
+- `src-tauri/src/services/synapse.rs` usage in command layer
+  - sync lifecycle to active vault transitions
 
-// update_project_vaults(project_id, vaults[]) — add/remove/reorder vaults
-// set_active_vault(project_id, vault_id)       — switch active vault
-// add_vault(project_id, vault_ref)             — add a new vault reference
-// remove_vault(project_id, vault_id)           — remove a vault reference (keeps files on disk)
-// rename_vault(project_id, vault_id, name)     — rename in the VaultRef
+#### Type export / TS contract
+- add project type exports (`project.ts`) to `types_export` and `src-tauri/tests/export_types.rs`
+- update frontend imports to use generated project types where appropriate
+
+#### Frontend
+- `src/lib/types.ts` / `src/lib/api/projects.ts` contract updates
+- `src/stores/projectStore.ts`
+  - active-vault selection actions
+  - backend rebuild and Synapse lifecycle on switch
+- `src/stores/vaultStore.ts`
+  - derive `currentVault` from active id
+- pages/components referencing `currentProject.vault_path`
+  - `ChatPage.tsx`, `VaultPage.tsx`, `OverviewPage.tsx`, `ProjectSettingsPanel.tsx`
+  - wrap-up save flow must use active vault path
+
+### E.5 Commands
+
+Add commands (service + tauri wrappers + TS API wrapper):
+- `update_project_vaults(project_id, vaults)`
+- `set_active_vault(project_id, vault_id)`
+- `add_vault(project_id, vault_ref)`
+- `remove_vault(project_id, vault_id)`
+- `rename_vault(project_id, vault_id, name)`
+
+Removal invariants:
+- if removed vault is active, select next by `position` (or previous); if none, `active_vault_id = None`
+- removing a vault ref never deletes on-disk files
+
+### E.6 UI
+
+Add `VaultSwitcher` surface:
+
+```text
+VaultSwitcher.tsx
+├── VaultTab.tsx
+├── VaultAddDialog.tsx
+└── VaultRemoveDialog.tsx
 ```
 
-These become new Tauri commands (add 5 commands).
-
-### E.4 Frontend: VaultSwitcher component
-
-```
-VaultSwitcher.tsx          (drop-down: list vaults + "Add Vault" + "Remove" for active)
-├── VaultTab.tsx           (single vault tab with icon + name)
-├── VaultAddDialog.tsx     (native folder picker + backend selector + name input)
-└── VaultRemoveDialog.tsx  (confirm: removes ref but not files on disk)
-```
-
-The `VaultSwitcher` lives in the `ContextPanel` header or `Sidebar` vault section. It switches the `active_vault_id` in the project store, which `vaultStore` uses to derive `currentVault`.
-
-### E.5 `vaultStore` update
-
-```ts
-// Current:
-currentVault: VaultRef | null  // derived from projectStore.currentProject?.vault_path
-
-// New:
-currentVault: VaultRef | null  // derived from projectStore.currentProject?.vaults.find(v => v.id === projectStore.currentProject?.active_vault_id)
-activeVaultId: string | null   // from currentProject.active_vault_id
-```
-
-All existing `vaultStore` methods (`list`, `read`, `write`, `create`, `delete`, `search`, `backlinks`, `vaultInfo`, `healthCheck`) are unchanged — they already operate through the `VaultBackend` which is constructed from `currentProject.vaults`. The backend construction in `projectStore.setCurrentProject` changes to select the active vault from the array.
-
-### E.6 The `VaultBackend` strategy from Phase 14D
-
-The `VaultBackend` strategy already handles Synapse vs legacy. The only change is that `SynapseBackend` and `LegacyBackend` are now instantiated per `VaultRef` rather than per project. The routing is:
-
-```
-currentProject.vaults[]
-  └─→ [active_vault_id] → current VaultRef
-        └─→ VaultBackend.for(ref.backend, ref.path)
-              └─→ SynapseBackend | LegacyBackend
-```
+Must show:
+- active vault highlight,
+- backend badge (`Synapse`, `Legacy`, `Classroom`),
+- lock icon + disabled write actions for `read_only` / classroom vaults.
 
 ## Task Checklist
 
-### Data model
-- [ ] Add `VaultRef` struct in Rust `project.rs` with `#[derive(TS)]` annotation
-- [ ] Add `VaultBackend` enum: `Synapse | Legacy | Classroom`
-- [ ] Add `vaults: Vec<VaultRef>` and `active_vault_id: String` fields to `MathProject`
-- [ ] Add `export-types` feature re-export for `VaultRef` + `MathProject` in `services/project.rs`
-- [ ] Add migration in `project.rs`: load-time conversion of `vault_path → vaults[0]`
-- [ ] Regenerate TS types: `npm run generate:ts-types`
+### Data model + migration
+- [ ] Add `VaultKind` + `VaultRef` in Rust project model
+- [ ] Add `vaults` + `active_vault_id` to `MathProject`
+- [ ] Implement load-time migration and invariants
+- [ ] Add/propagate `schema_version`
 
-### Rust commands
-- [ ] Add `update_project_vaults` command (replace vault list)
-- [ ] Add `set_active_vault` command
-- [ ] Add `add_vault` command
-- [ ] Add `remove_vault` command
-- [ ] Add `rename_vault` command
-- [ ] Regenerate TS API wrappers (`npm run generate:ts-types` after adding commands)
+### Rust commands/services
+- [ ] Add 5 vault-management commands
+- [ ] Update `execute_tool` path resolution to active vault
+- [ ] Update `build_allowed_roots` to include all project vault paths
+- [ ] Wire Synapse start/stop/restart to active vault transitions
 
-### Frontend
-- [ ] Add `src/components/VaultSwitcher.tsx`
-- [ ] Add `src/components/VaultSwitcher/VaultTab.tsx`
-- [ ] Add `src/components/VaultSwitcher/VaultAddDialog.tsx`
-- [ ] Add `src/components/VaultSwitcher/VaultRemoveDialog.tsx`
-- [ ] Update `projectStore.ts`:
-  - `setCurrentProject` constructs the backend from `activeVault` (first vault or selected)
-  - `setActiveVault(id)` updates `active_vault_id`
-  - `addVault(vaultRef)`, `removeVault(vaultId)`, `updateVaults(vaults[])`
-  - `currentProject.vault_path` is removed
-- [ ] Update `vaultStore.ts`: derive `currentVault` from `activeVaultId` in `currentProject`
-- [ ] Update `ChatPage.tsx`, `ContextPanel.tsx`, `VaultPage.tsx` to use `VaultSwitcher`
-- [ ] Add `vaultStore.vaults[]` derived from `projectStore.currentProject?.vaults`
+### Type export / TS wrappers
+- [ ] Export project-related TS types (`project.ts`) via `ts-rs`
+- [ ] Update export test (`src-tauri/tests/export_types.rs`)
+- [ ] Update TS API wrappers for new commands
+
+### Frontend stores/UI
+- [ ] Add active-vault actions in `projectStore`
+- [ ] Update `vaultStore` derivations
+- [ ] Implement `VaultSwitcher` + dialogs
+- [ ] Remove all direct `currentProject.vault_path` callsites
 
 ### Tests
-- [ ] Update Rust project tests for new data model
-- [ ] Add `src/lib/vault/vaultswitcher.test.tsx` (render VaultSwitcher with 1 vault, 2 vaults, read-only vault)
-- [ ] Verify the migration path: load an old JSON project with `vault_path` and confirm it becomes `vaults[0]`
+- [ ] Rust migration tests: old JSON (`vault_path`) -> new model
+- [ ] Rust invariants tests: invalid active id, empty vault list, remove-active behavior
+- [ ] Frontend tests for switcher states (1 vault, many vaults, read-only)
+- [ ] Store tests for backend swap + Synapse lifecycle transitions
 
 ## Validation
 
 - `npm run build` ✅
 - `npm test` ✅
+- `cargo check` ✅
 - `cargo test` ✅
 - Manual smoke:
-  1. Create a new project — should have one vault (empty path or default)
-  2. Add a second vault via VaultSwitcher → folder picker → confirm
-  3. Switch between vaults — vaultStore operations should use the selected vault
-  4. Search in vault A, switch to vault B, search again — results differ
-  5. Remove a vault from the project — files remain on disk; project loads without errors
-  6. Load an old project (JSON with `vault_path`) — migration produces a `vaults` array
+  1. Load old project JSON and verify migration
+  2. Add/remove/rename vault refs
+  3. Switch active vault and verify notes/search/tool execution follow active vault
+  4. Switch between two Synapse vaults and verify restart behavior
+  5. Classroom/read-only vault disables writes
 
 ## Acceptance Criteria
 
-- A project can have 1–N vault references
-- `vault_path: string | null` is removed from the JSON format (migrated)
-- All existing vault operations (list, read, write, create, delete, search) work on the active vault
-- The VaultSwitcher UI shows all vaults in the project with the active vault highlighted
-- Adding a new vault prompts for a folder (native dialog) and a name
-- Removing a vault removes it from the project but not from disk
-- Read-only vaults (classroom) show a lock indicator and disable write operations in the UI
+- Projects support 0..N vault references with stable active selection
+- No runtime dependency on legacy `vault_path` remains
+- Active vault governs all vault operations and tool-vault context
+- Synapse lifecycle is deterministic on vault switches
+- Migration is safe, idempotent, and covered by tests
 
 ## Risks
 
-- **Old JSON project migration.** Migration happens at load time. If `vault_path` is null, the project has no vault. Mitigation: in `init_vault`, check if `vaults` is empty and create a default vault.
-- **Synapse per-vault vs per-project.** Synapse currently initializes one MCP client per project. If a project has two Synapse vaults, do they share one MCP connection or need two? Mitigation: keep one Synapse connection per project (as today) — both Synapse vaults use the same connection. The path check in `VaultBackend` is per-call.
-- **API key for multiple vaults.** If vault A needs a Synapse API key and vault B is a legacy vault, both should work independently. This is already handled by `VaultBackend`.
-- **Data migration is one-way.** Old JSON files get migrated on load. Once loaded and saved, they use the new format. Mitigation: add a version field to the JSON format for future migrations.
+- **Hidden `vault_path` coupling**: mitigate via grep-driven checklist and CI assertion against new usages.
+- **Synapse restart race on rapid switching**: mitigate by serializing switch operations in `projectStore`.
+- **Migration edge cases**: mitigate with fixture files for malformed/partial old JSON.
 
 ## Out of Scope
 
-- **Classroom/collab sync.** Read-only classroom vaults are a data-model feature; the actual sync/live-collaboration protocol is a separate Phase 15+ item.
-- **Vault nesting.** No sub-folders within a vault (each `VaultRef` points to one directory). Users can organize with sub-folders if they want.
-- **Vault templates.** No "create vault from template" feature.
+- Collaborative sync protocol for classroom vaults
+- Multi-active-vault querying in a single call
+- Vault nesting/templates

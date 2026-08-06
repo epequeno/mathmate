@@ -2,191 +2,161 @@
 
 ## Objective
 
-Fix `lib/providers.ts` to correctly implement the Anthropic API wire protocol for streaming responses. The current implementation has partial Anthropic support (adds the right HTTP headers) but the delta parser reads the OpenAI `choice.delta` shape, which Anthropic does not use. The fix replaces the OpenAI-only `_parseDelta` with a provider-specific delta parser.
+Make `src/lib/providers.ts` correctly support **native Anthropic streaming** end-to-end (request format + SSE parsing), while preserving existing OpenAI/OpenRouter behavior.
 
 ## Current Pain
 
-In `lib/providers.ts`:
+Today the code does two incompatible things at once:
+- routes Anthropic providers to `/v1/messages` with Anthropic headers,
+- but parses stream chunks with OpenAI `choices[0].delta` assumptions.
 
-```ts
-// Current — wrong for Anthropic
-function _parseDelta(delta: unknown, model: string): ParsedDelta {
-  const d = delta as Record<string, unknown>;
-  if (d.type === "thinking") return { thinking: d.text as string };
-  if (d.type === "content_block") {
-    if (d.content_type === "text") return { text: d.text as string };
-    if (d.content_type === "input_json") return { toolCall: parseToolCall(d); }
-  }
-  return {};
-}
-```
-
-Problems:
-- **`choice.delta` is OpenAI terminology.** Anthropic uses `content_block_delta` events. No `choice` wrapper exists in the Anthropic SSE stream.
-- **Anthropic streaming format is completely different:**
-  - OpenAI: `data: {"choices":[{"delta":{"content":"..."}}]}\n\n`
-  - Anthropic: `data: {"type":"content_block_delta","index":0,"delta":{"type":"text","text":"..."}}\n\n`
-- **`type: "thinking"` vs `type: "content_block"`**: Anthropic sends thinking as `{"type":"content_block","content_type":"thinking","text":"..."}` NOT `{"type":"thinking"}`.
-- **Tool calls differ in shape**: Anthropic uses `content_block` with `content_type: "tool_use"` and `input_json`; the `function_call` object is nested differently than OpenAI's `delta.function_call`.
-- **The `model` string-match for "anthropic" / "claude" exists in the header logic but may not cover all model IDs** (e.g. `claude-opus-4-5`, `claude-sonnet-4-0`, `anthropic.claude-3-5-sonnet-20241022-v2`).
+So native Anthropic calls can connect but are parsed incorrectly (or dropped), especially for thinking and tool-use blocks.
 
 ## Proposed Design
 
-### C.1 Provider detection
-
-Define a `ProviderVariant` enum:
+### C.1 Canonical wire-variant detection (provider-based, not model-name-based)
 
 ```ts
-// src/lib/providers.ts
+export type WireVariant = "openai_compatible" | "anthropic_native";
 
-export type ProviderVariant = "openai" | "anthropic" | "openrouter";
+function detectWireVariant(provider: ProviderConfig): WireVariant {
+  const name = provider.name.toLowerCase();
+  const base = provider.base_url.toLowerCase();
 
-function detectVariant(provider: string, model: string): ProviderVariant {
-  const key = `${provider}:${model}`.toLowerCase();
-  if (
-    key.includes("anthropic") ||
-    key.includes("claude") ||
-    provider === "anthropic"
-  ) return "anthropic";
-  if (provider === "openrouter") return "openrouter";
-  return "openai";
-}
-```
-
-### C.2 Split the stream parser
-
-```ts
-// src/lib/providers.ts
-
-function parseSSE_OpenAI(line: string): DeltaEvent | null;
-function parseSSE_Anthropic(line: string): DeltaEvent | null;
-
-function* parseSSEStream(
-  reader: ReadableStreamDefaultReader<Uint8Array>,
-  variant: ProviderVariant,
-): Generator<ParsedDelta> {
-  const parser = variant === "anthropic"
-    ? parseSSE_Anthropic
-    : parseSSE_OpenAI;
-
-  // yield from parser(lines)
-}
-```
-
-### C.3 Anthropic delta parser
-
-```ts
-function parseSSE_Anthropic(line: string): DeltaEvent | null {
-  if (!line.startsWith("data:")) return null;
-  const json = JSON.parse(line.slice(5));
-  const type = json.type as string;
-
-  switch (type) {
-    case "content_block_delta": {
-      const delta = json.delta as Record<string, unknown>;
-      const deltaType = delta.type as string;
-      if (deltaType === "text") return { text: delta.text as string };
-      if (deltaType === "thinking_delta") return { thinking: delta.thinking as string };
-      if (deltaType === "input_json_block") {
-        // Tool call block — format as tool call
-        return { toolCall: parseAnthropicToolCall(json) };
-      }
-      break;
-    }
-    case "content_block_start": {
-      const block = json.content_block as Record<string, unknown>;
-      if (block.content_type === "thinking") return { thinkingBlockStart: true };
-      if (block.content_type === "tool_use") return { toolCallStart: true };
-      break;
-    }
-    case "message_delta": {
-      // Final message with stop_reason
-      const stopReason = json.delta?.stop_reason as string | undefined;
-      return { stopReason };
-    }
-    case "error": {
-      return { error: json.error as string };
-    }
-    case "[DONE]":
-      return { done: true };
+  // OpenRouter remains OpenAI-compatible wire format even for Claude models.
+  if (name.includes("openrouter") || base.includes("openrouter.ai")) {
+    return "openai_compatible";
   }
-  return null;
-}
 
-function parseAnthropicToolCall(json: AnthropicContentBlock): ToolCallDelta {
-  const delta = json.delta as Record<string, unknown>;
-  return {
-    callId: crypto.randomUUID(),
-    toolName: delta.name as string ?? "",
-    arguments: parseInputJson(delta as Record<string, unknown>),
-  };
+  if (name.includes("anthropic") || base.includes("api.anthropic.com")) {
+    return "anthropic_native";
+  }
+
+  return "openai_compatible";
 }
 ```
 
-### C.4 OpenAI parser (extract, no behavior change)
+**Rule:** never infer Anthropic-native mode from model ID alone (prevents misclassifying OpenRouter Claude models).
+
+### C.2 Split request building by wire variant
+
+`streamChat()` should delegate to:
+- `buildOpenAIRequest(...)`
+- `buildAnthropicRequest(...)`
+
+Anthropic-native builder requirements:
+- endpoint: `/v1/messages`
+- headers: `x-api-key`, `anthropic-version`, `content-type`
+- body shape:
+  - `model`, `max_tokens`, `stream: true`
+  - `system` extracted from system messages
+  - `messages` converted to Anthropic content blocks
+  - `tools` converted from OpenAI-style tool definitions:
+    - `{ name, description, input_schema }`
+
+Message conversion requirements:
+- user/assistant text → `{ type: "text", text }`
+- image parts → Anthropic image block (`source.type = "base64"`)
+- assistant tool calls → `tool_use` content blocks (stable `id`, `name`, `input`)
+- tool result messages (`role: "tool"`) → Anthropic `user` message with `tool_result` block referencing `tool_use_id`
+
+### C.3 Parse SSE by full frame, not single-line JSON assumptions
+
+Add a shared frame reader that parses SSE blocks (supports `event:` + multi-line `data:`):
 
 ```ts
-function parseSSE_OpenAI(line: string): DeltaEvent | null {
-  if (!line.startsWith("data:")) return null;
-  const obj = JSON.parse(line.slice(5));
-  if (obj.error) return { error: obj.error.message ?? String(obj.error) };
-  const choice = (obj.choices ?? [])[0] as Record<string, unknown> | undefined;
-  if (!choice) return null;
-  const delta = choice.delta as Record<string, unknown> | undefined;
-  if (!delta) return null;
-  // Existing logic unchanged...
+for await (const frame of readSSEFrames(reader)) {
+  // frame.event, frame.data
 }
 ```
 
-### C.5 `content_type: "tool_result"` handling
+This prevents malformed handling when providers emit multi-line data or include event names.
 
-Anthropic sends tool results as `content_block_delta` with `input_json` containing the result. This is the tool-result data sent back to the model, not the tool-call output from the model. The tool-result data is handled in `assembleToolCalls` — this part already works correctly.
+### C.4 Anthropic event-to-`StreamChunk` adapter (stable tool-call IDs)
+
+Create `parseAnthropicFrame(frame, state): StreamChunk | null` where `state` tracks per-`index` tool-call assembly.
+
+Support at least:
+- `content_block_start`
+  - text/thinking blocks: initialize index state
+  - tool_use block: emit `tool_call_delta` with `call_id_part` + `tool_name_part`
+- `content_block_delta`
+  - `text_delta` → `chunk.text`
+  - `thinking_delta` → `chunk.thinking`
+  - `input_json_delta` (or equivalent partial-json type) → emit `arguments_part`
+- `content_block_stop`
+  - finalize index state (no random IDs)
+- `message_delta`
+  - usage/stop metadata if present
+- `message_stop`
+  - emit `{ done: true }`
+- `error`
+  - map to `AppError` path
+
+Important compatibility constraint:
+- Emit tool chunks in the **existing** `StreamChunk.tool_call_delta(s)` format so `assembleToolCalls()` continues to work unchanged.
+
+### C.5 OpenAI/OpenRouter parser extraction (no behavior change)
+
+Move current OpenAI delta logic into `parseOpenAIFrame(...)` with behavioral parity.
+OpenRouter should continue through this parser.
+
+### C.6 Compatibility/validation matrix
+
+| Provider path | Wire variant | Parser |
+|---|---|---|
+| OpenAI-compatible | `openai_compatible` | OpenAI parser |
+| OpenRouter (including Claude models) | `openai_compatible` | OpenAI parser |
+| Native Anthropic | `anthropic_native` | Anthropic parser |
 
 ## Task Checklist
 
-- [ ] Add `ProviderVariant` type + `detectVariant()` function
-- [ ] Add `parseSSE_Anthropic()` function with all event types: `content_block_delta`, `content_block_start`, `content_block_stop`, `message_delta`, `message_stop`, `error`, `[DONE]`
-- [ ] Add `parseAnthropicToolCall()` helper (converts Anthropic `input_json_block` delta to internal `ToolCallDelta`)
-- [ ] Add `parseSSE_OpenAI()` function (extract existing logic from `_parseDelta`)
-- [ ] Add `parseSSEStream()` generator that takes `variant: ProviderVariant`
-- [ ] Update `streamChat()` to call `parseSSEStream(reader, detectVariant(provider, model))`
-- [ ] Add `src/lib/providers.anthropic.test.ts`:
-  - SSE fixture: text-only message
-  - SSE fixture: thinking block followed by text
-  - SSE fixture: tool-use block
-  - SSE fixture: mixed (thinking → text → tool_use)
-  - SSE fixture: error event
-  - Assert parsed `ParsedDelta[]` for each fixture
-- [ ] Add `src/lib/providers.e2e.test.ts` (if mock server available) or document manual test steps
+- [ ] Add `WireVariant` + `detectWireVariant(provider)`
+- [ ] Split request builders: OpenAI-compatible vs Anthropic-native
+- [ ] Add message/tool conversion helpers for Anthropic request payloads
+- [ ] Add shared SSE frame reader (`readSSEFrames`)
+- [ ] Add `parseOpenAIFrame` (extracted current behavior)
+- [ ] Add `parseAnthropicFrame` with per-index tool-call assembly state
+- [ ] Preserve `StreamChunk` output contract used by orchestrator
+- [ ] Update `streamChat()` to route by wire variant
+- [ ] Add tests: `src/lib/providers.anthropic.test.ts`
+  - text-only stream
+  - thinking + text stream
+  - tool-use with partial JSON args
+  - mixed thinking/text/tool-use
+  - error event
+  - message_stop done event
+- [ ] Add parity tests: `src/lib/providers.openai-compat.test.ts`
+  - assert OpenRouter Claude model still uses OpenAI parser path
 
 ## Validation
 
 - `npm run build` ✅
-- `npm test` ✅ (includes new Anthropic parser tests)
+- `npm test` ✅ (includes new provider parser tests)
 - `cargo test` ✅
 - Manual smoke:
-  1. Set a Claude model (e.g. `claude-sonnet-4-20250514`) in settings
-  2. Send a text message — assert full response renders
-  3. Send a math problem requiring `calculate` tool — assert tool is called and result is rendered
-  4. Send a textbook search query — assert tool is called and results displayed
-  5. Click abort mid-stream — assert stream stops cleanly
+  1. Native Anthropic provider + Claude model: normal text response
+  2. Anthropic thinking model: thinking trace appears as plain text
+  3. Anthropic tool-use turn: tool executes and result is incorporated
+  4. OpenRouter Claude model still streams normally (no regression)
+  5. Abort mid-stream works for both variants
 
 ## Acceptance Criteria
 
-- A streaming turn with a Claude model produces the same rendered output as with an OpenAI model
-- Thinking blocks are rendered as expandable thinking traces (same as OpenAI thinking/thinking delta)
-- Tool calls are extracted correctly from Anthropic's `content_block_delta` events
-- The abort button stops the stream without errors
-- The `error` event type surfaces as an `AppError` in the UI via the existing error path
+- Native Anthropic streaming works for text, thinking, and tool-use flows
+- Tool-call IDs remain stable across partial deltas (no UUID-per-delta bug)
+- OpenRouter Claude models are not misrouted to Anthropic-native parser
+- Existing OpenAI/OpenRouter behavior remains unchanged
+- Errors surface through existing `AppError` handling path
 
 ## Risks
 
-- **Anthropic API may change their SSE format.** Mitigation: version the parser and add a compatibility layer if the format changes significantly.
-- **Model detection relies on string matching.** Mitigation: use a config field `providerVariant` in the model catalog or app config rather than guessing from model name.
-- **Thinking blocks vs `content_block`** are rendered differently by the UI. The existing `streamSegments` renderer treats `thinking` segments specially. Ensure Anthropic thinking maps to the same segment type.
+- **Anthropic event schema drift**: mitigate with fixture-driven parser tests and narrow adapters.
+- **Request conversion bugs**: mitigate with explicit unit tests for message/tool conversion.
+- **Cross-provider regressions**: mitigate with parity tests for existing OpenAI-compatible fixtures.
 
 ## Out of Scope
 
-- **Non-streaming Anthropic requests.** The current code only streams. A non-streaming path is not needed.
-- **Anthropic system prompt format.** Anthropic recommends a specific system prompt structure. The current system prompt works but may not be optimal. Deferred to a separate prompt-engineering task.
-- **Claude 3.5 / Opus / Sonnet differences.** The streaming format is consistent across Claude models. No per-model special-casing needed.
+- Non-streaming request mode
+- Prompt-quality tuning specific to Claude
+- Provider-catalog redesign (this plan only implements correct wire handling)

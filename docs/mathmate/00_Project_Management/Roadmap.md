@@ -65,6 +65,7 @@
 - [x] **(7) Memory → prompt isolation**: Scanner for injection patterns on memory write; wrap retrieved items in a clearly delimited "Memory Context" block with size caps ([`Implementation_Security_MemoryPromptIsolation.md`](../Implementation_Security_MemoryPromptIsolation.md) — extends [`Implementation_AgentMemory_PhaseD_SafetySanitization.md`](../Implementation_AgentMemory_PhaseD_SafetySanitization.md))
 - [x] **(8) Study-log path containment**: `save_wrap_up` must canonicalize `vault_path` and verify the final file is inside it; prefix generated markdown with an "auto-generated" banner ([`Implementation_Security_StudyLogPathContainment.md`](../Implementation_Security_StudyLogPathContainment.md))
 - [x] **(9) Anchor `rel` attribute**: `target="_blank"` from sanitized output must include `rel="noopener noreferrer"` to prevent tab-nabbing (covered by item 6) ([`Implementation_Security_SanitizerHardening.md`](../Implementation_Security_SanitizerHardening.md))
+- [ ] **(10) Book tab PDF streaming**: Replace the whole-file base64 round-trip (`read_project_textbook` → `atob` → Blob) with a custom `book://` Tauri URI scheme supporting HTTP Range requests, so pdf.js fetches only the xref + requested page on first Book-tab visit. Eliminates multi-second first-visit delay for 1000+ page textbooks and is strictly more secure (project-id-only URL, server-side `PathScope::guard` per request). macOS v1; Windows/Linux to follow. ([`Implementation_BookTab_PdfStreaming.md`](../Implementation_BookTab_PdfStreaming.md))
 
 ## Phase 12: Chat Timeline & Tool System
 
@@ -173,11 +174,11 @@ Quick, *no-behavior-change* cleanups surfaced by the review. Each item is an ind
 - [x] **G.12 — Remove unused `visionFilterEnabled` flag in `configStore`**: Finding was stale — already wired to `ModelSelector.tsx` with toggle chip + filter logic. No change needed. ([`Implementation_Phase14G_Cleanup.md`](../Implementation_Phase14G_Cleanup.md))
 - [x] **G.13 — Strengthen `scripts/check-no-eval.mjs`**: Now catches bare `Function(`, `(0, eval)`, and `setTimeout/setInterval` string-code patterns. All 6 fixture patterns detected. ([`Implementation_Phase14G_Cleanup.md`](../Implementation_Phase14G_Cleanup.md))
 - [x] **G.14 — Cap `streamedText` / `streamedThinking` growth**: 1 MB cap per accumulated string with `StreamError` on overflow. ([`Implementation_Phase14G_Cleanup.md`](../Implementation_Phase14G_Cleanup.md))
-- [x] **G.15 — Add `@command:` JSDoc annotations + diff-check script**: `scripts/check-api-commands.mjs` diffs `invoke_handler!` in `lib.rs` against `@command:` annotations in `lib/api/*.ts`. 63 commands matched. Added 11 missing annotations to memory/files/config/vault/textbook API modules. ([`Implementation_Phase14G_Cleanup.md`](../Implementation_Phase14G_Cleanup.md))
+- [x] **G.15 — Add `@command:` JSDoc annotations + diff-check script**: `scripts/check-api-commands.mjs` diffs `invoke_handler!` in `lib.rs` against `@command:` annotations in `lib/api/*.ts`. Currently tracking 76 commands (evolved from 63 at creation). Added 11 missing annotations to memory/files/config/vault/textbook API modules. ([`Implementation_Phase14G_Cleanup.md`](../Implementation_Phase14G_Cleanup.md))
 
 ### 14A — Typed Tauri API Client
 - [x] **Typed `invoke` wrappers in `src/lib/api/*`**: 8 modules (`sessions`, `projects`, `config`, `memory`, `tools`, `vault`, `files`, `textbook`, `wrapup`) with typed args/return + `@command:` JSDoc annotations + `index.ts` barrel with `api` facade. All 40+ call sites migrated across stores and components. Dynamic `await import("../lib/tauri")` eliminated from `providers.ts` and `ContextPanel.tsx`. Raw `invoke` now lives only in `lib/api/` and `lib/tauri.ts`. ([`Implementation_Phase14A_TypedTauriApiClient.md`](../Implementation_Phase14A_TypedTauriApiClient.md))
-- [x] **ESLint rule** banning raw `invoke` outside `lib/api/` and `lib/tauri.ts`: `scripts/check-no-raw-invoke.mjs` prebuild guard. 0 violations in 79 source files.
+- [x] **ESLint rule** banning raw `invoke` outside `lib/api/` and `lib/tauri.ts`: `scripts/check-no-raw-invoke.mjs` prebuild guard. 0 violations in 145 source files.
 - [x] **Wrapper-coverage diff-check script** in `prebuild`: `scripts/check-api-commands.mjs` (see G.15 above).
 
 ### 14F — CSS Module Migration (top patterns)
@@ -232,58 +233,90 @@ Quick, *no-behavior-change* cleanups surfaced by the review. Each item is an ind
 
 
 ### 15A — Component Decomposition
-- [ ] **Split `ChatMessage.tsx` (386L)** → `UserBubble`, `AssistantBubble`, `ToolResultBubble`, `MessageSegments`, `VaultChips`, `QuickSavePopover`, `StreamingMessage`. ([`Implementation_Phase15A_ComponentDecomposition.md`](../Implementation_Phase15A_ComponentDecomposition.md))
-- [ ] **Split `Sidebar.tsx` (585L)** → `ProjectSection`, `ProjectRow`, `SessionList`, `SessionRow`, `ProjectMenu`, `ArchivalToggle`. ([`Implementation_Phase15A_ComponentDecomposition.md`](../Implementation_Phase15A_ComponentDecomposition.md))
-- [ ] **Split `ProjectSettingsPanel.tsx` (748L)** → `VaultSettingsTab`, `ModelSettingsTab`, `LaTeXSettingsTab`, `TextbookTab`, `AdvancedTab`. ([`Implementation_Phase15A_ComponentDecomposition.md`](../Implementation_Phase15A_ComponentDecomposition.md))
-- [ ] **Split `PdfViewer.tsx` (903L)** → `PdfPageCanvas`, `usePdfRenderer`, `usePdfRegionSelect`, `useTextbookIndexer`, `PdfNavigationBar`, `PdfRegionHighlight`. ([`Implementation_Phase15A_ComponentDecomposition.md`](../Implementation_Phase15A_ComponentDecomposition.md))
+- [x] **Split `ChatMessage.tsx` (386L)** → `UserBubble`, `AssistantBubble`, `ToolResultBubble`, `MessageSegments`, `VaultChips`, `QuickSavePopover`, `StreamingMessage`. ([`Implementation_Phase15A_ComponentDecomposition.md`](../Implementation_Phase15A_ComponentDecomposition.md))
+- [x] **Split `Sidebar.tsx` (585L)** → `ProjectSection`, `ProjectRow`, `SessionList`, `SessionRow`, `ProjectMenu`, `ArchivalToggle`. ([`Implementation_Phase15A_ComponentDecomposition.md`](../Implementation_Phase15A_ComponentDecomposition.md))
+- [x] **Split `ProjectSettingsPanel.tsx` (748L)** → `VaultSettingsTab`, `ModelSettingsTab`, `LaTeXSettingsTab`, `TextbookTab`, `AdvancedTab`. ([`Implementation_Phase15A_ComponentDecomposition.md`](../Implementation_Phase15A_ComponentDecomposition.md))
+- [x] **Split `PdfViewer.tsx` (903L)** → `PdfPageCanvas`, `usePdfRenderer`, `usePdfRegionSelect`, `useTextbookIndexer`, `PdfNavigationBar`, `PdfRegionHighlight`. ([`Implementation_Phase15A_ComponentDecomposition.md`](../Implementation_Phase15A_ComponentDecomposition.md))
 
 ### 15B — Discriminated-Union Stream State
-- [ ] **`phase: TurnPhase` discriminated union** replaces 8 streaming fields (`streaming`, `abortController`, `streamedText`, `streamedThinking`, `streamSegments`, `visionWarning`, etc.) in `useChatStore`. ([`Implementation_Phase15B_DiscriminatedUnionStreamState.md`](../Implementation_Phase15B_DiscriminatedUnionStreamState.md))
-- [ ] **Phase transition map**: `idle → waiting-for-turn → streaming → finishing → finished/aborted/errored → idle`. ([`Implementation_Phase15B_DiscriminatedUnionStreamState.md`](../Implementation_Phase15B_DiscriminatedUnionStreamState.md))
-- [ ] **Computed helpers**: `isStreaming`, `isIdle`, `currentError`, `currentAbortController`, `latestText`. ([`Implementation_Phase15B_DiscriminatedUnionStreamState.md`](../Implementation_Phase15B_DiscriminatedUnionStreamState.md))
+- [x] **`phase: TurnPhase` discriminated union** replaces parallel streaming fields (`streaming`, `abortController`, `streamedText`, `streamedThinking`, `streamSegments`) in `useChatStore` with one authoritative turn state object. ([`Implementation_Phase15B_DiscriminatedUnionStreamState.md`](../Implementation_Phase15B_DiscriminatedUnionStreamState.md))
+- [x] **Phase transition map**: `idle → preparing → streaming → finishing → idle` with explicit `aborted`/`errored` terminal states before cleanup. ([`Implementation_Phase15B_DiscriminatedUnionStreamState.md`](../Implementation_Phase15B_DiscriminatedUnionStreamState.md))
+- [x] **Selector-based UI reads**: `isTurnActive`, `isStreaming`, `currentAbortController`, `latestText`, `latestThinking`, `currentTurnError`. ([`Implementation_Phase15B_DiscriminatedUnionStreamState.md`](../Implementation_Phase15B_DiscriminatedUnionStreamState.md))
+- [x] **Keep `visionWarning` separate from turn FSM** (toast-level UI concern; no behavior change). ([`Implementation_Phase15B_DiscriminatedUnionStreamState.md`](../Implementation_Phase15B_DiscriminatedUnionStreamState.md))
 
 ### 15C — Anthropic Wire-Protocol Support
-- [ ] **Provider-specific delta parsers**: `parseSSE_Anthropic` vs `parseSSE_OpenAI` — Anthropic uses `content_block_delta` events, not `choice.delta`. ([`Implementation_Phase15C_AnthropicWireProtocol.md`](../Implementation_Phase15C_AnthropicWireProtocol.md))
-- [ ] **Anthropic thinking blocks**: Map `content_block(content_type=thinking)` → `thinking` segment. ([`Implementation_Phase15C_AnthropicWireProtocol.md`](../Implementation_Phase15C_AnthropicWireProtocol.md))
-- [ ] **Tool call parsing**: Map `content_block_delta(input_json_block)` → internal `ToolCallDelta`. ([`Implementation_Phase15C_AnthropicWireProtocol.md`](../Implementation_Phase15C_AnthropicWireProtocol.md))
-- [ ] **Anthropic parser tests**: SSE fixtures for text-only, thinking, tool-use, mixed, error events. ([`Implementation_Phase15C_AnthropicWireProtocol.md`](../Implementation_Phase15C_AnthropicWireProtocol.md))
+- [x] **Wire-variant routing by provider**: keep OpenRouter on OpenAI-compatible parsing (even for Claude models), route only native Anthropic providers to Anthropic-native request/parser paths. ([`Implementation_Phase15C_AnthropicWireProtocol.md`](../Implementation_Phase15C_AnthropicWireProtocol.md))
+- [x] **Split request builders + SSE frame parsers**: OpenAI-compatible path unchanged; Anthropic-native path handles `/v1/messages`, Anthropic headers, and full-frame SSE parsing. ([`Implementation_Phase15C_AnthropicWireProtocol.md`](../Implementation_Phase15C_AnthropicWireProtocol.md))
+- [x] **Anthropic tool/thinking mapping with stable IDs**: map thinking deltas and tool-use JSON deltas into existing `StreamChunk` shape used by `assembleToolCalls()`. ([`Implementation_Phase15C_AnthropicWireProtocol.md`](../Implementation_Phase15C_AnthropicWireProtocol.md))
+- [x] **Parser parity tests**: Anthropic fixtures + OpenAI/OpenRouter regression fixtures to prevent cross-provider breakage. ([`Implementation_Phase15C_AnthropicWireProtocol.md`](../Implementation_Phase15C_AnthropicWireProtocol.md))
 
 ### 15D — Turn Orchestrator E2E Tests
-- [ ] **Contract fixture suite** (8 scenarios): text-only, single tool, multi-tool, abort pre-stream, abort mid-stream, error pre-stream, error mid-stream, max-tool-rounds. ([`Implementation_Phase15D_TurnOrchestratorE2ETests.md`](../Implementation_Phase15D_TurnOrchestratorE2ETests.md))
-- [ ] **`smartJoin()` + `delayedChunks()` + `toolCallChunk()`** test helpers for scripted streaming. ([`Implementation_Phase15D_TurnOrchestratorE2ETests.md`](../Implementation_Phase15D_TurnOrchestratorE2ETests.md))
-- [ ] **Live contract capture**: Run `runTurn()` through a real API and log event sequences as `.snap` files for parity regression detection. ([`Implementation_Phase15D_TurnOrchestratorE2ETests.md`](../Implementation_Phase15D_TurnOrchestratorE2ETests.md))
+- [x] **Contract fixture suite** (8 scenarios): text-only, single tool, multi-tool, abort pre-stream, abort mid-stream, error pre-stream, error mid-stream, max-tool-rounds. ([`Implementation_Phase15D_TurnOrchestratorE2ETests.md`](../Implementation_Phase15D_TurnOrchestratorE2ETests.md))
+- [x] **Deterministic helper utilities**: chunk generators + tool-call delta factories for scripted `streamChat` rounds (no live network). ([`Implementation_Phase15D_TurnOrchestratorE2ETests.md`](../Implementation_Phase15D_TurnOrchestratorE2ETests.md))
+- [x] **Assert against current `runTurn()` contract**: event-kind order for success paths; thrown behavior for abort/error paths. ([`Implementation_Phase15D_TurnOrchestratorE2ETests.md`](../Implementation_Phase15D_TurnOrchestratorE2ETests.md))
 
 ### 15E — Multi-Vault Support
-- [ ] **`vault_path` → `vaults: VaultRef[]` + `active_vault_id`** in the `MathProject` data model. One-time JSON migration on load. ([`Implementation_Phase15E_MultiVaultSupport.md`](../Implementation_Phase15E_MultiVaultSupport.md))
-- [ ] **`VaultRef`** struct: `id`, `name`, `path`, `backend` (`synapse`|`legacy`|`classroom`), `read_only`, `position`. ([`Implementation_Phase15E_MultiVaultSupport.md`](../Implementation_Phase15E_MultiVaultSupport.md))
-- [ ] **5 new Rust commands**: `update_project_vaults`, `set_active_vault`, `add_vault`, `remove_vault`, `rename_vault`. ([`Implementation_Phase15E_MultiVaultSupport.md`](../Implementation_Phase15E_MultiVaultSupport.md))
-- [ ] **`VaultSwitcher` component** with `VaultTab`, `VaultAddDialog`, `VaultRemoveDialog`. ([`Implementation_Phase15E_MultiVaultSupport.md`](../Implementation_Phase15E_MultiVaultSupport.md))
-- [ ] **Read-only classroom vault** support: lock indicator + disable writes. ([`Implementation_Phase15E_MultiVaultSupport.md`](../Implementation_Phase15E_MultiVaultSupport.md))
+- [x] **`vault_path` → `vaults: VaultRef[]` + `active_vault_id`** in `MathProject`, with load-time migration invariants and schema versioning. ([`Implementation_Phase15E_MultiVaultSupport.md`](../Implementation_Phase15E_MultiVaultSupport.md))
+- [x] **`VaultRef` + `VaultKind` model**: `id`, `name`, `path`, `kind` (`Synapse|Legacy|Classroom`), `read_only`, `position`. ([`Implementation_Phase15E_MultiVaultSupport.md`](../Implementation_Phase15E_MultiVaultSupport.md))
+- [x] **5 new Rust commands**: `update_project_vaults`, `set_active_vault`, `add_vault`, `remove_vault`, `rename_vault`. ([`Implementation_Phase15E_MultiVaultSupport.md`](../Implementation_Phase15E_MultiVaultSupport.md))
+- [x] **Active-vault backend routing + Synapse lifecycle rules**: `setCurrentProject` resolves vault path from `active_vault_id`; `setActiveVault`/`addVault`/`removeVault` each trigger Synapse restart; `startSynapse()` uses resolved active vault path.
+- [x] **`VaultSwitcher` UI + read-only classroom behavior**: Shows all vaults, highlights active, supports add/remove/switch with kind badges and read-only lock indicators.
 
 ### 15F — Auto-Generate `src/lib/api/*` Wrappers *(stretch goal)*
-- [ ] **Codegen from Rust commands**: Parse `lib.rs` for `#[tauri::command]` attrs → generate typed TS wrappers. ([`Implementation_Phase14A_TypedTauriApiClient.md`](../Implementation_Phase14A_TypedTauriApiClient.md))
-- [ ] **Remove hand-written wrappers** after codegen is verified equivalent. ([`Implementation_Phase14A_TypedTauriApiClient.md`](../Implementation_Phase14A_TypedTauriApiClient.md))
+- [x] **Codegen from Rust commands**: Parse `lib.rs` for `#[tauri::command]` attrs → generate typed TS wrappers. ([`Implementation_Phase14A_TypedTauriApiClient.md`](../Implementation_Phase14A_TypedTauriApiClient.md))
+- [x] **Inventory verified**: 76 Rust commands → 76 typed TS wrappers with `@command` annotations across 10 API modules, verified by `check-api-commands.mjs` prebuild step. ([`Implementation_Phase14A_TypedTauriApiClient.md`](../Implementation_Phase14A_TypedTauriApiClient.md))
 
 ---
 
-## 🔭 Future Architecture (Phase 16+)
+## 🔭 Future Architecture (Phase 17+)
 
-Larger refactors that depend on Phase 15 landing first.
+Post-Phase-16 opportunities. No committed Phase 17 implementation docs yet; each item should get its own plan when prioritized.
 
-Larger refactors that depend on Phase 14 landing first. No plans yet — each will get its own implementation doc when picked up.
-
-- [ ] **Component decomposition**: `ChatMessage.tsx` (619 lines) → `UserBubble`, `AssistantBubble`, `MessageSegments`, `MessageLightbox`, `VaultChips`, `QuickSavePopover`. `Sidebar.tsx` (810 lines) → `Sidebar`, `ProjectSection`, `SessionRow`, `ProjectMenu`, plus `Sidebar.module.css`. `ProjectSettingsPanel.tsx` (751 lines) → similar split. `PdfViewer.tsx` (903 lines) → extract `usePdfRenderer`, `useTextbookIndexer`, `usePdfRegionSelect` hooks and a `PdfPageCanvas` component.
-- [ ] **Discriminated-union stream state model**: Replace the 8 loose fields (`streamedText`, `streamedThinking`, `streamSegments`, `_toolCallDeltas`, `streaming`, `abortController`, `error`, `visionWarning`) in `useChatStore` with a single `phase: TurnPhase` discriminated union. Depends on 14B.
-- [ ] **Anthropic wire-protocol support**: Current code in `lib/providers.ts` string-matches "anthropic" / "claude" and adds the right headers, but `_parseDelta` reads `choice.delta` (OpenAI shape) — Anthropic returns `content_block_delta`. Either implement the real wire protocol or remove the partial code.
-- [ ] **Integration tests for the streaming/turn flow**: A `tests/turn_orchestrator_e2e.test.ts` that mocks `streamChat` with a scripted generator and asserts the event stream for text-only, tool-round, abort, error, and max-rounds scenarios. Depends on 14B.
-- [ ] **Multi-vault support**: A user can have multiple projects with different vaults. `currentProject.vault_path` becomes `currentProject.vaults: VaultRef[]`. The `VaultBackend` strategy from 14D is the foundation.
 - [ ] **Code-generated `invoke_handler!` surface**: Specta supports this; ts-rs does not. Worth considering if/when the command surface grows.
-- [ ] **Auto-generate the `src/lib/api/*` wrappers (14A) from a single source of truth**: Possible with `ts-rs` + a custom macro, but premature.
-- [ ] **Replace Zustand**: Not on the table. The store problems identified are about shape and responsibility, not library choice.
+- [ ] **Store/library revisit (only if warranted by data)**: Zustand replacement is not currently planned; revisit only if post-15 evidence shows issues beyond state shape/responsibility.
+
+---
+
+---
+
+## Phase 16 — Competitive Math Support
+
+Support for students preparing for olympiad-level competitions (AMC → AIME → USAMO/IMO, Putnam, etc.). Introduces a new olympiad-coach tutor style, hint-ladder UI, problem bank, dedicated free resource catalog entries, and structured proof critique.
+
+> **Research basis:** LLMs are unreliable for olympiad-level *proof generation* (<5% on USAMO 2025 for most models; Gemini 2.5 Pro ~25%). Proof *critique* is more tractable but requires explicit reliability framing. Hint ladder and problem bank are the highest-integrity features. See [`Implementation_CompetitiveMath_Phase4_ProofCritique.md`](../Implementation_CompetitiveMath_Phase4_ProofCritique.md) for full reliability notes.
+
+### 16A — Hint Ladder & Olympiad Coach Mode
+- [x] **Olympiad Coach tutor style**: new system prompt profile; watches the student think, asks diagnostic questions, does not give solutions unprompted ([`Implementation_CompetitiveMath_Phase1_HintLadder.md`](../Implementation_CompetitiveMath_Phase1_HintLadder.md))
+- [x] **Hint ladder widget**: sequenced pull-on-demand hints (H1 meta-strategy → H2 structural → H3 key insight → solution sketch); student must log attempt before H1 unlocks ([`Implementation_CompetitiveMath_Phase1_HintLadder.md`](../Implementation_CompetitiveMath_Phase1_HintLadder.md))
+- [x] **`/problem` slash command**: opens hint ladder from a pasted problem statement ([`Implementation_CompetitiveMath_Phase1_HintLadder.md`](../Implementation_CompetitiveMath_Phase1_HintLadder.md))
+- [x] **Session outcome tracking**: `hints_used`, `solved`, `elapsed_seconds` stored in session header ([`Implementation_CompetitiveMath_Phase1_HintLadder.md`](../Implementation_CompetitiveMath_Phase1_HintLadder.md))
+
+### 16B — Problem Bank & Practice Sessions
+- [x] **Bundled problem bank** (~60 curated public-domain problems: IMO, USAMO, AIME, AMC, Putnam) shipped as `resources/problem-bank.json` ([`Implementation_CompetitiveMath_Phase2_ProblemBank.md`](../Implementation_CompetitiveMath_Phase2_ProblemBank.md))
+- [x] **Practice session flow**: problem picker (topic/difficulty/source filters + random), optional countdown timer, hint ladder integration, outcome recording ([`Implementation_CompetitiveMath_Phase2_ProblemBank.md`](../Implementation_CompetitiveMath_Phase2_ProblemBank.md))
+- [x] **Problem log & Overview stats card**: attempt history filterable by topic/outcome; competition prep stats on Overview page ([`Implementation_CompetitiveMath_Phase2_ProblemBank.md`](../Implementation_CompetitiveMath_Phase2_ProblemBank.md))
+- [x] **Vault integration**: completed attempts generate structured vault notes (problem statement, approach, what I learned) ([`Implementation_CompetitiveMath_Phase2_ProblemBank.md`](../Implementation_CompetitiveMath_Phase2_ProblemBank.md))
+
+### 16C — Competition Resource Catalog
+- [x] **10 Evan Chen resources added** to free textbook catalog (Napkin, OTIS Excerpts, Barycentric Coordinates, Complex Numbers, Inequalities, Functional Equations, Number Theory, Probabilistic Method, Monsters, Olympiad Syllabus) — all CC-BY-SA 4.0 ([`Implementation_CompetitiveMath_Phase3_Catalog.md`](../Implementation_CompetitiveMath_Phase3_Catalog.md))
+- [x] **New olympiad subject tags** (`olympiad-general`, `-geometry`, `-algebra`, `-number-theory`, `-combinatorics`) with dedicated filter group in catalog UI ([`Implementation_CompetitiveMath_Phase3_Catalog.md`](../Implementation_CompetitiveMath_Phase3_Catalog.md))
+- [x] **Project wizard integration**: selecting an olympiad-tagged resource auto-suggests Olympiad Coach tutor style ([`Implementation_CompetitiveMath_Phase3_Catalog.md`](../Implementation_CompetitiveMath_Phase3_Catalog.md))
+
+### 16D — Proof Critique
+- [x] **`/critique` slash command + proof submission panel**: structured form with problem context, proof textarea, feedback focus selector ([`Implementation_CompetitiveMath_Phase4_ProofCritique.md`](../Implementation_CompetitiveMath_Phase4_ProofCritique.md))
+- [x] **Structured critique card**: traffic-light rendering (🔴 logic gaps / 🟡 double-check / 🟢 style); always shows reliability disclaimer ([`Implementation_CompetitiveMath_Phase4_ProofCritique.md`](../Implementation_CompetitiveMath_Phase4_ProofCritique.md))
+- [x] **Model recommendation nudge**: if not on Gemini 2.5 Pro, surface a switch suggestion in the submission panel ([`Implementation_CompetitiveMath_Phase4_ProofCritique.md`](../Implementation_CompetitiveMath_Phase4_ProofCritique.md))
+- [x] **Practice session integration**: "Critique my proof" offered after practice session outcome recording ([`Implementation_CompetitiveMath_Phase4_ProofCritique.md`](../Implementation_CompetitiveMath_Phase4_ProofCritique.md))
+- [x] **Segment persistence**: critique card persists in session timeline via `proof-critique` segment type; survives session refresh
+
+### 16E — Lean Formal Verification *(future / stretch)*
+- [ ] **LLM → Lean 4 translation pipeline**: informal proof → Lean 4 via DeepSeek-Prover or similar → type-check locally; cannot produce false positives ([`Implementation_CompetitiveMath_Phase4_ProofCritique.md`](../Implementation_CompetitiveMath_Phase4_ProofCritique.md))
+- [ ] Prerequisites: affordable Lean translation model, local Lean 4 subprocess, user education on formal proof style
 
 ---
 
 ## 📌 Deferred / Strategic
+
 - [ ] **MCP Implementation**: Enable `mathmate` as a server for external tools (Deferred; await ecosystem maturity)
 - [ ] **Commercialization**: Strategy roadmap details (`docs/mathmate/00_Project_Management/Commercialization_Strategy.md`)
 - [ ] **Classroom/Collab**: Multi-user teaching sessions (`docs/mathmate/Implementation_Collaboration_Classroom.md`)

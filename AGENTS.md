@@ -131,7 +131,72 @@ Use template:
 
 ---
 
-## 10) Safe Completion Checklist
+## 10) Adding Free Textbook Resources to the Library Catalog
+
+The MathMate Library feature is backed by a single static JSON file that is compiled into the Rust binary at build time. Adding a new free resource requires only an edit to that file (no Rust or frontend code changes in the common case).
+
+### File & loading mechanism
+- **Catalog file:** `mathmate-v2/src-tauri/resources/textbook-catalog.json`
+- **Embedded via:** `include_str!("../resources/textbook-catalog.json")` in `mathmate-v2/src-tauri/src/textbook_catalog.rs`
+- **Rendered by:** `mathmate-v2/src/components/Settings/TextbookTab.tsx` (generic over catalog entries)
+- **Consequence:** because the JSON is `include_str!`-ed at compile time, a content change is picked up only after recompiling the Rust side (e.g. `npm run tauri dev` restart or `cargo check`). No runtime file read occurs.
+
+### Entry schema
+Append a new object to the top-level `entries` array. All fields below are expected; use `null` for any URL/hint that does not apply.
+
+```json
+{
+  "id": "kebab-case-unique-id",
+  "title": "Book Title",
+  "authors": ["Author One", "Author Two"],
+  "edition": "2nd" | null,
+  "subject": "<see taxonomy below>",
+  "publisher": "Publisher" | null,
+  "license": "<see license values below>",
+  "description": "One- or two-sentence description of coverage, level, and notable features.",
+  "thumbnail_url": "https://.../cover.jpg" | null,
+  "download_urls": {
+    "pdf": "https://.../book.pdf",
+    "epub": null,
+    "html": "https://.../landing-or-toc.htm"
+  },
+  "file_size_hint": 6186598 | null,
+  "page_count_hint": 598 | null,
+  "recommended_for": ["Abstract Algebra", "Upper-level Undergraduate"]
+}
+```
+
+### Subject taxonomy (reuse existing tags; do not invent new ones without reason)
+Currently in use: `calculus`, `linear-algebra`, `algebra`, `abstract-algebra`, `differential-equations`, `discrete-math`, `number-theory`, `probability`, `statistics`, `olympiad-general`, `olympiad-algebra`, `olympiad-geometry`, `olympiad-number-theory`, `olympiad-combinatorics`, `other`.
+
+### License values currently in use
+`cc-by`, `cc-by-sa`, `cc-by-nd`, `cc-by-nc-sa`, `cc-by-nc-nd`, `gpl`, `free`, `free-online`, `other`. Use `free` when the author offers the work free of charge without a stated Creative Commons license; use `free-online` for web-only / read-online-only resources with no downloadable artifact.
+
+### Workflow when adding a resource
+1. **Confirm the resource is not already listed.** Grep the catalog for the author surname, title keywords, and the host domain, e.g.:
+   ```bash
+   grep -in "goodman\|uiowa\|algebrabook" mathmate-v2/src-tauri/resources/textbook-catalog.json
+   ```
+2. **Verify the URL actually works** before adding it. User-supplied URLs are frequently truncated or stale. Use `curl -sI -L --max-time 15 <url>` and, if the provided URL 404s, walk the parent directory listing to locate the canonical file (prefer the latest edition / most recent dated PDF).
+3. **Capture accurate metadata** from the author/host page: exact title, edition, author(s), publisher, license terms, file size (bytes), and page count if stated. Prefer a direct PDF link for `download_urls.pdf`; put the landing/download page under `download_urls.html`.
+4. **Pick a unique `id`** in kebab-case, prefixed with a short author/series slug (e.g. `goodman-algebra-abstract-concrete`, `openstax-calculus-v1`).
+5. **Append to the `entries` array** (keep a trailing comma on the prior entry; the array's closing `]` and file's closing `}` remain last).
+6. **Validate the JSON parses** before finishing:
+   ```bash
+   python3 -c "import json; d=json.load(open('mathmate-v2/src-tauri/resources/textbook-catalog.json')); print('entries:', len(d['entries']))"
+   ```
+7. **No code rebuild is required for correctness**, but note in the changelog that a Rust recompile is needed for the new entry to appear at runtime because the catalog is `include_str!`-ed.
+8. **Update docs** per §8: add a `docs/mathmate/03_Dev_Logs/YYYY-MM-DD.md` entry and a line under today's date in `docs/mathmate/CHANGELOG.md` (under an `### Added` block titled "Catalog Addition: <short name>").
+
+### Edge cases / gotchas
+- A 404 on the user-supplied URL does **not** mean the resource is gone — many author sites use directory indexes or `.htm`/`.php` landing pages. Always check the parent directory.
+- Do not invent `file_size_hint` or `page_count_hint`; leave them `null` if not confirmed from the host (the Apache/`curl` directory listing usually shows sizes).
+- Do not add paywalled or pirated resources. The catalog is for **free, open-access** material only.
+- If a new subject is genuinely needed, add it to the taxonomy list above and check that `TextbookTab.tsx` filter rendering handles it gracefully (it generically iterates subjects, but confirm visually).
+
+---
+
+## 11) Safe Completion Checklist
 Before handoff, verify:
 - [ ] no secrets/API keys added to repo files
 - [ ] reasoning trace still visible in UI

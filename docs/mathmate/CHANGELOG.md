@@ -4,6 +4,232 @@ All notable changes to MathMate are tracked here.
 
 ---
 
+## 2026-07-02 — Catalog Addition: Evans & Rosenthal + Calculus in Context
+
+### Added
+- **2 free textbook catalog entries** added to `mathmate-v2/src-tauri/resources/textbook-catalog.json`:
+  - *Probability and Statistics - The Science of Uncertainty (2nd ed.)* — Michael J. Evans & Jeffrey S. Rosenthal (University of Toronto). Upper-level mathematical statistics covering probability, inference (likelihood/Bayesian/optimal), model checking, regression, and stochastic processes. Subject: `statistics`. ~18.4 MB PDF + solutions manual.
+  - *Calculus in Context* — Callahan, Cox, Hoffman, O'Shea, Pollatsek, Senechal (Five College Calculus Project, Smith College). Reform-calculus text from single-variable through multivariable, dynamical systems, and series. Subject: `calculus`. ~8.4 MB PDF, ~845 pp.
+- Cargo rebuild required (catalog is `include_str!`-ed at compile time). No code changes needed.
+
+---
+
+## 2026-06-26 — Service-Layer Migration (Phase 14C completion)
+
+### Fixed
+- **Failing test `test_catalog_validates`**: Added `free` and `cc-by-nc-nd` license types to `get_license_info()` match in `textbook_catalog.rs`.
+
+### Changed
+- **Service-layer type migration**: Moved all data-type definitions (struct/enum) from 8 legacy Rust modules into their `services/` counterparts. Legacy modules now import types from `services/`. External callers (`lib.rs`, `tools/vault_search.rs`, test code) updated to reference `crate::services::*` paths. Unused imports cleaned up across legacy modules. `images.rs` had no types — already clean. Cargo rebuild required (catalog is `include_str!`-ed).
+- Deleted stale `chatStore.phase.test.ts.bak`
+
+## 2026-06-25 — Catalog Addition: Discovering the Art of Mathematics (11 volumes)
+
+### Added
+- **11 free textbook catalog entries** — the *Discovering the Art of Mathematics* (DAoM) inquiry-based-learning liberal-arts mathematics series by Julian F. Fleron, Philip K. Hotchkiss, Volker Ecke, and Christine von Renesse (Westfield State University) added to `mathmate-v2/src-tauri/resources/textbook-catalog.json` as individual per-volume entries, each with a direct PDF, page count, file size, and cover thumbnail:
+  - *Art & Sculpture* — geometry, 117pp
+  - *Ideas of Calculus* — calculus, 130pp
+  - *Dance* — other, 76pp
+  - *Games & Puzzles* — discrete-math, 130pp
+  - *Geometry* — geometry, 172pp
+  - *Knot Theory* — other, 116pp
+  - *Music* — other, 75pp
+  - *Number Theory* — number-theory, 143pp
+  - *Patterns* — other, 204pp
+  - *The Infinite* — other, 113pp
+  - *Truth, Reasoning, Certainty, & Proof* — discrete-math, 136pp
+- Each volume's `download_urls.pdf` is the latest non-excerpt, non-teacher-edition PDF linked as "Download Book" on the book's page; `download_urls.html` is the book's landing page. License `free` (no stated Creative Commons license). The `geometry` subject was already defined in the UI's subject label/color map, so no frontend code change was needed. Catalog now contains 59 entries.
+
+## 2026-06-23 — Catalog Addition: Huber Probability Texts & Online Statistics
+
+### Added
+- **3 free textbook catalog entries**:
+  - *Probability Adventures* by Mark Huber (Claremont McKenna College) — a one-semester probability text written in tabletop-RPG style, building probability on logic rather than set theory. 171pp, subject `probability`.
+  - *Probability: Lectures and Labs* by Mark Huber — a one-semester probability text with a partially-flipped, lecture-plus-R-lab design. 379pp, subject `probability`.
+  - *Online Statistics: An Interactive Multimedia Course of Study* by David M. Lane (Rice University et al.) — public-domain introductory statistics with interactive simulations, case studies, and an analysis lab; PDF and ePub downloads plus a web version. 692pp, subject `statistics`.
+- All entries linked to verified direct PDF/EPub downloads and landing pages. Catalog now contains 48 entries.
+
+---
+
+## 2026-06-18 — Catalog Addition: ClassicalRealAnalysis.com Textbooks
+
+### Added
+- **5 free textbook catalog entries** from ClassicalRealAnalysis.com:
+  - *Real Analysis* (2nd Ed.) by Bruckner, Bruckner & Thomson — graduate-level real analysis, 660pp, subject `real-analysis`
+  - *Elementary Real Analysis* (2nd Ed.) by Thomson, Bruckner & Bruckner — undergraduate real analysis, 740pp, subject `real-analysis`
+  - *Mathematical Discovery* by Bruckner, Thomson & Bruckner — mathematics appreciation via discovery, 266pp, subject `other`
+  - *The Calculus Integral* by B. S. Thomson — elementary integration theory, 304pp, subject `calculus`
+  - *Theory of the Integral* by B. S. Thomson — rigorous integration (Riemann/Lebesgue/Henstock-Kurzweil), 422pp, subject `real-analysis`
+- All entries linked to verified direct PDF downloads and landing pages. Catalog now contains 45 entries.
+
+---
+
+## 2026-06-16 — Book Tab PDF Streaming + Catalog Addition: Goodman Abstract Algebra
+
+### Added
+- **Free textbook catalog entry** — *Algebra: Abstract and Concrete* (Edition 2.6) by Frederick M. Goodman (University of Iowa) added to `mathmate-v2/src-tauri/resources/textbook-catalog.json` under subject `abstract-algebra`. PDF (~5.9 MB) and HTML download page linked from the author's site. Catalog now contains 40 entries.
+- **Book Tab PDF Streaming** — replaced the base64/Blob first-load path with a local loopback HTTP range server (`axum` on `tokio`). First Book-tab visit now loads page 1 via byte-range requests from `http://127.0.0.1:<port>/book/<project-id>`, eliminating whole-file read, base64 encode/decode, and Blob URL creation for large textbooks.
+
+### Changed
+- **BookPage.tsx** — removed `pdfUrlCache`, `CachedPdf`, base64 decode (`atob` + byte loop), and Blob URL creation. PDF URL now derived from `getBookStreamInfo()` + `projectTextbookStreamUrl()` with a revision hash for cache-busting.
+- **useTextbookIndexer.ts** — auto-indexing delay increased from 500ms → 2000ms to let pdf.js render the first page before indexing begins.
+- **tauri.conf.json CSP** — added `http://127.0.0.1:*` to `connect-src`.
+- **lib/api/textbook.ts** — added `BookStreamInfo`, `getBookStreamInfo()`, `projectTextbookStreamUrl()`, `textbookPathRevision()`. Marked `Textbook.readProjectTextbook` as `@deprecated`.
+
+### Cleanup
+- Removed lifetime of `pdfUrlCache` LRU map and associated helper functions.
+
+---
+
+## 2026-06-13 — Phase 16A: Hint Ladder & Olympiad Coach Mode
+
+### Added
+- **Hint Ladder widget** — sequenced, pull-on-demand hint system for olympiad problems. Problem statement, attempt textarea, H1–H4 hint chips (revealed one at a time), and solved/stuck outcome buttons.
+- **Olympiad Coach tutor style** — new system prompt profile for productive struggle coaching. Available in project settings and welcome page tutor style selector.
+- **`/problem` slash command** — accepts a problem statement and opens the hint ladder widget in the chat timeline.
+- **Real-time hint generation** — `generateHintLadder()` calls the configured LLM provider with a structured prompt to produce 4 hints (meta-strategy, structural, key insight, solution sketch) in a single request.
+- **Segment-based command infrastructure** — slash commands can now produce structured `MessageSegment`s (not just text responses).
+- **Session hint outcome persistence** — `hints_used` and `solved` fields stored in session header via `update_session_hint_outcome` Tauri command.
+- **Phase 16B — Problem Bank & Practice Sessions**: Rust `ProblemBankService` with 60 bundled competition problems, `/practice` page with filters/timer/hint ladder/outcome recording, Competition Prep stats card on Overview page, "Practice" sidebar nav button, `/practice` slash command, and vault note generation for completed attempts (writes structured markdown to `<vault>/MathMate/Competition/Attempts/`).
+
+### Changed
+- **`SessionHeader`** extended with `hints_used` and `solved` optional fields (backward-compatible).
+- **AssistantBubble** renders hint-ladder segments between ProcessBlock and content segments.
+- **Sidebar Practice nav** — clock icon button in sidebar footer, active state highlighting on `/practice` route.
+- **Phase 16C — Competition Resource Catalog**: 10 Evan Chen resources (Napkin, OTIS Excerpts, Barycentric Coordinates, Complex Numbers, Inequalities, Functional Equations, Orders Modulo a Prime, Probabilistic Method, Monsters, Syllabus) added to free textbook catalog with new olympiad subject tags and distinct colors in the catalog filter bar.
+- **Phase 16D — Proof Critique**: `/critique` slash command opens structured proof submission panel; CritiqueCard renders traffic-light feedback (logic gaps 🔴 / double-check 🟡 / style 🟢) with reliability disclaimer; model recommendation nudge for Gemini 2.5 Pro; "Critique my proof" button in practice session done/outcome phases; `proof-critique` segment persists in session timeline.
+- **TUTOR_STYLES** arrays in WelcomePage and ChatPage include the new "olympiad" entry.
+- **API inventory** and generator scripts updated for the new `update_session_hint_outcome` command.
+
+### Cleanup
+- Fixed pre-existing unused-variable warning (`archived_jsonl`) in `session.rs`.
+
+---
+
+## 2026-06-12 — Bug Fixes & Roadmap: Phase 16 Competitive Math
+
+### Fixed
+- **Blank screen on startup**: `useRef` was called inside a `useEffect` in `App.tsx`, violating React’s Rules of Hooks. Moved ref declaration to component top level.
+- **Rust dead-code warnings**: removed unused `uuid_v4` / `rand_u16` local functions from `src/services/project.rs` (file already uses `crate::project::uuid_v4()`).
+- **File picker buttons in project wizard**: added native folder/file picker buttons (via `@tauri-apps/plugin-dialog`) next to vault path and textbook path fields in `WelcomePage`.
+- **Textbook catalog blank screen**: wrapped `TextbookCatalog` in `createPortal(…, document.body)` so the `position: fixed` overlay correctly escapes any `overflow: auto` ancestor in WebKit/Tauri.
+- **Error boundary in Welcome page**: added `ErrorBoundary` class component wrapping the catalog overlay; render crashes now surface a dismissable message instead of blanking the app.
+
+### Added
+- **Phase 16 roadmap — Competitive Math Support**: four implementation plan docs for olympiad/competition prep features:
+  - `Implementation_CompetitiveMath_Phase1_HintLadder.md` — Hint Ladder widget + Olympiad Coach tutor style
+  - `Implementation_CompetitiveMath_Phase2_ProblemBank.md` — Problem bank, timed practice sessions, vault integration, stats
+  - `Implementation_CompetitiveMath_Phase3_Catalog.md` — Evan Chen catalog entries (10 CC-BY-SA resources) + olympiad subject tags
+  - `Implementation_CompetitiveMath_Phase4_ProofCritique.md` — Structured proof critique with LLM reliability research, model recommendations, and Lean future path
+
+---
+
+---
+
+## 2026-06-12 — Phase 15E: Multi-Vault Support
+
+### Added
+- **Rust data model**: `VaultKind` (Synapse | Legacy | Classroom), `VaultRef` (id, name, path, kind, read_only, position), `vaults: Vec<VaultRef>`, `active_vault_id`, `schema_version` on `MathProject`.
+- **Load-time migration** (`migrate_project`): promotes `vault_path` → `vaults[0]` (VaultKind::Synapse), normalises positions, repairs missing/invalid `active_vault_id`. Idempotent.
+- **5 Rust commands**: `set_active_vault`, `add_vault`, `remove_vault`, `rename_vault`, `update_project_vaults` — all registered in Tauri handler.
+- **TS API wrappers** (`lib/api/projects.ts`): typed `invoke` calls for all 5 vault commands.
+- **`VaultSwitcher` UI** (`Settings/VaultSwitcher.tsx`): shows all vaults, highlights active, supports add/remove/switch. Kind badges (Synapse/Legacy/Classroom).
+
+### Changed
+- **`projectStore`**: `setCurrentProject` uses `active_vault_id` → vault path resolution. New actions: `setActiveVault`, `addVault`, `removeVault` (each triggers Synapse restart).
+- **`startSynapse`**: resolves vault path from active vault (fallback to legacy `vault_path`).
+- **`MathProject` TS type**: added `vaults`, `active_vault_id`, `schema_version`, `VaultKind`, `VaultRef`.
+- **`VaultSettingsTab`**: now includes `<VaultSwitcher />` below the vault path field.
+
+### Verification
+- `npm run build` ✅, `npx vitest run` ✅ (260/260), `cargo check` ✅, `cargo test` ✅
+
+---
+
+## 2026-06-12 — Phase 15D: Turn Orchestrator E2E Tests
+
+### Added
+- **`src/lib/turn/orchestrator.e2e.test.ts`** — 8 deterministic contract fixtures for `runTurn()` using mocked `streamChat` generators (no live network).
+- **Helper utilities**: `chunks()`, `toolCallChunk()`, `textChunks()`, `collect()`, `collectOrThrow()`, `makeDeps()`, `makeInput()`.
+
+### Fixtures
+| # | Name | Assertions |
+|---|------|------------|
+| 1 | Text-only success | Event sequence (`status → tool-round-started → status → segments-changed → tool-round-finished → status → turn-finished`), `appendMessage` called with correct text |
+| 2 | Single-tool round trip | `executeTool` called once with correct name, `loadSession` called after, `assembleToolCalls` processes deltas |
+| 3 | Multi-tool sequence | 3 `streamChat` calls, 2 `executeTool` calls across rounds |
+| 4 | Abort pre-stream | Signal already aborted → throws before `streamChat` is called |
+| 5 | Abort mid-stream | `streamChat` throws mid-yield → error propagates |
+| 6 | Error pre-stream | `streamChat` throws immediately → no `appendMessage` calls |
+| 7 | Error mid-stream | Partial text yielded before throw → no `appendMessage` |
+| 8 | Max-tool-round cap | 4 tool rounds, `"Stopped after 3 tool rounds"` appended |
+
+### Verification
+- `npm run build` ✅, `npx vitest run` ✅ (260/260, 11 test files), `cargo check` ✅
+
+---
+
+## 2026-06-12 — Phase 15C: Anthropic Wire-Protocol Support
+
+### Added
+- **Wire-variant detection** (`detectWireVariant`): routes OpenRouter → `openai_compatible`, native Anthropic → `anthropic_native`. Never infers from model ID.
+- **Anthropic request builder** (`convertMessagesToAnthropicBlocks`): converts `MessagePayload[]` to Anthropic content blocks (text, image, tool_use, tool_result). Extracts system messages to `system[]` top-level parameter.
+- **Anthropic tool schema conversion** (`convertToolsToAnthropicSchema`): OpenAI `function.parameters` → Anthropic `input_schema`.
+- **Anthropic SSE parser** (`parseAnthropicFrame`): handles `message_start`, `content_block_start/delta/stop`, `message_delta/stop`, `ping`, and `error` events. Maintains per-index tool-call state for stable IDs across partial JSON deltas. Emits existing `StreamChunk` shape (including `tool_call_delta(s)` for `assembleToolCalls()` compatibility).
+- **Robust SSE frame reader** (`readSSEFrames`): handles multi-line `data:`, `event:`, split-across-chunks, and comment lines per W3C spec.
+
+### Changed
+- **`streamChat()` routes by wire variant**: Anthropic-native path uses `/v1/messages` + `x-api-key` header + `readSSEFrames` + `parseAnthropicFrame`. OpenAI-compatible path uses `parseOpenAIFrame` (extracted from old `_parseDelta` — no behaviour change).
+- **`MessagePayload.role`** now includes `"tool"` (needed for Anthropic tool-result conversion).
+
+### Tests
+- `providers.anthropic.test.ts` — 19 tests (conversion, text-only, thinking, tool use, mixed interleaved, errors)
+- `providers.openai-compat.test.ts` — 20 tests (text, reasoning fields, tool call deltas, usage, finish_reason, OpenRouter parity)
+- `providers.sse-reader.test.ts` — 12 tests (single/multi-line, events, split chunks, comments, Anthropic format)
+- Full suite: 252 tests pass across 10 test files.
+
+### Verification
+- `npm run build` ✅, `npx vitest run` ✅ (252/252), `cargo check` ✅
+
+---
+
+## 2026-06-12 — Phase 15B: Discriminated-Union Stream State
+
+### Changed
+- **TurnPhase discriminated union** replaces 8 parallel Zustand fields (`streaming`, `abortController`, `streamedText`, etc.) with a single `phase: TurnPhase` state machine in `chatStore`.
+- **Transition map**: `idle → preparing → streaming → finishing → idle`, with side paths `streaming → aborted → idle` and `streaming → errored → idle`.
+- **Store rewrite**: `sendMessage` uses `for await (const event of runTurn(...))` with phase transitions in the event switch; retry logic transitions to `preparing` on retryable errors.
+- **Consumers updated**: `ChatInput.tsx` uses `isTurnActive(phase)`; `ChatPage.tsx` derives `streaming`/`error` from phase; `useKeyboardShortcuts.ts` uses `isStreaming(store.phase)`.
+
+### Added
+- **Selectors in `phase.ts`**: `isTurnActive`, `isStreaming`, `isAborted`, `isTurnErrored`, `latestText`, `latestThinking`, `currentSegments`, `currentAbortController`, `currentTurnError`.
+- **`capturedInput`** field in store for auto-memory storage post-turn.
+
+### Tests
+- `chatStore.phase.test.ts` — 55 tests covering every selector, invariant, and edge case.
+- Full suite: 197 tests pass across 8 test files.
+
+### Verification
+- `npm run build` ✅, `npx vitest run` ✅ (197/197), `cargo check` ✅
+
+---
+
+## 2026-06-12 — Phase 15A: Component Decomposition
+
+### Changed
+- **ChatMessage decomposition** (`src/components/chat/`): 386L → 8 focused sub-components (UserBubble, AssistantBubble, ToolResultBubble, VaultChips, QuickSavePopover, MessageSegments, StreamingMessage, ChatMessage shell at 128L). Root re-export shim preserves all import paths.
+- **Sidebar decomposition** (`src/components/Sidebar/`): 585L → 8 sub-components (Sidebar shell at 228L, ProjectSection, ProjectMenu, SessionList, SessionRow, ArchivalToggle, ArchivedProjectRow, NewProjectForm). CSS module moved.
+- **ProjectSettingsPanel decomposition** (`src/components/Settings/`): 748L → 9 sub-components (shell at 144L with tab routing, VaultSettingsTab, TextbookTab, ModelSettingsTab, LaTeXSettingsTab, AdvancedTab, PanelHeader, Shared). New tab-bar UI.
+- **PdfViewer decomposition** (`src/components/PdfViewer/`): 903L → 4 sub-components (PdfViewer shell at 351L, PdfPageCanvas, PdfNavigationBar, PdfRegionHighlight). Fit-width + capture box state retained in shell.
+
+### Added
+- Barrel `index.ts` files for `chat/`, `Sidebar/`, `Settings/`, `PdfViewer/`.
+
+### Verification
+- `npm run build` ✅, `cargo check` ✅
+
+---
+
 ## 2026-06-12 — Architectural Review & Phase 14 Plan
 
 ### Added

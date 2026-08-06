@@ -81,7 +81,7 @@ PdfViewer.tsx                      (shell: ~120 lines — layout + PDF load orch
 - [ ] `src/components/chat/StreamingMessage.tsx` — streaming-mode renderer (subscribes to live segment accumulation)
 - [ ] `src/components/ChatMessage.tsx` → becomes shell (~80 lines)
 - [ ] Move `ChatMessage.module.css` → `src/components/chat/ChatMessage.module.css`
-- [ ] Move `VaultChips.module.css` → `src/components/chat/VaultChips.module.css`
+- [ ] If `VaultChips` styles are split out, create `src/components/chat/VaultChips.module.css` (do not assume this file already exists)
 
 ### Sidebar
 - [ ] `src/components/Sidebar/ProjectSection.tsx`
@@ -147,4 +147,4 @@ PdfViewer.tsx                      (shell: ~120 lines — layout + PDF load orch
 
 - New behavior or new features
 - Changes to the turn orchestrator (Phase 14B) — the streaming state is handled by `StreamingMessage.tsx` which should work with the existing orchestrator events
-- Mobile-specific layout (deferred to Phase 15B)
+- Mobile-specific layout (deferred to a later UI-focused phase; not part of Phase 15B stream-state work)
