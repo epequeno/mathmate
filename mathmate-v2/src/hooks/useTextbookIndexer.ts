@@ -131,15 +131,16 @@ export function useTextbookIndexer({
     }
   }, [pdfDocument, textbookId, title]);
 
-  // Auto-start indexing when status is "idle" and document is ready
+  // Auto-start indexing when status is "idle" and document is ready.
+  // For streamed PDFs, a longer delay gives pdf.js time to render
+  // the first page before we start issuing range requests for indexing.
   useEffect(() => {
     if (status === "idle" && pdfDocument && enabled && textbookId) {
-      // Small delay to let the UI settle
       const timer = setTimeout(() => {
         if (!indexingRef.current) {
           startIndexing();
         }
-      }, 500);
+      }, 2000);
       return () => clearTimeout(timer);
     }
   }, [status, pdfDocument, enabled, textbookId, startIndexing]);

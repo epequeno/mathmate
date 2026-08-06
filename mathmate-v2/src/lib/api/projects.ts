@@ -5,7 +5,7 @@
  */
 
 import { invoke } from "@tauri-apps/api/core";
-import type { MathProject } from "../types";
+import type { MathProject, VaultRef } from "../types";
 
 export interface SynapseStatus {
   running: boolean;
@@ -60,4 +60,26 @@ export const Projects = {
 
   /** @command: synapse_mcp_status */
   synapseStatus: () => invoke<SynapseStatus>("synapse_mcp_status"),
+
+  // ─── Vault management (Phase 15E) ────────────
+
+  /** @command: set_active_vault */
+  setActiveVault: (projectId: string, vaultId: string) =>
+    invoke<void>("set_active_vault", { projectId, vaultId }),
+
+  /** @command: add_vault */
+  addVault: (projectId: string, name: string, path: string, kind: string) =>
+    invoke<void>("add_vault", { projectId, name, path, kind }),
+
+  /** @command: remove_vault */
+  removeVault: (projectId: string, vaultId: string) =>
+    invoke<void>("remove_vault", { projectId, vaultId }),
+
+  /** @command: rename_vault */
+  renameVault: (projectId: string, vaultId: string, name: string) =>
+    invoke<void>("rename_vault", { projectId, vaultId, name }),
+
+  /** @command: update_project_vaults */
+  updateVaults: (projectId: string, vaults: import("../types").VaultRef[]) =>
+    invoke<void>("update_project_vaults", { projectId, vaults }),
 } as const;

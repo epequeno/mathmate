@@ -3,12 +3,14 @@ import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { listen } from "@tauri-apps/api/event";
 import Layout from "./components/Layout";
 import ChatPage from "./pages/ChatPage";
+import PracticePage from "./pages/PracticePage";
 import VaultPage from "./pages/VaultPage";
 import BookPage from "./pages/BookPage";
 import OverviewPage from "./pages/OverviewPage";
 import SettingsPage from "./pages/SettingsPage";
 import WelcomePage from "./pages/WelcomePage";
 import SessionManagerPage from "./pages/SessionManagerPage";
+import LibraryPage from "./pages/LibraryPage";
 import { useProjectStore } from "./stores/projectStore";
 import { useConfigStore } from "./stores/configStore";
 
@@ -16,6 +18,7 @@ export default function App() {
   const navigate = useNavigate();
   const { hasProjects, loadProjects, loading } = useProjectStore();
   const [ready, setReady] = useState(false);
+  const unlisteners = useRef<(() => void)[]>([]);
 
   // Apply persisted font size to CSS variable when config loads
   useEffect(() => {
@@ -48,8 +51,6 @@ export default function App() {
 
   // Listen for menu events from Rust backend
   useEffect(() => {
-    const unlisteners = useRef<(() => void)[]>([]);
-
     const setupListener = async () => {
       try {
         const unlisten = await listen<string>("menu-navigate", async (event) => {
@@ -106,8 +107,10 @@ export default function App() {
             <Route path="/" element={<Navigate to="/chat" replace />} />
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/chat/:sessionId" element={<ChatPage />} />
+            <Route path="/practice" element={<PracticePage />} />
             <Route path="/vault" element={<VaultPage />} />
             <Route path="/book" element={<BookPage />} />
+            <Route path="/library" element={<LibraryPage />} />
             <Route path="/overview" element={<OverviewPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/sessions" element={<SessionManagerPage />} />

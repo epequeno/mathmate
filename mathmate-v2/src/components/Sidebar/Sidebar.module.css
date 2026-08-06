@@ -1,0 +1,442 @@
+/* ─── Sidebar.module.css ─────────────────────────── */
+
+.sidebar {
+  width: 240px;
+  min-width: 240px;
+  background: var(--color-bg-elevated);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.sidebarInner {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  padding: 20px 16px 12px;
+  flex-shrink: 0;
+}
+
+.title {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.02em;
+}
+
+.divider {
+  height: 1px;
+  background: var(--color-border);
+  flex-shrink: 0;
+}
+
+.scrollArea {
+  flex: 1;
+  overflow: auto;
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.spacer {
+  flex: 1;
+}
+
+/* ─── Project section ─────────────────────────────── */
+
+.projectSection {
+  margin-bottom: 2px;
+}
+
+.projectRow {
+  display: flex;
+  align-items: center;
+  padding: 6px 16px 6px 12px;
+  gap: 6px;
+  cursor: pointer;
+  position: relative;
+}
+
+.projectChevron {
+  flex-shrink: 0;
+  transition: transform 0.15s;
+}
+
+.projectName {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.newSessionBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 3px;
+  border-radius: 5px;
+  color: var(--color-accent-light);
+  line-height: 1;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  transition: opacity 0.1s, background 0.1s;
+}
+
+.newSessionBtn:hover {
+  background: var(--color-accent-subtle);
+  opacity: 1;
+}
+
+.newSessionBtnHidden {
+  opacity: 0;
+}
+
+.menuBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 3px;
+  border-radius: 4px;
+  color: var(--color-text-tertiary);
+  line-height: 1;
+  flex-shrink: 0;
+  transition: opacity 0.1s, background 0.1s;
+}
+
+.menuBtn:hover {
+  background: var(--color-hover);
+}
+
+.menuBtnHidden {
+  opacity: 0;
+}
+
+/* ─── Project menu dropdown ──────────────────────── */
+
+.projectMenu {
+  position: absolute;
+  top: calc(100% + 2px);
+  right: 0;
+  z-index: 100;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  min-width: 148px;
+  overflow: hidden;
+}
+
+.menuItem {
+  display: block;
+  width: 100%;
+  padding: 9px 14px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.1s;
+}
+
+.menuItem:hover {
+  background: var(--color-hover);
+}
+
+.menuItemDanger {
+  display: block;
+  width: 100%;
+  padding: 9px 14px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--color-red);
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.1s;
+}
+
+.menuItemDanger:hover {
+  background: var(--color-error-bg);
+}
+
+/* ─── Sessions list ───────────────────────────────── */
+
+.sessionsList {
+  /* container for session rows */
+}
+
+.sessionRow {
+  display: flex;
+  align-items: center;
+  margin: 1px 8px;
+  border-radius: 6px;
+  padding: 7px 12px 7px 10px;
+  gap: 8px;
+  cursor: pointer;
+  background: transparent;
+  border-left: 2px solid transparent;
+  transition: background 0.1s;
+}
+
+.sessionRow:hover {
+  background: var(--color-hover);
+}
+
+.sessionRowActive {
+  background: var(--color-accent-selected);
+  border-left-color: var(--color-accent-light);
+}
+
+.sessionIcon {
+  flex-shrink: 0;
+}
+
+.sessionText {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.sessionTitle {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sessionTitleActive {
+  font-weight: 500;
+  color: var(--color-accent-light);
+}
+
+.sessionTitleArchived {
+  font-style: italic;
+  color: var(--color-text-tertiary);
+}
+
+.sessionTime {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+}
+
+.hoverActions {
+  display: flex;
+  gap: 2px;
+}
+
+/* ─── Archived sessions toggle ────────────────────── */
+
+.archiveToggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px 4px 22px;
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+}
+
+.archiveToggleIcon {
+  font-size: 8px;
+}
+
+/* ─── Archived projects section ──────────────────── */
+
+.archivedSection {
+  margin-top: 8px;
+}
+
+.archivedToggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.archivedToggleIcon {
+  font-size: 7px;
+}
+
+.archivedRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px 6px 12px;
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+  font-style: italic;
+}
+
+.archivedRowName {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.archivedHoverActions {
+  display: flex;
+  gap: 4px;
+}
+
+/* ─── New project form ─────────────────────────────── */
+
+.newProjectForm {
+  padding: 8px 12px;
+}
+
+.newProjectInput {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--color-accent-light);
+  border-radius: 7px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+  margin-bottom: 6px;
+}
+
+.newProjectBtns {
+  display: flex;
+  gap: 6px;
+}
+
+.btnCreate {
+  flex: 1;
+  padding: 6px 0;
+  background: var(--color-accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  transition: background 0.1s, opacity 0.1s;
+}
+
+.btnCreate:hover:not(:disabled) {
+  opacity: 0.92;
+}
+
+.btnCreate:disabled {
+  background: var(--color-surface);
+  color: var(--color-text-tertiary);
+  cursor: default;
+}
+
+.btnCancel {
+  padding: 6px 10px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: inherit;
+  transition: background 0.1s;
+}
+
+.btnCancel:hover {
+  background: var(--color-hover);
+}
+
+/* ─── New project button ───────────────────────────── */
+
+.newProjectBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 12px 0;
+  border-radius: 8px;
+  padding: 9px 12px;
+  background: var(--color-accent);
+  color: #ffffff;
+  cursor: pointer;
+  user-select: none;
+}
+
+.newProjectBtnText {
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+}
+
+/* ─── Settings footer ─────────────────────────────── */
+
+.settingsArea {
+  padding: 8px 12px 12px;
+  flex-shrink: 0;
+}
+
+.settingsDivider {
+  height: 1px;
+  background: var(--color-border);
+  margin-bottom: 10px;
+}
+
+.settingsBtn {
+  width: 100%;
+  padding: 7px 10px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  border: none;
+  border-radius: 7px;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.1s;
+}
+
+.settingsBtn:hover {
+  background: var(--color-hover);
+}
+
+.settingsBtnActive {
+  background: var(--color-accent-selected);
+  color: var(--color-accent-light);
+}
+
+.settingsBtnActive:hover {
+  background: var(--color-accent-selected);
+}

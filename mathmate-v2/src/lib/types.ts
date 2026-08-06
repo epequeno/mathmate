@@ -41,7 +41,41 @@ export type MessageSegment =
       ts: string;
       type: "content";
       text: string;
-    };
+    }
+  | {
+      id: string;
+      ts: string;
+      type: "hint-ladder";
+      problem: string;
+      attempt: string;
+      hints: string[];
+      hintsRevealed: number;
+      solved: boolean | null;
+      hintsUsed: number;
+    }
+  // Phase 16D — Proof Critique
+  | ProofCritiqueSegment;
+
+export interface CritiqueItem {
+  location: string;
+  issue: string;
+  confidence?: "high" | "medium" | "low";
+  suggestion?: string;
+}
+
+export interface ProofCritiqueSegment {
+  id: string;
+  ts: string;
+  type: "proof-critique";
+  problem: string;
+  proof: string;
+  focus: "full" | "logic" | "style";
+  model_used: string;
+  logic_gaps: CritiqueItem[];
+  double_check: CritiqueItem[];
+  style: CritiqueItem[];
+  overall: string;
+}
 
 export interface Message {
   id: string;
@@ -66,6 +100,8 @@ export interface SessionHeader {
   project_id?: string;
   tutor_style?: string;
   flags?: Record<string, string | boolean>;
+  hints_used?: number;
+  solved?: boolean;
 }
 
 export interface Session {
@@ -119,6 +155,8 @@ export function makeSegment(kind: { type: "thinking"; content: string }): Messag
 export function makeSegment(kind: { type: "tool_call"; tool_name: string; arguments: Record<string, unknown>; call_id: string; status: ToolCallStatus }): MessageSegment;
 export function makeSegment(kind: { type: "tool_result"; call_id: string; result: unknown; is_error: boolean }): MessageSegment;
 export function makeSegment(kind: { type: "content"; text: string }): MessageSegment;
+export function makeSegment(kind: { type: "hint-ladder"; problem: string; attempt: string; hints: string[]; hintsRevealed: number; solved: boolean | null; hintsUsed: number }): MessageSegment;
+export function makeSegment(kind: { type: "proof-critique"; problem: string; proof: string; focus: "full" | "logic" | "style"; model_used: string; logic_gaps: CritiqueItem[]; double_check: CritiqueItem[]; style: CritiqueItem[]; overall: string }): MessageSegment;
 export function makeSegment(kind: Record<string, unknown>): MessageSegment {
   return {
     id: crypto.randomUUID(),
@@ -175,13 +213,31 @@ export function makeSessionHeader(overrides?: Partial<SessionHeader>): SessionHe
 
 // ─── Project types ──────────────────────────────
 
+// ─── Vault multi-vault types (Phase 15E) ─────────────────────────────
+
+export type VaultKind = "synapse" | "legacy" | "classroom";
+
+export interface VaultRef {
+  id: string;
+  name: string;
+  path: string;
+  kind: VaultKind;
+  read_only: boolean;
+  position: number;
+}
+
+// ─── Project ───────────────────────────────────
+
 export interface MathProject {
   id: string;
   name: string;
-  vault_path?: string;
+  vault_path?: string;  // deprecated; prefer vaults + active_vault_id
+  vaults: VaultRef[];
+  active_vault_id?: string;
   textbook_path?: string;
   default_model?: string;
   tutor_style?: string;
+  schema_version?: number;
   created_at: string;
   updated_at: string;
 }
@@ -268,7 +324,16 @@ export type TextbookSubject =
   | "discrete-math"
   | "probability"
   | "physics"
-  | "other";
+  | "number-theory"
+  | "abstract-algebra"
+  | "real-analysis"
+  | "other"
+  // Competition prep subjects (Phase 16C)
+  | "olympiad-general"
+  | "olympiad-geometry"
+  | "olympiad-algebra"
+  | "olympiad-number-theory"
+  | "olympiad-combinatorics";
 
 export type TextbookLicense =
   | "cc-by"
@@ -276,6 +341,7 @@ export type TextbookLicense =
   | "cc-by-nc"
   | "cc-by-nc-sa"
   | "cc-by-nd"
+  | "cc-by-nc-nd"
   | "gpl"
   | "mit"
   | "free-online"
@@ -315,4 +381,56 @@ export interface ModelCatalogEntry {
 export interface ModelCatalog {
   fetched_at: string;
   models: ModelCatalogEntry[];
+}
+
+// ─── Problem Bank types (Phase 16B) ─────────────
+
+export type ProblemSource = "Imo" | "Usamo" | "Aime" | "Amc" | "Putnam" | "Custom";
+export type DifficultyTier = "Amc" | "Aime" | "UsamoEasy" | "UsamoHard" | "ImoEasy" | "ImoHard";
+export type ProblemTopic = "Combinatorics" | "NumberTheory" | "Algebra" | "Geometry" | "Inequalities" | "FunctionalEquations" | "Probability" | "Other";
+export type AttemptOutcome = "Solved" | "PartialProgress" | "Stuck" | "GaveUp";
+
+export interface ProblemFilter {
+  topics?: ProblemTopic[];
+  difficulties?: DifficultyTier[];
+  sources?: ProblemSource[];
+  exclude_ids?: string[];
+  limit?: number;
+}
+
+export interface CompProblem {
+  id: string;
+  source: ProblemSource;
+  year: number;
+  number: number;
+  difficulty: DifficultyTier;
+  topics: ProblemTopic[];
+  statement: string;
+  answer: string | null;
+  solution_sketch: string | null;
+}
+
+export interface ProblemAttempt {
+  problem_id: string;
+  session_id: string;
+  timestamp: string;
+  elapsed_seconds: number;
+  outcome: AttemptOutcome;
+  hints_used: number;
+  notes: string;
+}
+
+export interface TopicStat {
+  topic: string;
+  attempted: number;
+  solved: number;
+}
+
+export interface AttemptStats {
+  total_attempted: number;
+  solved: number;
+  partial: number;
+  stuck: number;
+  gave_up: number;
+  by_topic: TopicStat[];
 }

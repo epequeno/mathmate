@@ -4,9 +4,34 @@ import { Config } from "./api";
 import { errorFromStatus, isCancelled } from "./error";
 import type { AppError } from "./error";
 
+// ─── Wire variant ─────────────────────────────────────────────────────
+
+export type WireVariant = "openai_compatible" | "anthropic_native";
+
+/** Detect wire variant from provider config. Never infers from model ID. */
+function detectWireVariant(provider: ProviderConfig): WireVariant {
+  const name = provider.name.toLowerCase();
+  const base = provider.base_url.toLowerCase();
+
+  // OpenRouter always stays OpenAI-compatible (even for Claude models)
+  if (name.includes("openrouter") || base.includes("openrouter.ai")) {
+    return "openai_compatible";
+  }
+
+  if (name.includes("anthropic") || base.includes("api.anthropic.com")) {
+    return "anthropic_native";
+  }
+
+  return "openai_compatible";
+}
+
+// ─── Shared types ─────────────────────────────────────────────────────
+
 export interface MessagePayload {
-  role: "user" | "assistant" | "system";
+  role: "user" | "assistant" | "system" | "tool";
   content: string | { type: string; text?: string; image_url?: { url: string } }[];
+  tool_call_id?: string;
+  tool_calls?: unknown[];
 }
 
 /** Custom error class enriched with retry/status info */
@@ -28,11 +53,76 @@ const CONNECTION_TIMEOUT = 30_000;   // 30s to establish connection
 const IDLE_TIMEOUT = 60_000;         // 60s with no tokens received
 const TOTAL_TIMEOUT = 120_000;       // 120s total for entire response
 
+// ─── SSE frame reader ──────────────────────────────────────────────────
+
+export interface SSEFrame {
+  event: string;
+  data: string;
+}
+
 /**
- * Stream chat completion from an OpenAI-compatible endpoint.
- * Yields text and thinking chunks as they arrive.
- * Supports optional tool definitions for function calling.
+ * Read a raw ReadableStream byte reader and yield SSE frames.
+ * Handles multi-line `data:` fields and optional `event:` fields per the
+ * SSE specification (W3C).
  */
+export async function* readSSEFrames(
+  reader: ReadableStreamDefaultReader<Uint8Array>
+): AsyncGenerator<SSEFrame> {
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+
+    // SSE frames are separated by double newlines
+    const parts = buffer.split("\n\n");
+    // Keep the last incomplete part in the buffer
+    buffer = parts.pop() ?? "";
+
+    for (const part of parts) {
+      const lines = part.split("\n");
+      let event = "message";
+      let data = "";
+
+      for (const line of lines) {
+        if (line.startsWith("event:")) {
+          event = line.slice(6).trim();
+        } else if (line.startsWith("data:")) {
+          if (data) data += "\n";
+          data += line.slice(5).trim();
+        }
+        // comment lines (starting with :) are ignored per spec
+      }
+
+      if (data) {
+        yield { event, data };
+      }
+    }
+  }
+
+  // Flush remaining buffer
+  if (buffer.trim()) {
+    const lines = buffer.split("\n");
+    let event = "message";
+    let data = "";
+    for (const line of lines) {
+      if (line.startsWith("event:")) {
+        event = line.slice(6).trim();
+      } else if (line.startsWith("data:")) {
+        if (data) data += "\n";
+        data += line.slice(5).trim();
+      }
+    }
+    if (data) {
+      yield { event, data };
+    }
+  }
+}
+
+// ─── OpenAI-compatible parser ──────────────────────────────────────────
 
 /** Convert internal StreamError to typed AppError for consumers. */
 function _streamErrorToAppError(err: StreamError): AppError {
@@ -45,6 +135,258 @@ function _streamErrorToAppError(err: StreamError): AppError {
   return { kind: "network", message: err.message };
 }
 
+// ─── Anthropic request builders ────────────────────────────────────────
+
+/**
+ * Convert MessagePayload[] to Anthropic Messages API content blocks.
+ * Rules:
+ * - system messages → extracted into `system[]` (handled by streamChat)
+ * - user text → `{ type: "text", text }`
+ * - image parts → `{ type: "image", source: { type: "base64", ... } }`
+ * - assistant tool calls → `tool_use` blocks with stable IDs
+ * - tool results → `user` message with `tool_result` blocks
+ */
+export function convertMessagesToAnthropicBlocks(
+  messages: MessagePayload[]
+): { system: unknown[]; messages: Record<string, unknown>[] } {
+  const system: unknown[] = [];
+  const result: Record<string, unknown>[] = [];
+
+  for (const msg of messages) {
+    if (msg.role === "system") {
+      // Anthropic handles system prompts as a top-level parameter, not in messages.
+      if (typeof msg.content === "string") {
+        system.push({ type: "text", text: msg.content });
+      }
+      continue;
+    }
+
+    if (msg.role === "tool") {
+      const tcId = (msg as any).tool_call_id || "";
+      const contentText = typeof msg.content === "string" ? msg.content : "";
+      result.push({
+        role: "user",
+        content: [{ type: "tool_result", tool_use_id: tcId, content: contentText }],
+      });
+      continue;
+    }
+
+    // ── Assistant ───────────────────────────────────────────────────
+    if (msg.role === "assistant") {
+      const toolCalls = (msg as any).tool_calls;
+      if (toolCalls && Array.isArray(toolCalls) && toolCalls.length > 0) {
+        const content: Record<string, unknown>[] = [];
+        const textContent = typeof msg.content === "string" ? msg.content : "";
+        if (textContent) {
+          content.push({ type: "text", text: textContent });
+        }
+        for (const tc of toolCalls) {
+          const tcName = tc.function?.name || tc.name || "unknown";
+          const tcArgs = tc.function?.arguments
+            ? (typeof tc.function.arguments === "string"
+              ? JSON.parse(tc.function.arguments)
+              : tc.function.arguments)
+            : tc.input || {};
+          content.push({
+            type: "tool_use",
+            id: tc.id || `tc_${crypto.randomUUID()}`,
+            name: tcName,
+            input: tcArgs,
+          });
+        }
+        result.push({ role: "assistant", content });
+      } else {
+        const textContent = typeof msg.content === "string" ? msg.content : "";
+        result.push({
+          role: "assistant",
+          content: textContent,
+        });
+      }
+      continue;
+    }
+
+    // ── User ─────────────────────────────────────────────────────────
+    if (msg.role === "user") {
+      if (typeof msg.content === "string") {
+        result.push({ role: "user", content: msg.content });
+      } else if (Array.isArray(msg.content)) {
+        const blocks: Record<string, unknown>[] = [];
+        for (const part of msg.content) {
+          if (part.type === "image_url" || (part as any).type === "image") {
+            const img = part as any;
+            let mediaType = "image/jpeg";
+            let data = "";
+            if (img.image_url?.url) {
+              const url = img.image_url.url as string;
+              if (url.startsWith("data:")) {
+                const commaIdx = url.indexOf(",");
+                mediaType = url.slice(5, url.indexOf(";")) || "image/jpeg";
+                data = commaIdx >= 0 ? url.slice(commaIdx + 1) : "";
+              }
+            } else if (img.data) {
+              data = img.data;
+              mediaType = img.mime || "image/jpeg";
+            }
+            if (data) {
+              blocks.push({
+                type: "image",
+                source: { type: "base64", media_type: mediaType, data },
+              });
+            }
+          } else if (part.type === "text") {
+            blocks.push({ type: "text", text: part.text || "" });
+          }
+        }
+        result.push({ role: "user", content: blocks });
+      }
+      continue;
+    }
+  }
+
+  return { system, messages: result };
+}
+
+/**
+ * Convert OpenAI-style tool definitions to Anthropic tool format.
+ */
+export function convertToolsToAnthropicSchema(tools: unknown[]): unknown[] {
+  return tools.map((tool: any) => ({
+    name: tool.function?.name || tool.name || "",
+    description: tool.function?.description || tool.description || "",
+    input_schema: tool.function?.parameters || tool.input_schema || { type: "object", properties: {} },
+  }));
+}
+
+// ─── Anthropic parser ──────────────────────────────────────────────────
+
+export interface AnthropicParseState {
+  /** Per-index accumulated partial tool-use JSON strings */
+  toolArgsByIndex: Map<number, string>;
+  /** Per-index tool names (set at content_block_start) */
+  toolNameByIndex: Map<number, string>;
+  /** Per-index call IDs (set at content_block_start) */
+  callIdByIndex: Map<number, string>;
+}
+
+/**
+ * Parse a single Anthropic SSE frame into a StreamChunk.
+ * Uses accumulated `state` so that tool-call IDs are stable across
+ * multiple `content_block_delta` frames for the same index.
+ */
+export function parseAnthropicFrame(
+  event: string,
+  data: string,
+  state: AnthropicParseState
+): StreamChunk | null {
+  try {
+    const parsed = JSON.parse(data);
+    const type = parsed.type as string;
+
+    switch (type) {
+      case "message_start": {
+        const chunk: StreamChunk = {};
+        if (parsed.message?.usage) {
+          chunk.usage = {
+            prompt_tokens: parsed.message.usage.input_tokens ?? 0,
+            completion_tokens: parsed.message.usage.output_tokens ?? 0,
+          };
+        }
+        return chunk.usage ? chunk : null;
+      }
+
+      case "content_block_start": {
+        const block = parsed.content_block;
+        if (!block) return null;
+
+        if (block.type === "text") {
+          return { text: block.text || "" };
+        }
+
+        if (block.type === "thinking") {
+          return { thinking: block.thinking || "" };
+        }
+
+        if (block.type === "tool_use") {
+          const index = parsed.index ?? 0;
+          state.callIdByIndex.set(index, block.id || `tc_${crypto.randomUUID()}`);
+          state.toolNameByIndex.set(index, block.name || "");
+          state.toolArgsByIndex.set(index, "");
+
+          return {
+            tool_call_delta: { index, call_id_part: block.id, tool_name_part: block.name },
+            tool_call_deltas: [{ index, call_id_part: block.id, tool_name_part: block.name }],
+          };
+        }
+
+        return null;
+      }
+
+      case "content_block_delta": {
+        const delta = parsed.delta;
+        if (!delta) return null;
+
+        const blockType = delta.type as string;
+        const index = parsed.index ?? 0;
+
+        if (blockType === "text_delta") {
+          return { text: delta.text || "" };
+        }
+
+        if (blockType === "thinking_delta") {
+          return { thinking: delta.thinking || "" };
+        }
+
+        if (blockType === "input_json_delta") {
+          const prev = state.toolArgsByIndex.get(index) || "";
+          state.toolArgsByIndex.set(index, prev + (delta.partial_json || ""));
+          return {
+            tool_call_delta: { index, arguments_part: delta.partial_json || "" },
+            tool_call_deltas: [{ index, arguments_part: delta.partial_json || "" }],
+          };
+        }
+
+        return null;
+      }
+
+      case "content_block_stop":
+        return null;
+
+      case "message_delta": {
+        const chunk: StreamChunk = {};
+        if (parsed.usage) {
+          chunk.usage = {
+            prompt_tokens: parsed.usage.input_tokens ?? 0,
+            completion_tokens: parsed.usage.output_tokens ?? 0,
+          };
+        }
+        if (parsed.delta?.stop_reason === "end_turn" ||
+            parsed.delta?.stop_reason === "max_tokens") {
+          chunk.done = true;
+        }
+        return chunk;
+      }
+
+      case "message_stop":
+        return { done: true };
+
+      case "ping":
+        return null;
+
+      case "error":
+        throw errorFromStatus(
+          parsed.error?.status_code || 502,
+          `Anthropic API error: ${parsed.error?.message || "Unknown error"}`
+        );
+
+      default:
+        return null;
+    }
+  } catch (err: any) {
+    if (err && (err as AppError).kind) throw err;
+    return null;
+  }
+}
+
 export async function* streamChat(
   payload: MessagePayload[] | { messages: MessagePayload[]; tools?: unknown[] },
   model: string,
@@ -55,35 +397,14 @@ export async function* streamChat(
   const messages = Array.isArray(payload) ? payload : payload.messages;
   const tools = Array.isArray(payload) ? undefined : payload.tools;
 
-  const body: Record<string, unknown> = {
-    model,
-    messages,
-    stream: true,
-  };
+  // Detect wire variant — OpenRouter ALWAYS uses OpenAI-compatible parser
+  const wireVariant = detectWireVariant(provider);
 
-  // OpenRouter only streams model reasoning/thinking fields when the client
-  // opts in. MathMate's parser/UI already preserves those fields as plain
-  // text; this ensures reasoning-capable OpenRouter models actually emit them.
-  if (_isOpenRouterProvider(provider)) {
-    body.include_reasoning = true;
-  }
-
-  // Include tool definitions if present
-  if (tools && tools.length > 0) {
-    body.tools = tools;
-  }
-
-  // Detect Anthropic-style provider
-  const isAnthropic = provider.base_url.includes("anthropic") || provider.name.toLowerCase().includes("claude");
-
-  // Preferred order:
-  // 1) Provider key saved in Settings (stored in ~/.mathmate/models.json)
-  // 2) Provider-specific env var
-  // 3) OpenRouter/OpenAI env fallback for OpenAI-compatible endpoints
+  // Resolve API key: 1) stored, 2) provider env var, 3) fallback env vars
   let apiKey: string | undefined = provider.stored_api_key?.trim() || undefined;
 
   if (!apiKey) {
-    if (isAnthropic) {
+    if (wireVariant === "anthropic_native") {
       apiKey = await _getEnvKey(provider.env_key ?? "ANTHROPIC_API_KEY");
     } else {
       apiKey = await _getEnvKey(provider.env_key ?? `${provider.name.toUpperCase()}_API_KEY`);
@@ -100,19 +421,52 @@ export async function* streamChat(
     );
   }
 
-  // Determine endpoint URL
-  const baseUrl = provider.base_url.replace(/\/+$/, "");
-  const endpoint = isAnthropic
-    ? `${baseUrl}/v1/messages`
-    : `${baseUrl}/chat/completions`;
+  // Build request body based on wire variant
+  let body: Record<string, unknown>;
+  let endpoint: string;
+  let headers: Record<string, string>;
 
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${apiKey}`,
-  };
-  if (isAnthropic) {
-    headers["anthropic-version"] = "2023-06-01";
-    body.max_tokens = body.max_tokens ?? 4096;
+  if (wireVariant === "anthropic_native") {
+    const converted = convertMessagesToAnthropicBlocks(messages);
+    body = {
+      model,
+      max_tokens: 4096,
+      stream: true,
+      messages: converted.messages,
+    };
+    if (converted.system.length > 0) {
+      body.system = converted.system;
+    }
+    if (tools && tools.length > 0) {
+      body.tools = convertToolsToAnthropicSchema(tools);
+    }
+
+    const baseUrl = provider.base_url.replace(/\/+$/, "");
+    endpoint = `${baseUrl}/v1/messages`;
+    headers = {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+    };
+  } else {
+    body = {
+      model,
+      messages,
+      stream: true,
+    };
+    if (_isOpenRouterProvider(provider)) {
+      body.include_reasoning = true;
+    }
+    if (tools && tools.length > 0) {
+      body.tools = tools;
+    }
+
+    const baseUrl = provider.base_url.replace(/\/+$/, "");
+    endpoint = `${baseUrl}/chat/completions`;
+    headers = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    };
   }
 
   // Create an abort controller that includes timeouts
@@ -228,7 +582,7 @@ export async function* streamChat(
         }
         try {
           const parsed = JSON.parse(data);
-          const chunk = _parseDelta(parsed, isAnthropic);
+          const chunk = parseOpenAIFrame(parsed);
           if (chunk) yield chunk;
         } catch {
           // Skip malformed JSON
@@ -257,6 +611,7 @@ export async function* streamChat(
     clearTimers();
   }
 
+  // Fallback done signal (should be unreachable — parsers emit { done: true })
   yield { done: true };
 }
 
@@ -266,7 +621,12 @@ function _isOpenRouterProvider(provider: ProviderConfig): boolean {
   return name.includes("openrouter") || baseUrl.includes("openrouter.ai");
 }
 
-function _parseDelta(parsed: any, _isAnthropic: boolean): StreamChunk | null {
+/**
+ * Parse a single OpenAI-compatible SSE delta frame.
+ * Extracted from the original _parseDelta — behaviour unchanged.
+ */
+export function parseOpenAIFrame(raw: Record<string, unknown>): StreamChunk | null {
+  const parsed = raw as any;
   const choice = parsed.choices?.[0];
   if (!choice) return null;
 
@@ -334,9 +694,10 @@ function _parseDelta(parsed: any, _isAnthropic: boolean): StreamChunk | null {
 
   // Parse usage from the final chunk
   if (parsed.usage) {
+    const usage = parsed.usage as any;
     chunk.usage = {
-      prompt_tokens: parsed.usage.prompt_tokens ?? 0,
-      completion_tokens: parsed.usage.completion_tokens ?? 0,
+      prompt_tokens: usage.prompt_tokens ?? 0,
+      completion_tokens: usage.completion_tokens ?? 0,
     };
   }
 
@@ -344,7 +705,7 @@ function _parseDelta(parsed: any, _isAnthropic: boolean): StreamChunk | null {
     chunk.done = true;
   }
 
-  return chunk.text || chunk.thinking || chunk.tool_call_delta || chunk.tool_call_deltas?.length || chunk.done ? chunk : null;
+  return chunk.text || chunk.thinking || chunk.tool_call_delta || chunk.tool_call_deltas?.length || chunk.done || chunk.usage ? chunk : null;
 }
 
 function _reasoningDetailsText(value: unknown): string {

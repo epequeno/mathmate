@@ -32,6 +32,10 @@ export const Sessions = {
   rename: (sessionId: string, title: string) =>
     invoke<Session>("rename_session", { sessionId, title }),
 
+  /** @command: update_session_hint_outcome */
+  updateHintOutcome: (sessionId: string, hintsUsed: number | null, solved: boolean | null) =>
+    invoke<Session>("update_session_hint_outcome", { sessionId, hintsUsed, solved }),
+
   /** @command: delete_session */
   delete: (sessionId: string) =>
     invoke<void>("delete_session", { sessionId }),

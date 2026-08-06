@@ -1,0 +1,21 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.content {
+  padding: 6px 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--color-text-primary);
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.dots {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+  opacity: 0.5;
+}

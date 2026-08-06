@@ -36,6 +36,13 @@ export const LICENSE_INFO: Record<TextbookLicense, TextbookLicenseInfo> = {
     attribution_required: true,
     description: "Creative Commons Attribution-NoDerivatives — no modifications",
   },
+  "cc-by-nc-nd": {
+    license: "cc-by-nc-nd",
+    label: "CC BY-NC-ND 4.0",
+    url: "https://creativecommons.org/licenses/by-nc-nd/4.0/",
+    attribution_required: true,
+    description: "Creative Commons Attribution-NonCommercial-NoDerivatives — free sharing, no modifications, non-commercial only",
+  },
   "gpl": {
     license: "gpl",
     label: "GNU GPL",
@@ -79,6 +86,14 @@ const SUBJECT_LABELS: Record<string, string> = {
   "discrete-math": "Discrete Math",
   probability: "Probability",
   physics: "Physics",
+  "number-theory": "Number Theory",
+  "olympiad-general": "Olympiad — General",
+  "olympiad-geometry": "Olympiad — Geometry",
+  "olympiad-algebra": "Olympiad — Algebra",
+  "olympiad-number-theory": "Olympiad — Number Theory",
+  "olympiad-combinatorics": "Olympiad — Combinatorics",
+  "abstract-algebra": "Abstract Algebra",
+  "real-analysis": "Real Analysis",
   other: "Other",
 };
 
@@ -97,6 +112,14 @@ const SUBJECT_COLORS: Record<string, string> = {
   "discrete-math": "rgb(20,184,166)",
   probability: "rgb(236,72,153)",
   physics: "rgb(99,102,241)",
+  "number-theory": "rgb(234,88,12)",
+  "olympiad-general": "rgb(124,58,237)",
+  "olympiad-geometry": "rgb(8,145,178)",
+  "olympiad-algebra": "rgb(5,150,105)",
+  "olympiad-number-theory": "rgb(217,119,6)",
+  "olympiad-combinatorics": "rgb(220,38,38)",
+  "abstract-algebra": "rgb(14,165,233)",
+  "real-analysis": "rgb(244,63,94)",
   other: "rgb(148,163,184)",
 };
 

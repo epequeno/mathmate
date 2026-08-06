@@ -50,18 +50,39 @@ export default function SessionTable({
     });
   }
 
+  // Sentinel for sessions with no project_id or an unknown project_id.
+  const ORPHAN_ID = "__orphaned__";
+  const orphanGroup: GroupedProject = {
+    project: {
+      id: ORPHAN_ID,
+      name: "No Project",
+      updated_at: "",
+    } as any,
+    activeSessions: [],
+    archivedSessions: [],
+  };
+
   for (const s of sessions) {
-    const group = projectMap.get(s.project_id ?? "");
+    const group = s.project_id ? projectMap.get(s.project_id) : undefined;
     if (group) {
       group.activeSessions.push(s);
+    } else {
+      orphanGroup.activeSessions.push(s);
     }
   }
 
   for (const s of archivedSessions) {
-    const group = projectMap.get(s.project_id ?? "");
+    const group = s.project_id ? projectMap.get(s.project_id) : undefined;
     if (group) {
       group.archivedSessions.push(s);
+    } else {
+      orphanGroup.archivedSessions.push(s);
     }
+  }
+
+  // Append orphan group if it has any sessions.
+  if (orphanGroup.activeSessions.length > 0 || orphanGroup.archivedSessions.length > 0) {
+    projectMap.set(ORPHAN_ID, orphanGroup);
   }
 
   // Sort projects by most recently updated session descending

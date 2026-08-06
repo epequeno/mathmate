@@ -621,7 +621,7 @@ function GraphOutput({ pointCount }: { pointCount: number }) {
         <path d="M1 11 Q3.5 3 7 7 Q10.5 11 13 3" stroke="var(--color-accent)" strokeWidth="1.5" strokeLinecap="round" fill="none" />
       </svg>
       <span style={{ fontSize: 11, color: "var(--color-text-secondary)" }}>
-        {pointCount} points · rendered below
+        {pointCount} point{pointCount !== 1 ? "s" : ""} computed
       </span>
     </div>
   );

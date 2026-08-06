@@ -57,6 +57,20 @@ const tabs = [
     ),
   },
   {
+    path: "/library",
+    label: "Library",
+    icon: (active: boolean) => (
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+        <path
+          d="M1.5 2v9M4 2v9M6.5 2v9M9.5 2.5l2 8.5"
+          stroke={active ? "var(--color-accent-light)" : "var(--color-text-tertiary)"}
+          strokeWidth="1.1"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
+  {
     path: "/overview",
     label: "Overview",
     icon: (active: boolean) => (

@@ -13,6 +13,7 @@ import ChatInput from "../components/ChatInput";
 import MathComposer from "../components/MathComposer";
 import MigrationBanner from "../components/MigrationBanner";
 import ModelSelector from "../components/ModelSelector";
+import ProofCritiquePanel from "../components/chat/ProofCritiquePanel";
 import type { WrapUpResult, Message } from "../lib/types";
 import { renderMarkdown } from "../lib/renderMarkdown";
 import { sanitize } from "../lib/sanitize";
@@ -25,6 +26,7 @@ const TUTOR_STYLES = [
   { value: "math-tutor", label: "Math Tutor" },
   { value: "explanation", label: "Explanation" },
   { value: "review", label: "Review" },
+  { value: "olympiad", label: "Olympiad Coach" },
 ];
 
 function extractBookTitle(path: string): string {
@@ -372,17 +374,21 @@ export default function ChatPage() {
 
   const {
     currentSession,
-    streaming,
-    streamingContent,
-    streamingThinking,
+    phase,
+    streamedText,
+    streamedThinking,
     streamSegments,
-    error,
     newSession,
     retrievedMemories,
     visionWarning,
     clearVisionWarning,
   } = useChatStore();
   const currentProject = useProjectStore((s) => s.currentProject);
+
+  const streamingContent = streamedText;
+  const streamingThinking = streamedThinking;
+  const streaming = phase.kind === "streaming";
+  const error = phase.kind === "errored" ? phase.error : null;
 
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
@@ -775,6 +781,7 @@ export default function ChatPage() {
 
       {/* Input area */}
       <ChatInput />
+      <ProofCritiquePanel />
 
       {/* Scroll-to-bottom button */}
       {showScrollBtn && (

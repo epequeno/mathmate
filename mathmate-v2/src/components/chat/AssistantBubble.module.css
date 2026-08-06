@@ -1,0 +1,66 @@
+.imageStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-start;
+  margin-bottom: 6px;
+}
+
+.thumbnail {
+  max-width: 260px;
+  max-height: 200px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  object-fit: contain;
+  display: block;
+  cursor: zoom-in;
+  background: var(--color-surface);
+}
+
+.thinkingDetails {
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: var(--color-text-tertiary);
+}
+
+.thinkingSummary {
+  cursor: pointer;
+  font-weight: 500;
+  padding: 2px 0;
+  user-select: none;
+}
+
+.thinkingBody {
+  margin-top: 6px;
+  padding: 8px 12px;
+  background: var(--color-surface);
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--color-text-secondary);
+  white-space: pre-wrap;
+  font-family: 'SF Mono', Menlo, Monaco, monospace;
+}
+
+.contentBubble {
+  padding: 6px 0;
+  font-size: 14px;
+  line-height: 1.55;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.contentSegment {
+  padding: 6px 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--color-text-primary);
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.loadingDotsWrap {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+}

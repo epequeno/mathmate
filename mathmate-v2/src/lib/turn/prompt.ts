@@ -31,7 +31,16 @@ Answer as a clear math tutor.
 ## Interactive components (strict)
 - Do NOT include <mathmate-viz> or <mathmate-quiz> by default.
 - Only use these tags if the user explicitly asks for a graph/visualization, quiz, or practice exercise.
-- For normal explanation requests, return plain explanatory text + LaTeX only.`;
+- For normal explanation requests, return plain explanatory text + LaTeX only.
+
+## Graphing functions
+- When the user asks to see a graph or visualization of a function, embed it directly using:
+  <mathmate-viz type="function" expr="sin(x)" xmin="-6.28" xmax="6.28" title="sin(x)" />
+  Use standard math syntax: sin, cos, tan, log, sqrt, abs, pi, e, x^2, etc.
+- You may also call the \`graph\` tool to compute exact points first, then ALWAYS follow up by
+  embedding a <mathmate-viz> tag in your response so the graph appears inline.
+- Place the <mathmate-viz> tag where you want the graph to appear in your explanation.
+- For multiple functions (e.g. comparing sin and cos), emit one <mathmate-viz> tag per function.`;
 
 const TEXTBOOK_INSTRUCTIONS = `
 ## Textbook Access

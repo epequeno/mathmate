@@ -2,33 +2,33 @@ import { useState, useEffect, useCallback } from "react";
 import { useProjectStore } from "../stores/projectStore";
 import { useChatStore } from "../stores/chatStore";
 import { useNavigate, useOutletContext } from "react-router-dom";
-import { Textbook } from "../lib/api";
+import {
+  Textbook,
+  getBookStreamInfo,
+  projectTextbookStreamUrl,
+  textbookPathRevision,
+  type BookStreamInfo,
+} from "../lib/api/textbook";
 import PdfViewer from "../components/PdfViewer";
 import { FolderOpen, Settings2, AlertTriangle, CheckCircle } from "lucide-react";
 
-type CachedPdf = {
-  url: string;
-  lastUsed: number;
-};
-
-const pdfUrlCache = new Map<string, CachedPdf>();
-
-function cacheKeyForProject(projectId: string, textbookPath: string): string {
-  return `${projectId}:${textbookPath}`;
-}
-
-function prunePdfCache(activeKey: string) {
-  const entries = [...pdfUrlCache.entries()]
-    .filter(([key]) => key !== activeKey)
-    .sort((a, b) => b[1].lastUsed - a[1].lastUsed);
-  for (const [key, cached] of entries.slice(2)) {
-    URL.revokeObjectURL(cached.url);
-    pdfUrlCache.delete(key);
-  }
-}
-
 interface OutletCtx {
   openProjectSettings?: () => void;
+}
+
+// ── Module-level promise: fetch stream info once per app session ─────────
+// This avoids calling get_book_stream_info on every project switch.
+let streamInfoPromise: Promise<BookStreamInfo> | null = null;
+
+function getOrFetchStreamInfo(): Promise<BookStreamInfo> {
+  if (!streamInfoPromise) {
+    streamInfoPromise = getBookStreamInfo().catch((err) => {
+      // Reset on failure so a retry will attempt again
+      streamInfoPromise = null;
+      throw err;
+    });
+  }
+  return streamInfoPromise;
 }
 
 export default function BookPage() {
@@ -44,23 +44,13 @@ export default function BookPage() {
   const [captureError, setCaptureError] = useState<string | null>(null);
   const [textbookId, setTextbookId] = useState<string | null>(null);
 
-  // ── Load textbook when project changes ──
+  // ── Load textbook URL via local HTTP stream server ──
 
   useEffect(() => {
     if (!currentProject?.textbook_path) {
       setPdfUrl(null);
       setError(null);
-      return;
-    }
-
-    const cacheKey = cacheKeyForProject(currentProject.id, currentProject.textbook_path);
-    const cached = pdfUrlCache.get(cacheKey);
-    if (cached) {
-      cached.lastUsed = Date.now();
-      setPdfUrl(cached.url);
       setLoading(false);
-      setError(null);
-      prunePdfCache(cacheKey);
       return;
     }
 
@@ -68,39 +58,45 @@ export default function BookPage() {
     setLoading(true);
     setError(null);
 
-    Textbook.readProjectTextbook(currentProject.id)
-      .then((base64) => {
+    // Extract stable identifiers so TS can narrow types inside the async closure
+    const projectId = currentProject.id;
+    const textbookPath = currentProject.textbook_path;
+
+    // Build the stream URL
+    (async () => {
+      try {
+        const info = await getOrFetchStreamInfo();
         if (cancelled) return;
-        const binaryStr = atob(base64);
-        const bytes = new Uint8Array(binaryStr.length);
-        for (let i = 0; i < binaryStr.length; i++) {
-          bytes[i] = binaryStr.charCodeAt(i);
-        }
-        // Use a blob URL to avoid pdf.js structured-clone transfer issues
-        const blob = new Blob([bytes], { type: "application/pdf" });
-        const url = URL.createObjectURL(blob);
-        pdfUrlCache.set(cacheKey, { url, lastUsed: Date.now() });
-        prunePdfCache(cacheKey);
+
+        const revision = textbookPathRevision(textbookPath);
+        const url = projectTextbookStreamUrl(
+          info,
+          projectId,
+          revision,
+        );
+        if (cancelled) return;
         setPdfUrl(url);
         setLoading(false);
 
         // Derive stable textbook ID for search indexing
-        if (currentProject.textbook_path) {
-          Textbook.deriveId(currentProject.textbook_path)
-            .then((id) => {
-              if (!cancelled) setTextbookId(id);
-            })
-            .catch(() => {
-              // Non-critical — indexing won't be available
-            });
-        }
-      })
-      .catch((err: string) => {
+        Textbook.deriveId(textbookPath)
+          .then((id) => {
+            if (!cancelled) setTextbookId(id);
+          })
+          .catch(() => {
+            // Non-critical — indexing won't be available
+          });
+      } catch (err: unknown) {
         if (cancelled) return;
-        setError(err);
+        const msg =
+          typeof err === "string"
+            ? err
+            : "Failed to connect to book stream server";
+        setError(msg);
         setPdfUrl(null);
         setLoading(false);
-      });
+      }
+    })();
 
     return () => {
       cancelled = true;

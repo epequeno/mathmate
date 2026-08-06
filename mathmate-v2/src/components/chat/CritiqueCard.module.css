@@ -1,0 +1,195 @@
+/* CritiqueCard.module.css — Phase 16D */
+
+.card {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  overflow: hidden;
+  margin: 8px 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.headerIcon {
+  font-size: 16px;
+}
+
+.headerTitle {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.modelBadge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.overall {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 10px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.overallIcon {
+  font-size: 14px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ── Section ─────────────────────────────────────── */
+
+.section {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.section:last-child {
+  border-bottom: none;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.sectionTitle {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.items {
+  padding: 0 14px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.item {
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: var(--color-bg);
+}
+
+.itemRow {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.itemContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.itemLocation {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  display: block;
+  margin-bottom: 2px;
+}
+
+.itemIssue {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.itemSuggestion {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--color-text-tertiary);
+  margin: 4px 0 0;
+  font-style: italic;
+}
+
+/* ── Hint button ─────────────────────────────────── */
+
+.hintBtn {
+  margin-top: 6px;
+  margin-left: 28px;
+  padding: 3px 10px;
+  border: 1px solid var(--color-accent);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-accent);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.hintBtn:hover {
+  background: var(--color-accent-subtle);
+}
+
+/* ── No issues ───────────────────────────────────── */
+
+.noIssues {
+  padding: 14px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  text-align: center;
+  font-style: italic;
+}
+
+/* ── Reliability note ────────────────────────────── */
+
+.reliabilityNote {
+  padding: 10px 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-text-tertiary);
+  background: var(--color-bg);
+  border-top: 1px solid var(--color-border);
+}
+
+.reliabilityNote strong {
+  color: var(--color-text-secondary);
+}
+
+.reliabilityNote p {
+  margin: 4px 0 0;
+}
+
+.dismissBtn {
+  margin-top: 6px;
+  padding: 2px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-text-tertiary);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.dismissBtn:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-text-tertiary);
+}

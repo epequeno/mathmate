@@ -192,7 +192,7 @@ export type ToolOutputData =
   | { kind: "vault_write"; path: string; bytes: number; updated: boolean }
   | { kind: "vault_list"; totalFiles: number; groups: VaultListGroup[]; overflow: number }
   | { kind: "calculate"; value: string }
-  | { kind: "graph"; pointCount: number }
+  | { kind: "graph"; pointCount: number; expression: string; xmin: number; xmax: number }
   | { kind: "get_current_date"; date: string; dayOfWeek: string }
   | { kind: "error"; message: string; raw: string }
   | { kind: "raw_json"; json: string };
@@ -330,7 +330,11 @@ export function renderToolOutput(
       // ── graph ─────────────────────────────────────────────────────
       case "graph": {
         const points = Array.isArray(r.points) ? r.points : [];
-        return { kind: "graph", pointCount: points.length };
+        const expression = str(r.expression ?? "");
+        const meta = asObject(r.meta) ?? {};
+        const xmin = num(meta.xmin ?? -10);
+        const xmax = num(meta.xmax ?? 10);
+        return { kind: "graph", pointCount: points.length, expression, xmin, xmax };
       }
 
       // ── get_current_date ─────────────────────────────────────────

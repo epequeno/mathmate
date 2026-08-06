@@ -1,0 +1,29 @@
+.imageStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+  margin-bottom: 6px;
+}
+
+.thumbnail {
+  max-width: 260px;
+  max-height: 200px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  object-fit: contain;
+  display: block;
+  cursor: zoom-in;
+  background: var(--color-surface);
+}
+
+.bubble {
+  padding: 10px 16px;
+  border-radius: 16px 16px 4px 16px;
+  background: var(--color-user-bubble);
+  color: var(--color-user-text);
+  font-size: 14px;
+  line-height: 1.55;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}

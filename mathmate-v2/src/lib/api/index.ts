@@ -22,6 +22,7 @@ export type { RecentImageEntry } from "./files";
 export { Textbook } from "./textbook";
 export type { TocEntry, ImportResult, PageContent, TextbookIndexMeta } from "./textbook";
 export { WrapUp } from "./wrapup";
+export { ProblemBank } from "./problemBank";
 
 import { Sessions } from "./sessions";
 import { Projects } from "./projects";
@@ -32,6 +33,7 @@ import { Vault } from "./vault";
 import { Files } from "./files";
 import { Textbook } from "./textbook";
 import { WrapUp } from "./wrapup";
+import { ProblemBank } from "./problemBank";
 
 /** Convenience aggregate: `api.Sessions.load(...)` etc. */
 export const api = {
@@ -44,4 +46,5 @@ export const api = {
   Files,
   Textbook,
   WrapUp,
+  ProblemBank,
 } as const;

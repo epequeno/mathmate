@@ -33,6 +33,12 @@ interface ProjectState {
   archiveProject: (id: string) => Promise<void>;
   unarchiveProject: (id: string) => Promise<void>;
   setCurrentProject: (project: MathProject | null) => void;
+  /** Set the active vault for the current project. */
+  setActiveVault: (vaultId: string) => Promise<void>;
+  /** Add a new vault to the current project. */
+  addVault: (name: string, path: string, kind: string) => Promise<void>;
+  /** Remove a vault from the current project. */
+  removeVault: (vaultId: string) => Promise<void>;
   startSynapse: () => Promise<void>;
   stopSynapse: () => Promise<void>;
   checkSynapseStatus: () => Promise<void>;
@@ -132,21 +138,22 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   setCurrentProject: (project: MathProject | null) => {
-    // Stop Synapse when switching away from a vault project
     const prev = get().currentProject;
-    if (prev?.vault_path) {
+    const prevVaultPath = prev?.active_vault_id
+      ? prev.vaults?.find(v => v.id === prev.active_vault_id)?.path
+      : prev?.vault_path;
+    if (prevVaultPath) {
       Projects.stopSynapse().catch(() => {});
       set({ synapseStatus: { running: false, vault_path: null, tool_count: 0 } });
-      // Clear vault backend
       useVaultStore.getState().setBackend(null);
     }
 
     set({ currentProject: project });
 
-    // Construct the appropriate vault backend
-    if (project?.vault_path) {
-      // Always prefer Synapse for vault-enabled projects.
-      // LegacyBackend is used when Synapse is not available.
+    const vaultPath = project?.active_vault_id
+      ? project.vaults?.find(v => v.id === project.active_vault_id)?.path
+      : project?.vault_path;
+    if (vaultPath) {
       const backend = new SynapseBackend();
       useVaultStore.getState().setBackend(backend);
       get().startSynapse();
@@ -155,12 +162,52 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     }
   },
 
+  setActiveVault: async (vaultId: string) => {
+    const project = get().currentProject;
+    if (!project) return;
+    await Projects.setActiveVault(project.id, vaultId);
+    // Reload project after changing vault
+    try {
+      const reloaded = await Projects.list();
+      const updated = reloaded.find((p: any) => p.id === project.id);
+      if (updated) set({ currentProject: updated as MathProject });
+    } catch {}
+    get().startSynapse();
+  },
+
+  addVault: async (name: string, path: string, kind: string) => {
+    const project = get().currentProject;
+    if (!project) return;
+    await Projects.addVault(project.id, name, path, kind);
+    try {
+      const reloaded = await Projects.list();
+      const updated = reloaded.find((p: any) => p.id === project.id);
+      if (updated) set({ currentProject: updated as MathProject });
+    } catch {}
+    get().startSynapse();
+  },
+
+  removeVault: async (vaultId: string) => {
+    const project = get().currentProject;
+    if (!project) return;
+    await Projects.removeVault(project.id, vaultId);
+    try {
+      const reloaded = await Projects.list();
+      const updated = reloaded.find((p: any) => p.id === project.id);
+      if (updated) set({ currentProject: updated as MathProject });
+    } catch {}
+    get().startSynapse();
+  },
+
   startSynapse: async () => {
     const project = get().currentProject;
-    if (!project?.vault_path) return;
+    const vaultPath = project?.active_vault_id
+      ? project.vaults?.find(v => v.id === project.active_vault_id)?.path
+      : project?.vault_path;
+    if (!vaultPath) return;
 
     try {
-      await Projects.startSynapse(project.vault_path);
+      await Projects.startSynapse(vaultPath);
       await get().checkSynapseStatus();
     } catch (err) {
       console.warn("[synapse] Failed to start MCP:", err);

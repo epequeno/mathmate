@@ -7,6 +7,7 @@ import RecentImagesPanel from "./RecentImagesPanel";
 import { Files } from "../lib/api";
 import { cx } from "../lib/clsx";
 import styles from "./ChatInput.module.css";
+import { isTurnActive } from "../lib/turn/phase";
 
 interface ChatInputProps {
   onToggleContextPanel?: () => void;
@@ -17,10 +18,13 @@ export default function ChatInput({ onToggleContextPanel: _onToggleContextPanel 
   const setInputText = useChatStore((s) => s.setInputText);
   const sendMessage = useChatStore((s) => s.sendMessage);
   const cancelStream = useChatStore((s) => s.cancelStream);
-  const streaming = useChatStore((s) => s.streaming);
+  const phase = useChatStore((s) => s.phase);
   const pendingImages = useChatStore((s) => s.pendingImages);
   const attachImage = useChatStore((s) => s.attachImage);
   const removePendingImage = useChatStore((s) => s.removePendingImage);
+
+  const turnActive = isTurnActive(phase);
+  const streaming = phase.kind === "streaming";
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [showCommands, setShowCommands] = useState(false);

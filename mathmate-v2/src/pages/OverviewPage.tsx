@@ -242,6 +242,8 @@ export default function OverviewPage() {
             )}
           </div>
 
+          <CompetitionPrepCard />
+
           <Divider />
 
           {/* Recent Sessions */}
@@ -351,6 +353,125 @@ function TopicPill({ label, accent }: { label: string; accent: boolean }) {
       }}>
         {label}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Competition Prep Card — Phase 16B
+ * Shows problem attempt stats with a link to the practice page.
+ */
+function CompetitionPrepCard() {
+  const [stats, setStats] = useState<{
+    total_attempted: number;
+    solved: number;
+    partial: number;
+    stuck: number;
+    gave_up: number;
+    by_topic: { topic: string; attempted: number; solved: number }[];
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetch = async () => {
+      try {
+        const { ProblemBank } = await import("../lib/api/problemBank");
+        const s = await ProblemBank.getStats();
+        if (!cancelled) setStats(s);
+      } catch {
+        // Not available
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    fetch();
+    return () => { cancelled = true; };
+  }, []);
+
+  if (loading || !stats || stats.total_attempted === 0) return null;
+
+  const solvedPct = Math.round((stats.solved / stats.total_attempted) * 100);
+  const partialPct = Math.round((stats.partial / stats.total_attempted) * 100);
+  const stuckPct = Math.round(((stats.stuck + stats.gave_up) / stats.total_attempted) * 100);
+
+  const sortedTopics = [...(stats.by_topic || [])].sort((a, b) => {
+    const aRate = a.attempted > 0 ? a.solved / a.attempted : 0;
+    const bRate = b.attempted > 0 ? b.solved / b.attempted : 0;
+    return bRate - aRate;
+  });
+  const strongest = sortedTopics[0];
+  const weakest = sortedTopics[sortedTopics.length - 1];
+
+  const navigate = useNavigate();
+
+  return (
+    <div
+      onClick={() => navigate("/practice")}
+      style={{
+        border: "1px solid var(--color-border)",
+        borderRadius: 8,
+        padding: 14,
+        cursor: "pointer",
+        transition: "border-color 0.15s",
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--color-accent)"; }}
+      onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--color-border)"; }}
+    >
+      <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.2"/>
+          <path d="M7 4v3l2 2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+        </svg>
+        Competition Prep
+      </div>
+
+      <div style={{ fontSize: 13, color: "var(--color-text-primary)", marginBottom: 8 }}>
+        {stats.total_attempted} problem{stats.total_attempted !== 1 ? "s" : ""} attempted
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 3, marginBottom: 8 }}>
+        <BarSegment label="Solved" pct={solvedPct} color="#22c55e" />
+        <BarSegment label="Partial" pct={partialPct} color="#f59e0b" />
+        <BarSegment label="Stuck" pct={stuckPct} color="#ef4444" />
+      </div>
+
+      {strongest && (
+        <div style={{ fontSize: 11, color: "var(--color-text-secondary)", marginTop: 4 }}>
+          Strongest: <span style={{ color: "#22c55e", fontWeight: 600 }}>{strongest.topic}</span>
+          {strongest.attempted > 0 && ` (${Math.round((strongest.solved / strongest.attempted) * 100)}%)`}
+        </div>
+      )}
+      {weakest && weakest !== strongest && (
+        <div style={{ fontSize: 11, color: "var(--color-text-secondary)" }}>
+          Needs work: <span style={{ color: "#ef4444", fontWeight: 600 }}>{weakest.topic}</span>
+          {weakest.attempted > 0 && ` (${Math.round((weakest.solved / weakest.attempted) * 100)}%)`}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BarSegment({ label, pct, color }: { label: string; pct: number; color: string }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11 }}>
+      <span style={{ width: 44, color: "var(--color-text-tertiary)", flexShrink: 0 }}>{label}</span>
+      <div style={{
+        flex: 1,
+        height: 6,
+        background: "var(--color-bg)",
+        borderRadius: 3,
+        overflow: "hidden",
+      }}>
+        <div style={{
+          width: `${pct}%`,
+          height: "100%",
+          background: color,
+          borderRadius: 3,
+          transition: "width 0.3s ease",
+        }} />
+      </div>
+      <span style={{ width: 36, color: "var(--color-text-secondary)", textAlign: "right", flexShrink: 0 }}>{pct}%</span>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Textbook } from "../lib/api";
 import type { TextbookCatalogEntry, DownloadResult } from "../lib/types";
 import { subjectLabel, subjectColor } from "../lib/textbookLicenses";
@@ -20,7 +21,16 @@ const SUBJECTS = [
   "discrete-math",
   "statistics",
   "probability",
+  "number-theory",
+  "abstract-algebra",
+  "real-analysis",
   "other",
+  // Competition prep (Phase 16C)
+  "olympiad-general",
+  "olympiad-geometry",
+  "olympiad-algebra",
+  "olympiad-number-theory",
+  "olympiad-combinatorics",
 ] as const;
 
 export default function TextbookCatalog({ onClose }: TextbookCatalogProps) {
@@ -112,7 +122,7 @@ export default function TextbookCatalog({ onClose }: TextbookCatalogProps) {
 
   // ── Render ──
 
-  return (
+  return createPortal((
     <div
       style={{
         position: "fixed",
@@ -416,5 +426,5 @@ export default function TextbookCatalog({ onClose }: TextbookCatalogProps) {
         <TextbookDetailsPanel entry={selectedEntry} onClose={() => setSelectedEntry(null)} />
       )}
     </div>
-  );
+  ), document.body);
 }

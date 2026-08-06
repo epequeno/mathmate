@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useChatStore } from "../stores/chatStore";
+import { isStreaming } from "../lib/turn/phase";
 
 interface KeyboardShortcutOptions {
   onToggleContextPanel?: () => void;
@@ -139,7 +140,7 @@ export function useKeyboardShortcuts({ onToggleContextPanel }: KeyboardShortcutO
       // Esc — stop generation (handled in components too, but global catch)
       if (e.key === "Escape") {
         const store = useChatStore.getState();
-        if (store.streaming) {
+        if (isStreaming(store.phase)) {
           e.preventDefault();
           store.cancelStream();
         }

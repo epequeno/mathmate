@@ -39,6 +39,46 @@ export interface TextbookIndexMeta {
   error?: string;
 }
 
+// ─── Book Stream Info (PDF streaming via local HTTP range server) ────────
+
+export interface BookStreamInfo {
+  origin: string;
+  token: string;
+}
+
+/** @command: get_book_stream_info */
+export async function getBookStreamInfo(): Promise<BookStreamInfo> {
+  return invoke<BookStreamInfo>("get_book_stream_info");
+}
+
+/**
+ * Build a pdf.js-compatible URL for the local book stream server.
+ * Includes a token for auth and a revision for cache-busting.
+ */
+export function projectTextbookStreamUrl(
+  info: BookStreamInfo,
+  projectId: string,
+  revision: string,
+): string {
+  const url = new URL(`/book/${encodeURIComponent(projectId)}`, info.origin);
+  url.searchParams.set("token", info.token);
+  url.searchParams.set("v", revision);
+  return url.toString();
+}
+
+/**
+ * Compute a short, stable revision string from a textbook path.
+ * Uses a simple DJB2 hash to avoid exposing local paths in DevTools URLs.
+ */
+export function textbookPathRevision(path: string): string {
+  let hash = 5381;
+  for (let i = 0; i < path.length; i++) {
+    hash = ((hash << 5) + hash + path.charCodeAt(i)) | 0;
+  }
+  // Convert to unsigned hex, take first 8 chars
+  return (hash >>> 0).toString(16).padStart(8, "0");
+}
+
 export const Textbook = {
   /** @command: list_textbook_catalog */
   listCatalog: () =>
@@ -88,7 +128,13 @@ export const Textbook = {
       textbookTitle,
     }),
 
-  /** @command: read_project_textbook */
+  /**
+   * @command: read_project_textbook
+   * @deprecated Use getBookStreamInfo() + projectTextbookStreamUrl() instead.
+   *   This legacy command reads the entire PDF into memory and returns it
+   *   as base64 — slow for large textbooks. The new streaming path uses a
+   *   local HTTP server that supports byte-range requests.
+   */
   readProjectTextbook: (
     projectId: string,
     pageNumber?: number,
