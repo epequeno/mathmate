@@ -35,9 +35,11 @@ Thumbs.db
 
 # Screenshots and transient assets
 screenshot.png
+Screenshot *.png
+Screenshot*.png
 
-# Swift Package Manager
-.swiftpm/
+# Obsidian local workspace state
+.obsidian/
 
 # Miscellaneous
 .netrc
