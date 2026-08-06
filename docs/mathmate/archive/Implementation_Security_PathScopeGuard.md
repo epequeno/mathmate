@@ -104,7 +104,7 @@ The frontend updates `lib/tauri.ts` types to match.
 
 ### S3E1 — `pathscope` module
 **New:**
-- `mathmate-v2/src-tauri/src/pathscope.rs`
+- `mathmate/src-tauri/src/pathscope.rs`
 
 **Tasks:**
 - Implement `pub fn is_within(root: &Path, target: &Path) -> bool`.
@@ -122,7 +122,7 @@ The frontend updates `lib/tauri.ts` types to match.
 
 ### S3E2 — `read_file_as_base64` scope check
 **Modify:**
-- `mathmate-v2/src-tauri/src/lib.rs:181`
+- `mathmate/src-tauri/src/lib.rs:181`
 
 **Tasks:**
 - Resolve the active project (from a new `active_project_id` in `AppState` set when a project is selected in the UI).
@@ -134,7 +134,7 @@ The frontend updates `lib/tauri.ts` types to match.
 
 ### S3E3 — `open_path` scope check
 **Modify:**
-- `mathmate-v2/src-tauri/src/lib.rs:188`
+- `mathmate/src-tauri/src/lib.rs:188`
 
 **Tasks:**
 - Call `pathscope::normalize_local_path` on the input; reject non-local schemes.
@@ -146,7 +146,7 @@ The frontend updates `lib/tauri.ts` types to match.
 
 ### S3E4 — Capabilities audit
 **Modify:**
-- `mathmate-v2/src-tauri/capabilities/default.json`
+- `mathmate/src-tauri/capabilities/default.json`
 
 **Tasks:**
 - Verify `shell:default` is unused (no `tauri-plugin-shell` calls in `src-tauri/src/`). If so, remove it.
@@ -154,8 +154,8 @@ The frontend updates `lib/tauri.ts` types to match.
 
 ### S3E5 — Frontend types
 **Modify:**
-- `mathmate-v2/src/lib/tauri.ts`
-- `mathmate-v2/src/components/Sidebar.tsx` and any other caller of `read_file_as_base64` / `open_path`
+- `mathmate/src/lib/tauri.ts`
+- `mathmate/src/components/Sidebar.tsx` and any other caller of `read_file_as_base64` / `open_path`
 
 **Tasks:**
 - Update TypeScript signatures to include `projectId` and `confirmed`.

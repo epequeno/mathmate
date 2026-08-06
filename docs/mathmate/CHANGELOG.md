@@ -7,7 +7,7 @@ All notable changes to MathMate are tracked here.
 ## 2026-07-02 — Catalog Addition: Evans & Rosenthal + Calculus in Context
 
 ### Added
-- **2 free textbook catalog entries** added to `mathmate-v2/src-tauri/resources/textbook-catalog.json`:
+- **2 free textbook catalog entries** added to `mathmate/src-tauri/resources/textbook-catalog.json`:
   - *Probability and Statistics - The Science of Uncertainty (2nd ed.)* — Michael J. Evans & Jeffrey S. Rosenthal (University of Toronto). Upper-level mathematical statistics covering probability, inference (likelihood/Bayesian/optimal), model checking, regression, and stochastic processes. Subject: `statistics`. ~18.4 MB PDF + solutions manual.
   - *Calculus in Context* — Callahan, Cox, Hoffman, O'Shea, Pollatsek, Senechal (Five College Calculus Project, Smith College). Reform-calculus text from single-variable through multivariable, dynamical systems, and series. Subject: `calculus`. ~8.4 MB PDF, ~845 pp.
 - Cargo rebuild required (catalog is `include_str!`-ed at compile time). No code changes needed.
@@ -26,7 +26,7 @@ All notable changes to MathMate are tracked here.
 ## 2026-06-25 — Catalog Addition: Discovering the Art of Mathematics (11 volumes)
 
 ### Added
-- **11 free textbook catalog entries** — the *Discovering the Art of Mathematics* (DAoM) inquiry-based-learning liberal-arts mathematics series by Julian F. Fleron, Philip K. Hotchkiss, Volker Ecke, and Christine von Renesse (Westfield State University) added to `mathmate-v2/src-tauri/resources/textbook-catalog.json` as individual per-volume entries, each with a direct PDF, page count, file size, and cover thumbnail:
+- **11 free textbook catalog entries** — the *Discovering the Art of Mathematics* (DAoM) inquiry-based-learning liberal-arts mathematics series by Julian F. Fleron, Philip K. Hotchkiss, Volker Ecke, and Christine von Renesse (Westfield State University) added to `mathmate/src-tauri/resources/textbook-catalog.json` as individual per-volume entries, each with a direct PDF, page count, file size, and cover thumbnail:
   - *Art & Sculpture* — geometry, 117pp
   - *Ideas of Calculus* — calculus, 130pp
   - *Dance* — other, 76pp
@@ -67,7 +67,7 @@ All notable changes to MathMate are tracked here.
 ## 2026-06-16 — Book Tab PDF Streaming + Catalog Addition: Goodman Abstract Algebra
 
 ### Added
-- **Free textbook catalog entry** — *Algebra: Abstract and Concrete* (Edition 2.6) by Frederick M. Goodman (University of Iowa) added to `mathmate-v2/src-tauri/resources/textbook-catalog.json` under subject `abstract-algebra`. PDF (~5.9 MB) and HTML download page linked from the author's site. Catalog now contains 40 entries.
+- **Free textbook catalog entry** — *Algebra: Abstract and Concrete* (Edition 2.6) by Frederick M. Goodman (University of Iowa) added to `mathmate/src-tauri/resources/textbook-catalog.json` under subject `abstract-algebra`. PDF (~5.9 MB) and HTML download page linked from the author's site. Catalog now contains 40 entries.
 - **Book Tab PDF Streaming** — replaced the base64/Blob first-load path with a local loopback HTTP range server (`axum` on `tokio`). First Book-tab visit now loads page 1 via byte-range requests from `http://127.0.0.1:<port>/book/<project-id>`, eliminating whole-file read, base64 encode/decode, and Blob URL creation for large textbooks.
 
 ### Changed
@@ -609,7 +609,7 @@ All notable changes to MathMate are tracked here.
 
 ### Security
 - **Cleaned leaked OpenRouter API key** from `.env` file and replaced with placeholder values.
-- **Added `.gitignore`** for `mathmate-v2/` to prevent future env/key leaks.
+- **Added `.gitignore`** for `mathmate/` to prevent future env/key leaks.
 - **Added `.env.example`** template for new contributors.
 
 

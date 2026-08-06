@@ -389,10 +389,10 @@ fn resolve_synapse_binary() -> Result<PathBuf, String> {
         }
     }
 
-    // 3. Dev workspace sibling (mathmate-v2/../synapse/target/release/synapse)
+    // 3. Dev workspace sibling (mathmate/../synapse/target/release/synapse)
     let dev = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .parent() // mathmate-v2/src-tauri → mathmate-v2
-        .and_then(|p| p.parent()) // mathmate-v2 → code/mathmate
+        .parent() // mathmate/src-tauri → mathmate
+        .and_then(|p| p.parent()) // mathmate → code/mathmate
         .and_then(|p| p.parent()) // code/mathmate → code
         .map(|p| {
             p.join("synapse")

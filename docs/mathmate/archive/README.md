@@ -2,7 +2,7 @@
 
 This directory contains completed implementation plan documents from MathMate's development history. Each document describes the design rationale, approach, and execution of a specific feature or phase.
 
-These are historical reference documents — the features they describe are implemented in the codebase under `mathmate-v2/`. They are preserved for design context and decision history.
+These are historical reference documents — the features they describe are implemented in the codebase under `mathmate/`. They are preserved for design context and decision history.
 
 ## Active Documents
 

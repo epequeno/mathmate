@@ -158,7 +158,7 @@ MathMate will incorporate a curated collection of free, open-access mathematics 
 
 ### 1. Textbook Catalog Schema
 
-#### Frontend — TypeScript (`mathmate-v2/src/lib/types.ts`)
+#### Frontend — TypeScript (`mathmate/src/lib/types.ts`)
 
 ```typescript
 // ─── Textbook Catalog types ────────────────────
@@ -217,9 +217,9 @@ export interface TextbookLicenseInfo {
 }
 ```
 
-#### Backend — Rust (`mathmate-v2/src-tauri/src/textbook_catalog.rs`)
+#### Backend — Rust (`mathmate/src-tauri/src/textbook_catalog.rs`)
 
-The catalog itself lives as a **static JSON file** bundled with the app (under `mathmate-v2/src-tauri/resources/`), loaded at build time. A Rust module provides:
+The catalog itself lives as a **static JSON file** bundled with the app (under `mathmate/src-tauri/resources/`), loaded at build time. A Rust module provides:
 
 ```rust
 // src-tauri/src/textbook_catalog.rs
@@ -260,10 +260,10 @@ pub fn load_catalog() -> Result<Vec<TextbookCatalogEntry>, String> {
 **Design rationale:** A static catalog avoids database complexity for Phase 1. It can be updated via app releases (or later via a remote fetch mechanism in Phase 3). The catalog JSON is hand-curated and stored at:
 
 ```
-mathmate-v2/src-tauri/resources/textbook-catalog.json
+mathmate/src-tauri/resources/textbook-catalog.json
 ```
 
-### 2. Tauri Commands — Rust (`mathmate-v2/src-tauri/src/lib.rs`)
+### 2. Tauri Commands — Rust (`mathmate/src-tauri/src/lib.rs`)
 
 ```rust
 // ─── Free Textbook Catalog ────────────────────
@@ -303,9 +303,9 @@ fn download_free_textbook(
 
 | File | Purpose |
 |---|---|
-| `mathmate-v2/src/components/TextbookCatalog.tsx` | Grid/list view of available textbooks, filtering by subject |
-| `mathmate-v2/src/components/TextbookCatalogCard.tsx` | Single card with title, author, subject badge, download button |
-| `mathmate-v2/src/components/TextbookDetailsPanel.tsx` | Full metadata + license info + download + "Set as project textbook" |
+| `mathmate/src/components/TextbookCatalog.tsx` | Grid/list view of available textbooks, filtering by subject |
+| `mathmate/src/components/TextbookCatalogCard.tsx` | Single card with title, author, subject badge, download button |
+| `mathmate/src/components/TextbookDetailsPanel.tsx` | Full metadata + license info + download + "Set as project textbook" |
 
 #### Integration points:
 
@@ -327,7 +327,7 @@ User clicks "Download" on a catalog card
 ### 4. License Compliance
 
 ```typescript
-// mathmate-v2/src/lib/textbookLicenses.ts
+// mathmate/src/lib/textbookLicenses.ts
 
 export const LICENSE_INFO: Record<TextbookLicense, TextbookLicenseInfo> = {
   "cc-by": {
@@ -379,22 +379,22 @@ The following is already in place and needs **no changes** for Phase 1:
 
 | File | Action |
 |---|---|
-| `mathmate-v2/src-tauri/src/textbook_catalog.rs` | **New** — catalog types + `load_catalog()`, download function, license helper |
-| `mathmate-v2/src-tauri/src/lib.rs` | Add `mod textbook_catalog;` + register `list_textbook_catalog`, `get_textbook_license_info`, `download_free_textbook` commands |
-| `mathmate-v2/src-tauri/resources/textbook-catalog.json` | **New** — static JSON catalog of ~10–15 hand-curated free textbooks |
-| `mathmate-v2/src-tauri/Cargo.toml` | Add `ureq` or `reqwest` for HTTP downloads (or use `curl` subprocess) |
+| `mathmate/src-tauri/src/textbook_catalog.rs` | **New** — catalog types + `load_catalog()`, download function, license helper |
+| `mathmate/src-tauri/src/lib.rs` | Add `mod textbook_catalog;` + register `list_textbook_catalog`, `get_textbook_license_info`, `download_free_textbook` commands |
+| `mathmate/src-tauri/resources/textbook-catalog.json` | **New** — static JSON catalog of ~10–15 hand-curated free textbooks |
+| `mathmate/src-tauri/Cargo.toml` | Add `ureq` or `reqwest` for HTTP downloads (or use `curl` subprocess) |
 
 ### Frontend
 
 | File | Action |
 |---|---|
-| `mathmate-v2/src/lib/types.ts` | Add `TextbookCatalogEntry`, `TextbookDownloads`, `TextbookSubject`, `TextbookLicense`, `TextbookLicenseInfo` types |
-| `mathmate-v2/src/lib/textbookLicenses.ts` | **New** — license metadata map + `buildAttributionNotice()` helper |
-| `mathmate-v2/src/components/TextbookCatalog.tsx` | **New** — grid view, subject filter, search input, triggers download |
-| `mathmate-v2/src/components/TextbookCatalogCard.tsx` | **New** — card with thumbnail, metadata, download button |
-| `mathmate-v2/src/components/TextbookDetailsPanel.tsx` | **New** — full details + license info + "Set as project textbook" |
-| `mathmate-v2/src/components/ProjectSettingsPanel.tsx` | Add "Browse Free Textbooks" button; integrate catalog selection into textbook_path setter |
-| `mathmate-v2/src/pages/WelcomePage.tsx` | Optionally add "Browse free textbooks" CTA |
+| `mathmate/src/lib/types.ts` | Add `TextbookCatalogEntry`, `TextbookDownloads`, `TextbookSubject`, `TextbookLicense`, `TextbookLicenseInfo` types |
+| `mathmate/src/lib/textbookLicenses.ts` | **New** — license metadata map + `buildAttributionNotice()` helper |
+| `mathmate/src/components/TextbookCatalog.tsx` | **New** — grid view, subject filter, search input, triggers download |
+| `mathmate/src/components/TextbookCatalogCard.tsx` | **New** — card with thumbnail, metadata, download button |
+| `mathmate/src/components/TextbookDetailsPanel.tsx` | **New** — full details + license info + "Set as project textbook" |
+| `mathmate/src/components/ProjectSettingsPanel.tsx` | Add "Browse Free Textbooks" button; integrate catalog selection into textbook_path setter |
+| `mathmate/src/pages/WelcomePage.tsx` | Optionally add "Browse free textbooks" CTA |
 
 ---
 
@@ -460,13 +460,13 @@ The following is already in place and needs **no changes** for Phase 1:
 
 ```bash
 # Ensure Rust compiles
-cd mathmate-v2/src-tauri && cargo check
+cd mathmate/src-tauri && cargo check
 
 # Frontend build
-cd mathmate-v2 && npm run build
+cd mathmate && npm run build
 
 # Full Tauri dev mode
-cd mathmate-v2 && npm run tauri dev
+cd mathmate && npm run tauri dev
 ```
 
 Before completing Phase 1:

@@ -56,7 +56,7 @@ adapted to MathMate's math-first chat architecture.
 ## 4) File-by-File Tickets
 
 ### FM1 — Backend: `feynman.rs`
-**Create:** `mathmate-v2/src-tauri/src/feynman.rs`
+**Create:** `mathmate/src-tauri/src/feynman.rs`
 
 **Tasks:**
 - Define structs:
@@ -97,7 +97,7 @@ adapted to MathMate's math-first chat architecture.
 ---
 
 ### FM2 — Backend: Feynman AI-student prompt
-**Modify:** `mathmate-v2/src-tauri/src/feynman.rs`
+**Modify:** `mathmate/src-tauri/src/feynman.rs`
 
 **Tasks:**
 - System prompt for the "curious student" persona:
@@ -116,7 +116,7 @@ adapted to MathMate's math-first chat architecture.
 ---
 
 ### FM3 — Backend: Tauri commands
-**Modify:** `mathmate-v2/src-tauri/src/lib.rs`
+**Modify:** `mathmate/src-tauri/src/lib.rs`
 
 **Tasks:**
 Register:
@@ -155,7 +155,7 @@ pub async fn list_feynman_sessions(
 ---
 
 ### FM4 — Frontend: `FeynmanPage.tsx`
-**Create:** `mathmate-v2/src/pages/FeynmanPage.tsx`
+**Create:** `mathmate/src/pages/FeynmanPage.tsx`
 
 **Layout:**
 ```
@@ -190,7 +190,7 @@ pub async fn list_feynman_sessions(
 ---
 
 ### FM5 — Slash command: `/feynman`
-**Modify:** `mathmate-v2/src/stores/commandStore.ts`
+**Modify:** `mathmate/src/stores/commandStore.ts`
 
 **Tasks:**
 - Register `/feynman [topic]`
@@ -202,7 +202,7 @@ pub async fn list_feynman_sessions(
 ---
 
 ### FM6 — Sidebar integration
-**Modify:** `mathmate-v2/src/components/Sidebar.tsx`
+**Modify:** `mathmate/src/components/Sidebar.tsx`
 
 **Tasks:**
 - Add "Feynman" nav item with a brain/lightbulb icon (Lucide `BrainCircuit`
@@ -212,7 +212,7 @@ pub async fn list_feynman_sessions(
 ---
 
 ### FM7 — Memory DB integration
-**Modify:** `mathmate-v2/src-tauri/src/evaluator.rs` (from ME2)
+**Modify:** `mathmate/src-tauri/src/evaluator.rs` (from ME2)
 
 **Tasks:**
 - After `end_feynman_session`: call evaluator with the Feynman transcript

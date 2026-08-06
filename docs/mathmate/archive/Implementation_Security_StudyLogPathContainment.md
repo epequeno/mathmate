@@ -120,7 +120,7 @@ pub fn save_wrap_up(project_id: &str, content: &str) -> Result<String, String> {
 
 ### S8E1 — `pathscope::ensure_inside_vault`
 **Modify:**
-- `mathmate-v2/src-tauri/src/pathscope.rs` (new file from `Implementation_Security_PathScopeGuard.md`)
+- `mathmate/src-tauri/src/pathscope.rs` (new file from `Implementation_Security_PathScopeGuard.md`)
 
 **Tasks:**
 - Add `pub fn ensure_inside_vault(vault: &str, target: &Path) -> Result<PathBuf, String>` as in §4.1.
@@ -132,7 +132,7 @@ pub fn save_wrap_up(project_id: &str, content: &str) -> Result<String, String> {
 
 ### S8E2 — `wrapup.rs` refactor
 **Modify:**
-- `mathmate-v2/src-tauri/src/wrapup.rs`
+- `mathmate/src-tauri/src/wrapup.rs`
 
 **Tasks:**
 - Add `use sha2::{Sha256, Digest};` (add `sha2 = "0.10"` to `Cargo.toml`).
@@ -144,7 +144,7 @@ pub fn save_wrap_up(project_id: &str, content: &str) -> Result<String, String> {
 
 ### S8E3 — `audit` module
 **New:**
-- `mathmate-v2/src-tauri/src/audit.rs`
+- `mathmate/src-tauri/src/audit.rs`
 
 **Tasks:**
 - Implement `pub fn log_wrapup(...) -> Result<(), String>` — appends to `~/.mathmate/audit.log` with rotation.

@@ -13,7 +13,7 @@ Thanks for your interest in contributing! MathMate is a desktop AI math tutoring
 ```bash
 git clone <repo-url>
 cd mathmate
-cd mathmate-v2
+cd mathmate
 npm install
 npm run tauri dev
 ```
@@ -44,7 +44,7 @@ Run any check individually with `npm run lint:<name>`.
 
 ## Architecture
 
-The active codebase lives in `mathmate-v2/`:
+The active codebase lives in `mathmate/`:
 
 - **Frontend** (`src/`): React 19 + TypeScript + Zustand stores. Entry point `src/App.tsx`. Key areas: `src/components/`, `src/stores/`, `src/lib/` (providers, rendering, API client).
 - **Backend** (`src-tauri/src/`): Rust Tauri commands. Command handlers in `lib.rs`; business logic in `services/` modules. SQLite memory store, vault/project/session management.

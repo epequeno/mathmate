@@ -89,7 +89,7 @@ Tauri v2's `WebviewWindow::set_csp` (or equivalent) lets us update the CSP at ru
 
 ### S5E1 — Production CSP
 **Modify:**
-- `mathmate-v2/src-tauri/tauri.conf.json`
+- `mathmate/src-tauri/tauri.conf.json`
 
 **Tasks:**
 - Replace `"csp": null` with the policy string from §4.1.
@@ -97,7 +97,7 @@ Tauri v2's `WebviewWindow::set_csp` (or equivalent) lets us update the CSP at ru
 
 ### S5E2 — Dev CSP
 **Modify:**
-- `mathmate-v2/src-tauri/tauri.conf.json` (dev overrides via a top-level `devCsp` if Tauri v2 supports it; otherwise, document the dev-mode exception in SECURITY.md).
+- `mathmate/src-tauri/tauri.conf.json` (dev overrides via a top-level `devCsp` if Tauri v2 supports it; otherwise, document the dev-mode exception in SECURITY.md).
 
 **Tasks:**
 - If Tauri v2 supports a separate dev CSP, set it with Vite HMR endpoints allowed.
@@ -105,7 +105,7 @@ Tauri v2's `WebviewWindow::set_csp` (or equivalent) lets us update the CSP at ru
 
 ### S5E3 — Runtime provider-host expansion
 **Modify:**
-- `mathmate-v2/src-tauri/src/lib.rs` (after `get_models_config` runs at startup).
+- `mathmate/src-tauri/src/lib.rs` (after `get_models_config` runs at startup).
 
 **Tasks:**
 - After loading `AppConfigModels`, derive a unique set of origins from each enabled provider's `base_url` (parse with `url::Url`).
@@ -125,7 +125,7 @@ Tauri v2's `WebviewWindow::set_csp` (or equivalent) lets us update the CSP at ru
 
 ### S5E5 — Regression test
 **New:**
-- `mathmate-v2/tests/csp.test.mjs` (runs under Playwright or Vitest with jsdom; if neither, document the manual steps).
+- `mathmate/tests/csp.test.mjs` (runs under Playwright or Vitest with jsdom; if neither, document the manual steps).
 
 **Tasks:**
 - Verify `<script src="https://evil.example/x.js">` injected into a model response is blocked by the browser.

@@ -135,7 +135,7 @@ Today's `SettingsPage.tsx:347` does `defaultValue={p.stored_api_key ?? ""}` — 
 
 ### S2E1 — `secrets` Rust module
 **New:**
-- `mathmate-v2/src-tauri/src/secrets.rs`
+- `mathmate/src-tauri/src/secrets.rs`
 
 **Tasks:**
 - Add `keyring = { version = "3", features = [...] }` to `Cargo.toml`.
@@ -149,7 +149,7 @@ Today's `SettingsPage.tsx:347` does `defaultValue={p.stored_api_key ?? ""}` — 
 
 ### S2E2 — Tauri commands
 **Modify:**
-- `mathmate-v2/src-tauri/src/lib.rs`
+- `mathmate/src-tauri/src/lib.rs`
 
 **Tasks:**
 - Add commands:
@@ -161,7 +161,7 @@ Today's `SettingsPage.tsx:347` does `defaultValue={p.stored_api_key ?? ""}` — 
 
 ### S2E3 — `ProviderConfig` schema
 **Modify:**
-- `mathmate-v2/src-tauri/src/config.rs`
+- `mathmate/src-tauri/src/config.rs`
 
 **Tasks:**
 - Add `key_storage: String` field with default `"plaintext"`.
@@ -171,7 +171,7 @@ Today's `SettingsPage.tsx:347` does `defaultValue={p.stored_api_key ?? ""}` — 
 
 ### S2E4 — `get_models_config` key redaction
 **Modify:**
-- `mathmate-v2/src-tauri/src/lib.rs:57`
+- `mathmate/src-tauri/src/lib.rs:57`
 
 **Tasks:**
 - For all storage modes, return `has_stored_api_key: bool` only; never return raw key material.
@@ -180,7 +180,7 @@ Today's `SettingsPage.tsx:347` does `defaultValue={p.stored_api_key ?? ""}` — 
 
 ### S2E5 — Settings page UI
 **Modify:**
-- `mathmate-v2/src/pages/SettingsPage.tsx`
+- `mathmate/src/pages/SettingsPage.tsx`
 
 **Tasks:**
 - Replace the always-rendered `<input type="password" defaultValue={p.stored_api_key ?? ""}>` with:

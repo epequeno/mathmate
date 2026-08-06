@@ -2,7 +2,7 @@
 
 ## 1) Goal
 
-Tighten the DOMPurify configuration in `mathmate-v2/src/lib/sanitize.ts` so that:
+Tighten the DOMPurify configuration in `mathmate/src/lib/sanitize.ts` so that:
 
 - Model-injected HTML cannot exfiltrate data via `<a href>`, `<img src>`, or SVG `href`/`xlink:href` pointing to dangerous schemes (`javascript:`, `data:text/html`, `file:`, `vbscript:`, `data:application/...`).
 - Every anchor that gets `target="_blank"` automatically also gets `rel="noopener noreferrer"` to prevent tab-nabbing and reverse-tabnab.
@@ -137,7 +137,7 @@ The `afterSanitizeAttributes` hook fires after DOMPurify has already filtered ta
 
 ### S6E1 — `safeUrl` helper + hook
 **Modify:**
-- `mathmate-v2/src/lib/sanitize.ts`
+- `mathmate/src/lib/sanitize.ts`
 
 **Tasks:**
 - Add the `ALLOWED_HREF_SCHEMES` and `ALLOWED_SRC_SCHEMES` constants and `safeUrl` function.
@@ -147,7 +147,7 @@ The `afterSanitizeAttributes` hook fires after DOMPurify has already filtered ta
 
 ### S6E2 — Unit tests
 **New:**
-- `mathmate-v2/src/lib/sanitize.test.ts`
+- `mathmate/src/lib/sanitize.test.ts`
 
 **Tasks:**
 - Test vectors:
@@ -166,7 +166,7 @@ The `afterSanitizeAttributes` hook fires after DOMPurify has already filtered ta
 
 ### S6E3 — Streaming-payload check
 **Modify:**
-- `mathmate-v2/src/components/ChatPage.tsx` (the streaming render path at line 469)
+- `mathmate/src/components/ChatPage.tsx` (the streaming render path at line 469)
 
 **Tasks:**
 - Confirm `sanitize(renderMarkdown(streamingContent))` is the only path used.

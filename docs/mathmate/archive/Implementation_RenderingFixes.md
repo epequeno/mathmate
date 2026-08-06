@@ -77,7 +77,7 @@ The `f != g` part is left as raw ASCII `!=` even though it would benefit from Ka
 
 ### Implementation
 
-**File**: `mathmate-v2/src/lib/renderMarkdown.ts`
+**File**: `mathmate/src/lib/renderMarkdown.ts`
 
 1. Add a stateful `insideFence` tracker to the line-map loop so that all lines
    between opening and closing ` ``` ` are skipped entirely:
@@ -163,7 +163,7 @@ Or in plain text: x = (-b ± sqrt(b²-4ac)) / 2a
 
 ### Implementation
 
-**File**: `mathmate-v2/src/stores/chatStore.ts`
+**File**: `mathmate/src/stores/chatStore.ts`
 
 Promote the instruction to a numbered **Hard Rules** block at the very top of
 `SYSTEM_INSTRUCTIONS`, before the formatting section. Models consistently follow
@@ -217,7 +217,7 @@ to be rendered twice.
 
 ### Implementation
 
-**File**: `mathmate-v2/src/lib/renderMarkdown.ts`
+**File**: `mathmate/src/lib/renderMarkdown.ts`
 
 ```ts
 // Before
@@ -282,13 +282,13 @@ are small and well-maintained (used by every major React + math project).
 #### Step 1 — Install packages
 
 ```bash
-cd mathmate-v2
+cd mathmate
 npm install react-markdown remark-math rehype-katex
 ```
 
 #### Step 2 — Create `MarkdownRenderer` component
 
-Create `mathmate-v2/src/components/MarkdownRenderer.tsx`:
+Create `mathmate/src/components/MarkdownRenderer.tsx`:
 
 ```tsx
 import ReactMarkdown from "react-markdown";
@@ -351,7 +351,7 @@ Keep `normalizeMathDelimiters` (it handles `\[..\]` → `$$..$$` which the model
 still outputs despite system prompt instructions), but delete `normalizeEscapedDollarMath`,
 `normalizeCommonMathText`, and the `marked` singleton entirely.
 
-Rename the file to `mathmate-v2/src/lib/normalizeMarkdown.ts` (the function no
+Rename the file to `mathmate/src/lib/normalizeMarkdown.ts` (the function no
 longer renders — it only normalizes):
 
 ```ts
@@ -433,7 +433,7 @@ segments.push({ type: "html", markdown: text });
 
 #### Step 7 — Delete old files / remove dead dependencies
 
-1. Delete `mathmate-v2/src/lib/renderMarkdown.ts`
+1. Delete `mathmate/src/lib/renderMarkdown.ts`
 2. Remove unused imports of `renderMarkdown` from `ChatMessage.tsx` and `ChatPage.tsx`
 3. `marked` and `marked-katex-extension` can be removed from `package.json`
    once all call sites are migrated:

@@ -61,7 +61,7 @@ handled by decay/staleness logic in a future phase).
 ## 4) File-by-File Tickets
 
 ### MS1 — DB schema migration
-**Modify:** `mathmate-v2/src-tauri/src/memory.rs`
+**Modify:** `mathmate/src-tauri/src/memory.rs`
 
 **Tasks:**
 - Extend `init_schema` to run these idempotent migrations:
@@ -83,7 +83,7 @@ handled by decay/staleness logic in a future phase).
 ---
 
 ### MS2 — `MemoryItem` struct + helpers
-**Modify:** `mathmate-v2/src-tauri/src/memory.rs`
+**Modify:** `mathmate/src-tauri/src/memory.rs`
 
 **Tasks:**
 - Add fields to `MemoryItem`:
@@ -127,7 +127,7 @@ handled by decay/staleness logic in a future phase).
 ---
 
 ### MS3 — Tauri command: `update_memory_mastery`
-**Modify:** `mathmate-v2/src-tauri/src/lib.rs`
+**Modify:** `mathmate/src-tauri/src/lib.rs`
 
 **Tasks:**
 ```rust
@@ -162,7 +162,7 @@ pub struct MasterySummary {
 ---
 
 ### MS4 — Frontend type updates
-**Modify:** `mathmate-v2/src/lib/types.ts`
+**Modify:** `mathmate/src/lib/types.ts`
 
 **Tasks:**
 - Extend `MemoryItem` interface:
@@ -190,7 +190,7 @@ pub struct MasterySummary {
 ---
 
 ### MS5 — `memoryStore.ts` additions
-**Modify:** `mathmate-v2/src/stores/memoryStore.ts`
+**Modify:** `mathmate/src/stores/memoryStore.ts`
 
 **Tasks:**
 - Add `masterySummary: MasterySummary | null` to state
@@ -200,7 +200,7 @@ pub struct MasterySummary {
 ---
 
 ### MS6 — `MemoryRetrievalBar`: show mastery indicator
-**Modify:** `mathmate-v2/src/components/MemoryRetrievalBar.tsx`
+**Modify:** `mathmate/src/components/MemoryRetrievalBar.tsx`
 
 **Tasks:**
 - For each retrieved memory: if `composite_mastery()` is not null, show a
@@ -211,7 +211,7 @@ pub struct MasterySummary {
 ---
 
 ### MS7 — `OverviewPage`: mastery summary section
-**Modify:** `mathmate-v2/src/pages/OverviewPage.tsx`
+**Modify:** `mathmate/src/pages/OverviewPage.tsx`
 
 **Tasks:**
 - Add "Mastery Overview" card below the stats grid

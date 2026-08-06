@@ -143,9 +143,9 @@ Remove flag after:
 
 ## 10) Files Changed
 
-- `mathmate-v2/src/components/ChatMessage.tsx`
-- `mathmate-v2/src/pages/ChatPage.tsx`
-- `mathmate-v2/src/stores/chatStore.ts`
+- `mathmate/src/components/ChatMessage.tsx`
+- `mathmate/src/pages/ChatPage.tsx`
+- `mathmate/src/stores/chatStore.ts`
 
 ---
 

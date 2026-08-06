@@ -221,17 +221,17 @@ Design rules:
 ## 9) Files & Modules
 
 ### New
-- `mathmate-v2/src-tauri/src/tools/mod.rs`
-- `mathmate-v2/src-tauri/src/tools/calculate.rs`
-- `mathmate-v2/src-tauri/src/tools/graph.rs`
-- `mathmate-v2/src-tauri/src/tools/vault_search.rs`
+- `mathmate/src-tauri/src/tools/mod.rs`
+- `mathmate/src-tauri/src/tools/calculate.rs`
+- `mathmate/src-tauri/src/tools/graph.rs`
+- `mathmate/src-tauri/src/tools/vault_search.rs`
 
 ### Modified
-- `mathmate-v2/src-tauri/Cargo.toml` (`meval`)
-- `mathmate-v2/src-tauri/src/lib.rs` (Tauri commands)
-- `mathmate-v2/src/lib/providers.ts` (tool delta normalization + request tool definitions)
-- `mathmate-v2/src/lib/types.ts` (tool and stream types)
-- `mathmate-v2/src/stores/chatStore.ts` (multi-round dispatch loop)
+- `mathmate/src-tauri/Cargo.toml` (`meval`)
+- `mathmate/src-tauri/src/lib.rs` (Tauri commands)
+- `mathmate/src/lib/providers.ts` (tool delta normalization + request tool definitions)
+- `mathmate/src/lib/types.ts` (tool and stream types)
+- `mathmate/src/stores/chatStore.ts` (multi-round dispatch loop)
 
 ---
 

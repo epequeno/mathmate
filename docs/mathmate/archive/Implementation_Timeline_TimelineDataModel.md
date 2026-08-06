@@ -249,10 +249,10 @@ Compatibility policy:
 
 ## 8) Files Changed
 
-- `mathmate-v2/src-tauri/src/session.rs`
-- `mathmate-v2/src/lib/types.ts`
-- `mathmate-v2/src/lib/providers.ts` (delta normalization contract)
-- `mathmate-v2/src/stores/chatStore.ts` (segment assembly hooks)
+- `mathmate/src-tauri/src/session.rs`
+- `mathmate/src/lib/types.ts`
+- `mathmate/src/lib/providers.ts` (delta normalization contract)
+- `mathmate/src/stores/chatStore.ts` (segment assembly hooks)
 
 ---
 

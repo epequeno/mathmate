@@ -180,7 +180,7 @@ mcp__memory__recall({ topic: "calculus" })
 All four functions live in a single file:
 
 ```
-mathmate-v2/src/lib/toolFormat.ts
+mathmate/src/lib/toolFormat.ts
 ```
 
 All exports are pure functions — no React imports, no store access. `renderToolOutput` is the one exception (returns `React.ReactNode`) and may import React.
@@ -189,7 +189,7 @@ All exports are pure functions — no React imports, no store access. `renderToo
 
 ## 7) Test Plan
 
-Tests live in `mathmate-v2/src/lib/__tests__/toolFormat.test.ts`.
+Tests live in `mathmate/src/lib/__tests__/toolFormat.test.ts`.
 
 ### `formatToolCall`
 - `vault_search` with query → correct quoted label

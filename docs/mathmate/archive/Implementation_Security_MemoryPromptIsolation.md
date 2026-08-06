@@ -203,9 +203,9 @@ A new section in the Memory Manager (existing `MemoryRetrievalBar.tsx` and frien
 
 ### S7E1 — `memorySafety` shared module
 **New:**
-- `mathmate-v2/src/lib/memorySafety.ts`
-- `mathmate-v2/src/lib/memorySafetyPatterns.ts`
-- `mathmate-v2/src/lib/memorySafety.test.ts`
+- `mathmate/src/lib/memorySafety.ts`
+- `mathmate/src/lib/memorySafetyPatterns.ts`
+- `mathmate/src/lib/memorySafety.test.ts`
 
 **Tasks:**
 - Implement `scanMemoryContent` and `wrapRetrievedMemories` as in §4.1 and §4.3.
@@ -221,7 +221,7 @@ A new section in the Memory Manager (existing `MemoryRetrievalBar.tsx` and frien
 
 ### S7E2 — `memoryStore` write path
 **Modify:**
-- `mathmate-v2/src/stores/memoryStore.ts`
+- `mathmate/src/stores/memoryStore.ts`
 
 **Tasks:**
 - Optionally call `scanMemoryContent` before submit for immediate UI feedback.
@@ -230,7 +230,7 @@ A new section in the Memory Manager (existing `MemoryRetrievalBar.tsx` and frien
 
 ### S7E3 — `chatStore` retrieval path
 **Modify:**
-- `mathmate-v2/src/stores/chatStore.ts` (around line 279)
+- `mathmate/src/stores/chatStore.ts` (around line 279)
 
 **Tasks:**
 - Replace direct `invoke('query_memories', ...)` + concatenation with a call to `wrapRetrievedMemories`.
@@ -239,8 +239,8 @@ A new section in the Memory Manager (existing `MemoryRetrievalBar.tsx` and frien
 
 ### S7E4 — Settings toggle
 **Modify:**
-- `mathmate-v2/src/pages/SettingsPage.tsx`
-- `mathmate-v2/src/lib/types.ts` (add to `AppConfig.chat` or a new `safety` field)
+- `mathmate/src/pages/SettingsPage.tsx`
+- `mathmate/src/lib/types.ts` (add to `AppConfig.chat` or a new `safety` field)
 
 **Tasks:**
 - New "Memory safety" section with:
@@ -251,7 +251,7 @@ A new section in the Memory Manager (existing `MemoryRetrievalBar.tsx` and frien
 
 ### S7E5 — Audit UI
 **Modify:**
-- `mathmate-v2/src/components/MemoryRetrievalBar.tsx`
+- `mathmate/src/components/MemoryRetrievalBar.tsx`
 
 **Tasks:**
 - For each retrieved memory, show the scan status badge and a "Show original" toggle for redacted items.
@@ -259,8 +259,8 @@ A new section in the Memory Manager (existing `MemoryRetrievalBar.tsx` and frien
 
 ### S7E6 — Rust enforcement path
 **Modify:**
-- `mathmate-v2/src-tauri/src/memory.rs`
-- `mathmate-v2/src-tauri/src/lib.rs`
+- `mathmate/src-tauri/src/memory.rs`
+- `mathmate/src-tauri/src/lib.rs`
 
 **Tasks:**
 - Add `store_memory_with_safety(memory, mode)` Tauri command.

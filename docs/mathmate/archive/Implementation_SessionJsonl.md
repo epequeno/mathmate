@@ -2,7 +2,7 @@
 
 **Phase**: TRND-5  
 **Status**: ✅ Implemented 2026-05-28  
-**PR scope**: `mathmate-v2/src-tauri/src/session.rs` only — no TypeScript changes required.
+**PR scope**: `mathmate/src-tauri/src/session.rs` only — no TypeScript changes required.
 
 ---
 

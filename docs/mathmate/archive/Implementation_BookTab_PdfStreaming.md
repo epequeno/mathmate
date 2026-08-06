@@ -408,9 +408,9 @@ Do this before refactoring BookPage heavily.
 
 **Files:** likely new module(s):
 
-- `mathmate-v2/src-tauri/src/services/book_stream.rs` or `src-tauri/src/book_stream.rs`
-- `mathmate-v2/src-tauri/src/services/mod.rs`
-- `mathmate-v2/src-tauri/src/lib.rs`
+- `mathmate/src-tauri/src/services/book_stream.rs` or `src-tauri/src/book_stream.rs`
+- `mathmate/src-tauri/src/services/mod.rs`
+- `mathmate/src-tauri/src/lib.rs`
 
 Tasks:
 
@@ -439,7 +439,7 @@ Tasks:
 
 ### B3 — Rust: dependencies
 
-**File:** `mathmate-v2/src-tauri/Cargo.toml`
+**File:** `mathmate/src-tauri/Cargo.toml`
 
 Likely add explicit dependencies for the chosen HTTP stack, e.g.:
 
@@ -453,7 +453,7 @@ Only add what is actually used.
 
 ### B4 — Rust: Tauri command
 
-**File:** `mathmate-v2/src-tauri/src/lib.rs`
+**File:** `mathmate/src-tauri/src/lib.rs`
 
 - Add `get_book_stream_info` command.
 - Register it in `tauri::generate_handler!`.
@@ -461,7 +461,7 @@ Only add what is actually used.
 
 ### B5 — Frontend API wrapper
 
-**File:** `mathmate-v2/src/lib/api/textbook.ts`
+**File:** `mathmate/src/lib/api/textbook.ts`
 
 - Add `BookStreamInfo` type.
 - Add `getBookStreamInfo()`.
@@ -471,7 +471,7 @@ Only add what is actually used.
 
 ### B6 — Frontend BookPage refactor
 
-**File:** `mathmate-v2/src/pages/BookPage.tsx`
+**File:** `mathmate/src/pages/BookPage.tsx`
 
 - Remove blob/base64 load path.
 - Remove `pdfUrlCache` and helpers.
@@ -484,8 +484,8 @@ Only add what is actually used.
 
 **Files:**
 
-- `mathmate-v2/src/hooks/usePdfRenderer.ts`
-- `mathmate-v2/src/components/PdfViewer/PdfViewer.tsx`
+- `mathmate/src/hooks/usePdfRenderer.ts`
+- `mathmate/src/components/PdfViewer/PdfViewer.tsx`
 
 No planned rendering change, but verify:
 
@@ -496,7 +496,7 @@ No planned rendering change, but verify:
 
 ### B8 — Textbook indexing decision
 
-**File:** `mathmate-v2/src/hooks/useTextbookIndexer.ts`
+**File:** `mathmate/src/hooks/useTextbookIndexer.ts`
 
 Decide before final acceptance:
 
@@ -507,7 +507,7 @@ If changing behavior, document it in dev log/changelog.
 
 ### B9 — CSP config
 
-**File:** `mathmate-v2/src-tauri/tauri.conf.json`
+**File:** `mathmate/src-tauri/tauri.conf.json`
 
 - Add `http://127.0.0.1:*` to `connect-src`.
 - Do not add `book:`.
@@ -573,13 +573,13 @@ Document:
 
 ### Build gates
 
-Run from `mathmate-v2/` unless noted:
+Run from `mathmate/` unless noted:
 
 ```bash
 npm run build
 ```
 
-Run from `mathmate-v2/src-tauri/`:
+Run from `mathmate/src-tauri/`:
 
 ```bash
 cargo check

@@ -40,7 +40,7 @@ A desktop AI math tutoring app built with Tauri v2, React, and Rust. MathMate co
 ## Getting Started
 
 ```bash
-cd mathmate-v2
+cd mathmate
 npm install
 npm run tauri dev
 ```
@@ -52,18 +52,18 @@ This launches the Vite dev server and the Tauri desktop app in development mode.
 MathMate needs at least one provider API key. Set via environment variables:
 
 ```bash
-cp mathmate-v2/.env.example mathmate-v2/.env
+cp mathmate/.env.example mathmate/.env
 # Edit .env with your keys:
 # OPENROUTER_API_KEY=...
 # ANTHROPIC_API_KEY=...
 # OPENAI_API_KEY=...
 ```
 
-Or configure providers in `~/.mathmate/models.json` (created on first run; see `mathmate-v2/.env.example` for the key names). OpenRouter is the default provider path.
+Or configure providers in `~/.mathmate/models.json` (created on first run; see `mathmate/.env.example` for the key names). OpenRouter is the default provider path.
 
 ## Build & Test
 
-All commands run from `mathmate-v2/` unless noted.
+All commands run from `mathmate/` unless noted.
 
 ```bash
 npm run dev          # Frontend dev server only
@@ -72,7 +72,7 @@ npm run build        # TypeScript + Vite production build
 npm run test         # Frontend unit tests (Vitest)
 ```
 
-Rust checks (from `mathmate-v2/src-tauri/`):
+Rust checks (from `mathmate/src-tauri/`):
 
 ```bash
 cargo check
@@ -83,7 +83,7 @@ cargo test
 
 ```
 mathmate/
-├── mathmate-v2/          # Active app (Tauri v2 + React + Rust)
+├── mathmate/          # Active app (Tauri v2 + React + Rust)
 │   ├── src/              # Frontend (React/TypeScript)
 │   ├── src-tauri/        # Backend (Rust, Tauri commands)
 │   └── package.json

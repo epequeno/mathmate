@@ -7,7 +7,7 @@ fn main() {
     // of which directory npm/cargo is invoked from.
     if let Ok(manifest_dir) = std::env::var("CARGO_MANIFEST_DIR") {
         let dotenv_path = std::path::Path::new(&manifest_dir)
-            .join("..") // project root (mathmate-v2/)
+            .join("..") // project root (mathmate/)
             .join(".env");
         let _ = dotenvy::from_path(&dotenv_path);
     }

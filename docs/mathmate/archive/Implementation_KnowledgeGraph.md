@@ -72,7 +72,7 @@ includes an optional `edges` array; if absent, the graph is node-only
 ## 4) File-by-File Tickets
 
 ### KG1 — DB schema: concept graph tables
-**Modify:** `mathmate-v2/src-tauri/src/memory.rs`
+**Modify:** `mathmate/src-tauri/src/memory.rs`
 
 **Tasks:**
 - Add to `init_schema`:
@@ -101,7 +101,7 @@ includes an optional `edges` array; if absent, the graph is node-only
 ---
 
 ### KG2 — `graph.rs`: graph data types + Tauri commands
-**Create:** `mathmate-v2/src-tauri/src/graph.rs`
+**Create:** `mathmate/src-tauri/src/graph.rs`
 
 **Tasks:**
 - Define:
@@ -150,7 +150,7 @@ includes an optional `edges` array; if absent, the graph is node-only
 ---
 
 ### KG3 — Evaluator edge extraction (add to ME2)
-**Modify:** `mathmate-v2/src-tauri/src/evaluator.rs`
+**Modify:** `mathmate/src-tauri/src/evaluator.rs`
 
 **Tasks:**
 - Extend evaluator JSON output schema with optional edges:
@@ -172,7 +172,7 @@ includes an optional `edges` array; if absent, the graph is node-only
 ---
 
 ### KG4 — Frontend: D3 dependency
-**Modify:** `mathmate-v2/package.json`
+**Modify:** `mathmate/package.json`
 
 **Tasks:**
 - Add `d3-force`, `d3-drag`, `d3-zoom`, `d3-selection` (or just `d3` if
@@ -183,7 +183,7 @@ includes an optional `edges` array; if absent, the graph is node-only
 ---
 
 ### KG5 — `KnowledgeGraphPage.tsx`
-**Create:** `mathmate-v2/src/pages/KnowledgeGraphPage.tsx`
+**Create:** `mathmate/src/pages/KnowledgeGraphPage.tsx`
 
 **Layout:**
 ```
@@ -236,7 +236,7 @@ includes an optional `edges` array; if absent, the graph is node-only
 ---
 
 ### KG6 — `MasteryBar` shared component
-**Create:** `mathmate-v2/src/components/MasteryBar.tsx`
+**Create:** `mathmate/src/components/MasteryBar.tsx`
 
 **Tasks:**
 - Props: `{ label: string, score: number, max?: number }`
@@ -246,7 +246,7 @@ includes an optional `edges` array; if absent, the graph is node-only
 ---
 
 ### KG7 — Sidebar integration
-**Modify:** `mathmate-v2/src/components/Sidebar.tsx`
+**Modify:** `mathmate/src/components/Sidebar.tsx`
 
 **Tasks:**
 - Add "Concept Map" nav item (Lucide `Network` icon)
@@ -256,7 +256,7 @@ includes an optional `edges` array; if absent, the graph is node-only
 ---
 
 ### KG8 — OverviewPage deep-link
-**Modify:** `mathmate-v2/src/pages/OverviewPage.tsx`
+**Modify:** `mathmate/src/pages/OverviewPage.tsx`
 
 **Tasks:**
 - Replace the plain "weakest concepts" list with clickable concept chips

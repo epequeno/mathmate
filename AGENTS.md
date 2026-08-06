@@ -3,12 +3,11 @@
 This file defines how AI agents should work in this repository.
 
 ## 1) Project Status & Scope
-MathMate has two codebases in this repo:
+MathMate is a desktop AI math tutoring app:
 
-- **Active app (current):** `mathmate-v2/` (Tauri v2 + React + TypeScript + Rust)
-- **Legacy app (maintenance-only):** `prototype/MathMate/` (SwiftUI)
+- **Active app:** `mathmate/` (Tauri v2 + React + TypeScript + Rust)
 
-Unless the user explicitly asks otherwise, **treat `mathmate-v2/` as the source of truth** and make changes there.
+**Treat `mathmate/` as the source of truth** and make changes there.
 
 ---
 
@@ -20,7 +19,7 @@ MathMate v2 is a desktop AI math tutoring app with:
 - project/session management,
 - Obsidian-style vault workflows.
 
-Primary working path: `mathmate-v2/`
+Primary working path: `mathmate/`
 
 ---
 
@@ -39,35 +38,35 @@ Primary working path: `mathmate-v2/`
 
 ### Frontend (React/TS)
 - App shell / routes:
-  - `mathmate-v2/src/main.tsx`
-  - `mathmate-v2/src/App.tsx`
+  - `mathmate/src/main.tsx`
+  - `mathmate/src/App.tsx`
 - Chat state and orchestration:
-  - `mathmate-v2/src/stores/chatStore.ts`
+  - `mathmate/src/stores/chatStore.ts`
 - Config/provider state:
-  - `mathmate-v2/src/stores/configStore.ts`
+  - `mathmate/src/stores/configStore.ts`
 - Streaming provider client/parsing:
-  - `mathmate-v2/src/lib/providers.ts`
+  - `mathmate/src/lib/providers.ts`
 - Markdown/KaTeX rendering:
-  - `mathmate-v2/src/lib/renderMarkdown.ts`
-  - `mathmate-v2/src/lib/renderMath.ts`
+  - `mathmate/src/lib/renderMarkdown.ts`
+  - `mathmate/src/lib/renderMath.ts`
 - Core UI:
-  - `mathmate-v2/src/components/`
+  - `mathmate/src/components/`
 
 ### Backend (Tauri/Rust)
 - Tauri command registration / app state:
-  - `mathmate-v2/src-tauri/src/lib.rs`
+  - `mathmate/src-tauri/src/lib.rs`
 - Config loading + provider key persistence:
-  - `mathmate-v2/src-tauri/src/config.rs`
+  - `mathmate/src-tauri/src/config.rs`
 - Sessions:
-  - `mathmate-v2/src-tauri/src/session.rs`
+  - `mathmate/src-tauri/src/session.rs`
 - Projects:
-  - `mathmate-v2/src-tauri/src/project.rs`
+  - `mathmate/src-tauri/src/project.rs`
 - Memory DB:
-  - `mathmate-v2/src-tauri/src/memory.rs`
+  - `mathmate/src-tauri/src/memory.rs`
 - Vault/textbook/wrap-up helpers:
-  - `mathmate-v2/src-tauri/src/vault.rs`
-  - `mathmate-v2/src-tauri/src/textbook.rs`
-  - `mathmate-v2/src-tauri/src/wrapup.rs`
+  - `mathmate/src-tauri/src/vault.rs`
+  - `mathmate/src-tauri/src/textbook.rs`
+  - `mathmate/src-tauri/src/wrapup.rs`
 
 ---
 
@@ -88,7 +87,7 @@ When editing markdown/math handling:
 ---
 
 ## 7) Build/Test Commands (v2)
-Run from `mathmate-v2/` unless noted.
+Run from `mathmate/` unless noted.
 
 ```bash
 npm run dev          # Frontend dev server
@@ -96,7 +95,7 @@ npm run tauri dev    # Full desktop app dev mode
 npm run build        # TS + Vite production build
 ```
 
-Rust checks (from `mathmate-v2/src-tauri/`):
+Rust checks (from `mathmate/src-tauri/`):
 
 ```bash
 cargo check
@@ -136,9 +135,9 @@ Use template:
 The MathMate Library feature is backed by a single static JSON file that is compiled into the Rust binary at build time. Adding a new free resource requires only an edit to that file (no Rust or frontend code changes in the common case).
 
 ### File & loading mechanism
-- **Catalog file:** `mathmate-v2/src-tauri/resources/textbook-catalog.json`
-- **Embedded via:** `include_str!("../resources/textbook-catalog.json")` in `mathmate-v2/src-tauri/src/textbook_catalog.rs`
-- **Rendered by:** `mathmate-v2/src/components/Settings/TextbookTab.tsx` (generic over catalog entries)
+- **Catalog file:** `mathmate/src-tauri/resources/textbook-catalog.json`
+- **Embedded via:** `include_str!("../resources/textbook-catalog.json")` in `mathmate/src-tauri/src/textbook_catalog.rs`
+- **Rendered by:** `mathmate/src/components/Settings/TextbookTab.tsx` (generic over catalog entries)
 - **Consequence:** because the JSON is `include_str!`-ed at compile time, a content change is picked up only after recompiling the Rust side (e.g. `npm run tauri dev` restart or `cargo check`). No runtime file read occurs.
 
 ### Entry schema
@@ -175,7 +174,7 @@ Currently in use: `calculus`, `linear-algebra`, `algebra`, `abstract-algebra`, `
 ### Workflow when adding a resource
 1. **Confirm the resource is not already listed.** Grep the catalog for the author surname, title keywords, and the host domain, e.g.:
    ```bash
-   grep -in "goodman\|uiowa\|algebrabook" mathmate-v2/src-tauri/resources/textbook-catalog.json
+   grep -in "goodman\|uiowa\|algebrabook" mathmate/src-tauri/resources/textbook-catalog.json
    ```
 2. **Verify the URL actually works** before adding it. User-supplied URLs are frequently truncated or stale. Use `curl -sI -L --max-time 15 <url>` and, if the provided URL 404s, walk the parent directory listing to locate the canonical file (prefer the latest edition / most recent dated PDF).
 3. **Capture accurate metadata** from the author/host page: exact title, edition, author(s), publisher, license terms, file size (bytes), and page count if stated. Prefer a direct PDF link for `download_urls.pdf`; put the landing/download page under `download_urls.html`.
@@ -183,7 +182,7 @@ Currently in use: `calculus`, `linear-algebra`, `algebra`, `abstract-algebra`, `
 5. **Append to the `entries` array** (keep a trailing comma on the prior entry; the array's closing `]` and file's closing `}` remain last).
 6. **Validate the JSON parses** before finishing:
    ```bash
-   python3 -c "import json; d=json.load(open('mathmate-v2/src-tauri/resources/textbook-catalog.json')); print('entries:', len(d['entries']))"
+   python3 -c "import json; d=json.load(open('mathmate/src-tauri/resources/textbook-catalog.json')); print('entries:', len(d['entries']))"
    ```
 7. **No code rebuild is required for correctness**, but note in the changelog that a Rust recompile is needed for the new entry to appear at runtime because the catalog is `include_str!`-ed.
 8. **Update docs** per §8: add a `docs/mathmate/03_Dev_Logs/YYYY-MM-DD.md` entry and a line under today's date in `docs/mathmate/CHANGELOG.md` (under an `### Added` block titled "Catalog Addition: <short name>").

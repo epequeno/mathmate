@@ -53,7 +53,7 @@ mastery = memory*0.25 + comprehension*0.30 + structure*0.20 + application*0.25
 ## 4) File-by-File Tickets
 
 ### ME1 — Extend memory schema (4-axis columns)
-**Modify:** `mathmate-v2/src-tauri/src/memory.rs`
+**Modify:** `mathmate/src-tauri/src/memory.rs`
 
 **Tasks:**
 - Add columns to `memories` table:
@@ -80,7 +80,7 @@ mastery = memory*0.25 + comprehension*0.30 + structure*0.20 + application*0.25
 ---
 
 ### ME2 — EvaluatorResult type + evaluator prompt
-**Create:** `mathmate-v2/src-tauri/src/evaluator.rs`
+**Create:** `mathmate/src-tauri/src/evaluator.rs`
 
 **Tasks:**
 - Define structs:
@@ -119,7 +119,7 @@ mastery = memory*0.25 + comprehension*0.30 + structure*0.20 + application*0.25
 ---
 
 ### ME3 — Tauri command `run_evaluator`
-**Modify:** `mathmate-v2/src-tauri/src/lib.rs`
+**Modify:** `mathmate/src-tauri/src/lib.rs`
 
 **Tasks:**
 - Register new command:
@@ -136,7 +136,7 @@ mastery = memory*0.25 + comprehension*0.30 + structure*0.20 + application*0.25
 ---
 
 ### ME4 — Upgrade `wrapup.rs` to include evaluator output
-**Modify:** `mathmate-v2/src-tauri/src/wrapup.rs`
+**Modify:** `mathmate/src-tauri/src/wrapup.rs`
 
 **Tasks:**
 - After template generation, call `run_evaluator_pass` internally (optional:
@@ -157,8 +157,8 @@ mastery = memory*0.25 + comprehension*0.30 + structure*0.20 + application*0.25
 
 ### ME5 — Frontend: auto-trigger + feedback
 **Modify:**
-- `mathmate-v2/src/stores/chatStore.ts`
-- `mathmate-v2/src/pages/OverviewPage.tsx`
+- `mathmate/src/stores/chatStore.ts`
+- `mathmate/src/pages/OverviewPage.tsx`
 
 **Tasks:**
 - In `chatStore`: after `generate_wrapup` completes successfully, fire
@@ -173,7 +173,7 @@ mastery = memory*0.25 + comprehension*0.30 + structure*0.20 + application*0.25
 ---
 
 ### ME6 — Settings: evaluator model override
-**Modify:** `mathmate-v2/src/pages/SettingsPage.tsx`
+**Modify:** `mathmate/src/pages/SettingsPage.tsx`
 
 **Tasks:**
 - Add "Evaluator model" setting (defaults to `""` = use session model)

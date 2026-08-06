@@ -46,7 +46,7 @@ Both `src/components/Quiz/FreeResponse.tsx` and `src/components/Visualization/Fu
 
 ### 4.2 Where `safeMath` lives
 
-- New file: `mathmate-v2/src/lib/safeMath.ts`
+- New file: `mathmate/src/lib/safeMath.ts`
 - Exports:
   - `safeEvalNumber(expr: string, scope?: Record<string, number>): number` — returns `NaN` on parse/runtime error
   - `safeEvalBool(expr: string): boolean` — convenience for quiz numeric comparisons
@@ -55,7 +55,7 @@ Both `src/components/Quiz/FreeResponse.tsx` and `src/components/Visualization/Fu
 
 ### 4.3 Banned patterns
 
-Add to a new `mathmate-v2/scripts/check-no-eval.mjs` CI script (run in `npm run build` via a `prebuild` hook):
+Add to a new `mathmate/scripts/check-no-eval.mjs` CI script (run in `npm run build` via a `prebuild` hook):
 - Regex: `/\bnew\s+Function\s*\(|\beval\s*\(/`
 - Exits non-zero with file:line if matched under `src/`.
 
@@ -65,8 +65,8 @@ Add to a new `mathmate-v2/scripts/check-no-eval.mjs` CI script (run in `npm run 
 
 ### S1E1 — Add `safeMath` module
 **New:**
-- `mathmate-v2/src/lib/safeMath.ts`
-- `mathmate-v2/src/lib/safeMath.test.ts`
+- `mathmate/src/lib/safeMath.ts`
+- `mathmate/src/lib/safeMath.test.ts`
 
 **Tasks:**
 - Add `mathjs` dependency (`npm install mathjs`).
@@ -86,7 +86,7 @@ Add to a new `mathmate-v2/scripts/check-no-eval.mjs` CI script (run in `npm run 
 
 ### S1E2 — Replace `new Function` in quiz free-response
 **Modify:**
-- `mathmate-v2/src/components/Quiz/FreeResponse.tsx`
+- `mathmate/src/components/Quiz/FreeResponse.tsx`
 
 **Tasks:**
 - Remove `safeEval` function (lines 180–189).
@@ -96,7 +96,7 @@ Add to a new `mathmate-v2/scripts/check-no-eval.mjs` CI script (run in `npm run 
 
 ### S1E3 — Replace `new Function` in function graph
 **Modify:**
-- `mathmate-v2/src/components/Visualization/FunctionGraph.tsx`
+- `mathmate/src/components/Visualization/FunctionGraph.tsx`
 
 **Tasks:**
 - Remove `evaluateExpression` function (lines 128–149).
@@ -106,10 +106,10 @@ Add to a new `mathmate-v2/scripts/check-no-eval.mjs` CI script (run in `npm run 
 
 ### S1E4 — CI guard
 **New:**
-- `mathmate-v2/scripts/check-no-eval.mjs`
+- `mathmate/scripts/check-no-eval.mjs`
 
 **Modify:**
-- `mathmate-v2/package.json` — add `"prebuild": "node scripts/check-no-eval.mjs"` and a new `"lint:no-eval": "node scripts/check-no-eval.mjs"` script.
+- `mathmate/package.json` — add `"prebuild": "node scripts/check-no-eval.mjs"` and a new `"lint:no-eval": "node scripts/check-no-eval.mjs"` script.
 
 **Tasks:**
 - Recursively scan `src/` for the regex `/\bnew\s+Function\s*\(|\beval\s*\(/` (excluding `node_modules` and `dist/`).
@@ -146,7 +146,7 @@ Add to a new `mathmate-v2/scripts/check-no-eval.mjs` CI script (run in `npm run 
 
 ## 7) Acceptance Criteria
 
-- [ ] `new Function`, `eval`, and `Function(` do not appear anywhere under `mathmate-v2/src/`. Verified by `npm run lint:no-eval`.
+- [ ] `new Function`, `eval`, and `Function(` do not appear anywhere under `mathmate/src/`. Verified by `npm run lint:no-eval`.
 - [ ] `safeMath.ts` exists, has unit tests, validates AST node types/symbols before evaluation, and is the only numeric-evaluation path used by quiz free-response and function-graph components.
 - [ ] Adversarial test cases (constructor chain, `globalThis`, unicode-escape eval, Tauri `invoke` access) all return `NaN` without throwing or executing user code.
 - [ ] No regression in legitimate quiz answers or function graphs.

@@ -343,19 +343,19 @@ The Book page needs to compute a stable `textbookId` for the index. This can be 
 
 | File | Action |
 |---|---|
-| `mathmate-v2/src-tauri/src/textbook_index.rs` | **New** — `PageContent`, `TextbookIndex`, `TextbookIndexMeta`, `SearchResult` types. `load_index()`, `save_index()`, `search_index()`, `extract_snippet()` functions. TF-IDF-like scoring. |
-| `mathmate-v2/src-tauri/src/tools/textbook_search.rs` | **New** — Tool definition + execute function. `definition()` returns `ToolDefinition`. `execute()` resolves project → textbook → index → search → return results. |
-| `mathmate-v2/src-tauri/src/tools/mod.rs` | Add `pub mod textbook_search;`. Add `textbook_search::definition()` to `get_tool_definitions()`. Add `textbook_search::execute()` dispatch to `execute_tool()`. Update test count. |
-| `mathmate-v2/src-tauri/src/lib.rs` | Add `mod textbook_index;`. Register `index_textbook_pages`, `get_textbook_index_status` Tauri commands. |
+| `mathmate/src-tauri/src/textbook_index.rs` | **New** — `PageContent`, `TextbookIndex`, `TextbookIndexMeta`, `SearchResult` types. `load_index()`, `save_index()`, `search_index()`, `extract_snippet()` functions. TF-IDF-like scoring. |
+| `mathmate/src-tauri/src/tools/textbook_search.rs` | **New** — Tool definition + execute function. `definition()` returns `ToolDefinition`. `execute()` resolves project → textbook → index → search → return results. |
+| `mathmate/src-tauri/src/tools/mod.rs` | Add `pub mod textbook_search;`. Add `textbook_search::definition()` to `get_tool_definitions()`. Add `textbook_search::execute()` dispatch to `execute_tool()`. Update test count. |
+| `mathmate/src-tauri/src/lib.rs` | Add `mod textbook_index;`. Register `index_textbook_pages`, `get_textbook_index_status` Tauri commands. |
 
 ### Frontend
 
 | File | Action |
 |---|---|
-| `mathmate-v2/src/hooks/useTextbookIndexer.ts` | **New** — Text extraction via pdf.js `getTextContent()`, batched upload to Rust, progress tracking. |
-| `mathmate-v2/src/components/PdfViewer.tsx` | Integrate `useTextbookIndexer` hook. Show indexing progress in toolbar. |
-| `mathmate-v2/src/pages/BookPage.tsx` | Compute stable `textbookId` (catalog ID or path hash). Pass to PdfViewer. |
-| `mathmate-v2/src/stores/chatStore.ts` | Inject system prompt instructions about textbook availability + `search_textbook` tool when project has indexed textbook. |
+| `mathmate/src/hooks/useTextbookIndexer.ts` | **New** — Text extraction via pdf.js `getTextContent()`, batched upload to Rust, progress tracking. |
+| `mathmate/src/components/PdfViewer.tsx` | Integrate `useTextbookIndexer` hook. Show indexing progress in toolbar. |
+| `mathmate/src/pages/BookPage.tsx` | Compute stable `textbookId` (catalog ID or path hash). Pass to PdfViewer. |
+| `mathmate/src/stores/chatStore.ts` | Inject system prompt instructions about textbook availability + `search_textbook` tool when project has indexed textbook. |
 
 ---
 
@@ -406,11 +406,11 @@ The initial search uses **simple keyword matching** with:
 
 ```bash
 # Rust
-cd mathmate-v2/src-tauri && cargo check
-cd mathmate-v2/src-tauri && cargo test  # New tests for indexing + search
+cd mathmate/src-tauri && cargo check
+cd mathmate/src-tauri && cargo test  # New tests for indexing + search
 
 # Frontend
-cd mathmate-v2 && npm run build
+cd mathmate && npm run build
 
 # Manual test scenarios:
 # 1. Open a downloaded free textbook → see "Indexing…" in toolbar → wait for completion

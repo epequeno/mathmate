@@ -52,7 +52,7 @@ v2 upgrade path: full SM-2 with per-card easiness factor stored in DB.
 ## 4) File-by-File Tickets
 
 ### SR1 — DB schema: flashcard tables
-**Modify:** `mathmate-v2/src-tauri/src/memory.rs`
+**Modify:** `mathmate/src-tauri/src/memory.rs`
 
 **Tasks:**
 - Add to `init_schema`:
@@ -89,7 +89,7 @@ v2 upgrade path: full SM-2 with per-card easiness factor stored in DB.
 ---
 
 ### SR2 — Scheduling logic
-**Create:** `mathmate-v2/src-tauri/src/flashcards.rs`
+**Create:** `mathmate/src-tauri/src/flashcards.rs`
 
 **Tasks:**
 - Define structs:
@@ -124,7 +124,7 @@ v2 upgrade path: full SM-2 with per-card easiness factor stored in DB.
 ---
 
 ### SR3 — AI card generation
-**Modify:** `mathmate-v2/src-tauri/src/flashcards.rs`
+**Modify:** `mathmate/src-tauri/src/flashcards.rs`
 
 **Tasks:**
 - `generate_cards(topic: &str, source_text: Option<&str>, model_config) -> Vec<(String, String)>`
@@ -145,7 +145,7 @@ v2 upgrade path: full SM-2 with per-card easiness factor stored in DB.
 ---
 
 ### SR4 — Tauri commands
-**Modify:** `mathmate-v2/src-tauri/src/lib.rs`
+**Modify:** `mathmate/src-tauri/src/lib.rs`
 
 **Tasks:**
 Register:
@@ -189,7 +189,7 @@ pub async fn get_due_cards(
 ---
 
 ### SR5 — Frontend: `FlashcardsPage.tsx`
-**Create:** `mathmate-v2/src/pages/FlashcardsPage.tsx`
+**Create:** `mathmate/src/pages/FlashcardsPage.tsx`
 
 **Layout — Deck list view:**
 ```
@@ -237,7 +237,7 @@ pub async fn get_due_cards(
 ---
 
 ### SR6 — `FlashcardCard` component
-**Create:** `mathmate-v2/src/components/FlashcardCard.tsx`
+**Create:** `mathmate/src/components/FlashcardCard.tsx`
 
 **Tasks:**
 - Props: `{ front: string, back: string, revealed: boolean, onReveal, onRate }`
@@ -249,7 +249,7 @@ pub async fn get_due_cards(
 ---
 
 ### SR7 — Slash command `/flashcards`
-**Modify:** `mathmate-v2/src/stores/commandStore.ts`
+**Modify:** `mathmate/src/stores/commandStore.ts`
 
 **Tasks:**
 - Register `/flashcards [topic]`
@@ -261,7 +261,7 @@ pub async fn get_due_cards(
 ---
 
 ### SR8 — OverviewPage: "Due Today" widget
-**Modify:** `mathmate-v2/src/pages/OverviewPage.tsx`
+**Modify:** `mathmate/src/pages/OverviewPage.tsx`
 
 **Tasks:**
 - Add a "Due Today" card in the stats grid
@@ -272,7 +272,7 @@ pub async fn get_due_cards(
 ---
 
 ### SR9 — Memory DB integration (mastery signal)
-**Modify:** `mathmate-v2/src-tauri/src/flashcards.rs`
+**Modify:** `mathmate/src-tauri/src/flashcards.rs`
 
 **Tasks:**
 - After `rate_flashcard`: find memory item(s) whose label matches the card's

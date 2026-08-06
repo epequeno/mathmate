@@ -26,7 +26,7 @@
 - [ ] Verify `cargo tauri dev` launches a window with the React dev server
 - [ ] Set up project structure:
   ```
-  mathmate-v2/
+  mathmate/
   ├── src/               # React frontend
   │   ├── components/    # Reusable UI components
   │   ├── pages/         # Route pages (Chat, Vault, Overview, Settings)
