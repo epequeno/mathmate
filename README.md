@@ -1,44 +1,104 @@
 # MathMate
 
-A native macOS math tutoring application with superior LaTeX rendering, model provider flexibility, and Obsidian vault integration.
+A desktop AI math tutoring app built with Tauri v2, React, and Rust. MathMate combines streaming AI responses, visible reasoning traces, KaTeX math rendering, Obsidian-style vault workflows, and a native desktop experience.
 
-## Overview
+<!-- TODO: add screenshots to docs/ or .github/ and reference here -->
+<!-- ![MathMate chat view](docs/screenshots/chat.png) -->
 
-MathMate is a SwiftUI-based macOS application designed to be your math study companion. It combines:
-- **AI Tutoring**: Chat-based math assistance with model provider selection (similar to pi's flexibility)
-- **LaTeX Rendering**: Native KaTeX (default) and MathJax support with automatic normalization of model-specific formatting
-- **Obsidian Integration**: Lightweight vault linking and management for your math notes
-- **Study Tracking**: Session logs stored directly in your Obsidian vault as markdown files
+## Features
+
+- **Streaming AI chat** with visible reasoning traces (kept as plain text, separate from rendered math)
+- **KaTeX math rendering** — inline and block LaTeX, with normalization for model-specific formatting quirks
+- **Multi-provider support** — OpenRouter (default), Anthropic, OpenAI; bring your own keys
+- **Project & session management** — hierarchical organization with session branching and history
+- **Obsidian-style vaults** — link one or more note vaults; the agent reads your notes for context-aware tutoring
+- **Tool-calling agent** — multi-round tool loops with sandboxed filesystem access and user-defined tool policies
+- **Interactive visualizations** — intent compiler (natural language → widget spec), annotation/tracer system, 3D surface primitives via Plotly
+- **PDF viewer & textbook library** — in-app PDF reading with region selection; a built-in catalog of free, open-access math textbooks
+- **Persistent memory** — SQLite-backed memory store with injection-safe retrieval and prompt isolation
+- **Native macOS integration** — native menu, window, and keyboard shortcut support via Tauri
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Desktop shell | Tauri v2 |
+| Frontend | React 19, TypeScript, Vite, Zustand |
+| Backend | Rust (axum, rusqlite, reqwest) |
+| Math rendering | KaTeX via marked-katex-extension |
+| Markdown | marked + DOMPurify sanitizer |
+| PDF | pdf.js (pdfjs-dist) |
+| Visualization | Plotly |
+| Tests | Vitest (frontend), `cargo test` (Rust) |
+
+## Prerequisites
+
+- [Node.js](https://nodejs.org/) 20+
+- [Rust](https://www.rust-lang.org/tools/install) (stable)
+- [Tauri v2 prerequisites](https://v2.tauri.app/start/prerequisites/) (system dependencies for your OS)
+
+## Getting Started
+
+```bash
+cd mathmate-v2
+npm install
+npm run tauri dev
+```
+
+This launches the Vite dev server and the Tauri desktop app in development mode.
+
+### API Keys
+
+MathMate needs at least one provider API key. Set via environment variables:
+
+```bash
+cp mathmate-v2/.env.example mathmate-v2/.env
+# Edit .env with your keys:
+# OPENROUTER_API_KEY=...
+# ANTHROPIC_API_KEY=...
+# OPENAI_API_KEY=...
+```
+
+Or configure providers in `~/.mathmate/models.json` (created on first run; see `mathmate-v2/.env.example` for the key names). OpenRouter is the default provider path.
+
+## Build & Test
+
+All commands run from `mathmate-v2/` unless noted.
+
+```bash
+npm run dev          # Frontend dev server only
+npm run tauri dev    # Full desktop app (frontend + Rust)
+npm run build        # TypeScript + Vite production build
+npm run test         # Frontend unit tests (Vitest)
+```
+
+Rust checks (from `mathmate-v2/src-tauri/`):
+
+```bash
+cargo check
+cargo test
+```
 
 ## Project Structure
 
 ```
 mathmate/
-├── docs/               # Design docs, specifications, planning
-├── config/              # Configuration templates and examples
-├── scripts/             # Setup and utility scripts
-├── prototype/           # SwiftUI prototype code
-└── README.md            # This file
+├── mathmate-v2/          # Active app (Tauri v2 + React + Rust)
+│   ├── src/              # Frontend (React/TypeScript)
+│   ├── src-tauri/        # Backend (Rust, Tauri commands)
+│   └── package.json
+├── docs/                 # Design docs, roadmap, changelog, dev logs
+├── AGENTS.md             # Guide for AI contributors
+├── CONTRIBUTING.md       # Guide for human contributors
+└── LICENSE
 ```
 
-## Architecture Decisions
+See [`docs/mathmate/`](docs/mathmate/) for the roadmap, design specs, changelog, and development logs.
 
-### Technology Stack
-- **UI**: SwiftUI (single-window macOS app)
-- **LaTeX Rendering**: WKWebView with KaTeX (default) / MathJax (toggle)
-- **Storage**: Markdown files in Obsidian vault (no SwiftData/CoreData)
-- **Config**: `~/.mathmate/` directory for app settings and model configs
+## Contributing
 
-### Key Design Principles
-1. **Vault-Native Storage**: All study logs and tracking data live in your Obsidian vault as markdown
-2. **LaTeX Normalization**: Custom layer to handle different model formatting strategies
-3. **Lightweight Obsidian Integration**: Link to notes, don't reimplement Obsidian
-4. **Model Flexibility**: Inspired by pi's provider architecture, but independent config
-
-## Getting Started
-
-Prototype development in progress. See `docs/` for design specifications.
+See [CONTRIBUTING.md](CONTRIBUTING.md). AI contributors should also read [AGENTS.md](AGENTS.md).
 
 ## License
 
-TBD
+[MIT](LICENSE) — © 2026 Steven Pequeno
