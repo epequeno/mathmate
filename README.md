@@ -8,6 +8,10 @@ A desktop AI math tutoring app built with Tauri v2, React, and Rust. MathMate co
 |---|---|
 | ![Project setup with vault, textbook and tutor style](docs/screenshots/new_project.png) | ![Catalog of 61 open-source textbooks](docs/screenshots/textbook_library.png) |
 
+The context panel tracks token use, per-session cost and per-message size, and exposes the searchable memory store:
+
+![Context panel showing token usage, session cost, attachments, per-message tokens and stored memories](docs/screenshots/context_side_panel.png)
+
 The chat is set to the Socratic tutor style: it works part (a) of the exercise as a model and leaves the remaining parts, with hints, for the student.
 
 ## Features
