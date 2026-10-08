@@ -60,6 +60,24 @@ Create a project with a vault and a textbook · send a chat message (streaming, 
 - **Hidden callers.** A grep for `crate::x::` misses `use crate::{a, b}` forms. Let the compiler find them: delete, then `cargo check`.
 - **Scope creep.** This is a move-and-delete refactor. Bug fixes found on the way go in separate commits.
 
+## Alternative evaluated: `@earendil-works/pi-durable` (not adopted)
+
+**Evaluated 2026-10-08. Decision: do not adopt now; borrow design ideas.** `pi-durable` (v1.1.0, MIT) is a durable agent runtime: conversations as append-only transcripts, model turns and tool calls as checkpointed tasks, forks, subagents with ownership and abort semantics, and pluggable storage (SQLite, JSONL, memory). It runs in a browser or webview, and would need a storage adapter over Tauri IPC (the adapter interface is `exec`, `run`, `get`, `all`, `transaction`).
+
+It overlaps with unchecked roadmap items: Session Branching (`fork(at)`), Reliability & Retry UX (retry settings, `abort()`, `requestId` de-duplication) and Per-Chat Tutor Modes (per-conversation agent config).
+
+Reasons not to adopt it now:
+
+- It would replace the code that is MathMate's own contribution: the turn orchestrator, the turn state machine, and the injected-dependency test setup.
+- It is **experimental** ("the API changes without notice"), and 1.1.0 changed the storage interface.
+- It would mean rewriting `providers.ts` (including the Anthropic wire format), the Rust session and memory storage, and the message-segment model, and migrating existing sessions, for no user-facing gain.
+- Nothing else in the pi repository (`coding-agent`, `server`, `client`) depends on it yet.
+- Crash recovery matters little for a tutoring chat. The one place replay-safety matters is `vault_write`.
+
+What to take from it instead: read its `docs/spec.md` before building Session Branching or the retry UX, and model `vault_write` as a tool that is **not** replay-safe (its `replay: "safe"` flag defaults to off).
+
+**Sequencing:** adopting it would replace the Rust session and memory storage, so step 2 above (the session migration) would be wasted. If a spike is ever wanted, decide it **before** starting step 2. Open question that would decide a spike: how well durable's immutable-entry transcript model maps onto MathMate's message segments (reasoning traces, visualizations, image parts). Not yet checked.
+
 ## Related
 
 - `docs/ARCHITECTURE.md` → "Known rough edges"
