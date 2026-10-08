@@ -560,12 +560,17 @@ mod tests {
 
     #[test]
     fn test_stewart_algebra_toc() {
-        let path = "/Users/steven/Library/CloudStorage/Dropbox/Public/books/math/algebra/Algebra and Trigonometry 4e.pdf";
-        if !std::path::Path::new(path).exists() {
+        // Optional integration test: set MATHMATE_TEST_PDF to a copy of
+        // "Algebra and Trigonometry" (Stewart, 4e); skipped otherwise.
+        let Ok(path) = std::env::var("MATHMATE_TEST_PDF") else {
+            eprintln!("Skipping: MATHMATE_TEST_PDF not set");
+            return;
+        };
+        if !std::path::Path::new(&path).exists() {
             eprintln!("Skipping: PDF not found at {}", path);
             return;
         }
-        let result = extract_pdf_toc(path);
+        let result = extract_pdf_toc(&path);
         match result {
             Ok(entries) => {
                 assert!(!entries.is_empty(), "Should have found TOC entries");
