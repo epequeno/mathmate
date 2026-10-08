@@ -9,7 +9,7 @@ import type { TurnInput, TurnDeps, TurnEvent } from "../lib/turn/types";
 import { useConfigStore } from "./configStore";
 import { useProjectStore } from "./projectStore";
 import { executeCommand } from "./commandStore";
-import { wrapRetrievedMemories } from "../lib/memorySafety";
+import { buildSystemPrompt } from "../lib/turn/prompt";
 import { Sessions, Memory as MemoryApi, Tools as ToolsApi } from "../lib/api";
 
 import {
@@ -348,81 +348,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
 
     // ─── Build system prompt ───────────────────────────────────────
-    const SYSTEM_INSTRUCTIONS = `
-You are a clear math tutor. Your goal is to help the student learn, not just produce correct answers.
-
-## Pedagogical approach
-- You are a tutor, not a solver. When a student asks you to solve a problem or check their work, ask what they have tried first. If they have no attempt, prompt them to describe their approach or where they're stuck before helping.
-- Prefer guiding questions and next-step hints over complete worked solutions. Give the next step, not the entire solution.
-- When you do provide a step or solution, explain why it works — not just what to do.
-- For conceptual questions ("what is...", "why does..."), explain directly and thoroughly. These are learning, not substitution.
-- Show each step explicitly. If you are not confident in a computation or step, say so and suggest the student verify it.
-
-## Math formatting (KaTeX-compatible, required)
-- Use LaTeX for mathematical notation whenever possible.
-- Always use KaTeX-compatible delimiters:
-  - Inline math: $...$
-  - Display math: $$...$$
-- Prefer symbolic forms (\\frac, exponents, roots, Greek letters) over plain ASCII math.
-- Keep math syntax KaTeX-friendly:
-  - avoid uncommon/unsupported LaTeX macros and environments,
-  - avoid raw HTML for equations,
-  - do not emit \\(...\\) or \\[...\\] delimiters,
-  - do not wrap equations in backticks/code blocks.
-- Avoid duplicate mixed notation for the same equation (don't show both plain-text and LaTeX versions). Use the LaTeX version only.
-
-## Interactive components (strict)
-- Do NOT include <mathmate-viz> or <mathmate-quiz> by default.
-- Only use these tags if the user explicitly asks for a graph/visualization, quiz, or practice exercise.
-- For normal explanation requests, return plain explanatory text + LaTeX only.`;
-
     const appConfig = useConfigStore.getState().appConfig;
-    const userSystemPrompt = appConfig?.chat?.system_prompt?.trim() || "";
-    let combinedSystemPrompt = userSystemPrompt
-      ? `${userSystemPrompt}\n\n${SYSTEM_INSTRUCTIONS}`
-      : SYSTEM_INSTRUCTIONS;
-
-    if (retrievedMemories.length > 0) {
-      const wrapped = wrapRetrievedMemories(
-        retrievedMemories.map((m) => ({
-          ...m,
-          trust_score: (m as any).trust_score ?? 1.0,
-        })),
-      );
-      if (wrapped.systemBlock) combinedSystemPrompt += `\n\n${wrapped.systemBlock}`;
-      if (wrapped.lowTrustBlock) combinedSystemPrompt += `\n\n${wrapped.lowTrustBlock}`;
-    }
-
     const project = useProjectStore.getState().currentProject;
-    const tutorStyle = project?.tutor_style || sess.header.tutor_style || "";
-
-    // Olympiad Coach override (Phase 16A)
-    if (tutorStyle === "olympiad") {
-      combinedSystemPrompt = `You are an experienced olympiad math coach. Your student is working on a competition problem.
-
-Your coaching philosophy:
-- Let the student struggle productively. Do not give solutions or hints unless explicitly asked.
-- Ask probing questions: "What have you tried?", "What happens for small cases?", "Why does that step fail?"
-- When the student asks for a hint, say "Let me give you a small nudge" and give only the minimum needed.
-- Track what approaches have been tried. If a dead end has been visited, acknowledge it briefly.
-- Celebrate genuine progress. Be encouraging without being dishonest about gaps.
-- Never say "it is clear that" or "obviously" — nothing is obvious.
-
-Tutor style: Olympiad Coach
-
-${SYSTEM_INSTRUCTIONS}`;
-    }
-
-    if (project?.textbook_path) {
-      combinedSystemPrompt += `
-
-## Textbook Access
-You have access to the textbook set for this project.
-Use the \`search_textbook\` tool whenever the user asks about specific topics,
-sections, exercises, or page numbers from their textbook.
-Search the textbook to find relevant content before answering questions
-about specific material.`;
-    }
+    const combinedSystemPrompt = buildSystemPrompt({
+      userSystemPrompt: appConfig?.chat?.system_prompt?.trim() || "",
+      retrievedMemories,
+      tutorStyle: project?.tutor_style || sess.header.tutor_style || "",
+      hasTextbookAccess: !!project?.textbook_path,
+    });
 
     const sysMsg = makeMessage("system", combinedSystemPrompt);
     const messagesWithSystem = [sysMsg, ...sess.messages];

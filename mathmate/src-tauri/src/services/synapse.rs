@@ -213,11 +213,7 @@ impl SynapseService {
 
     /// Get tool definitions: Synapse tools if running, else legacy vault fallback.
     pub fn get_tool_definitions(&self) -> Result<Vec<ToolDefinition>, AppError> {
-        let mut defs = vec![
-            tools::calculate::definition(),
-            tools::current_date::definition(),
-            tools::graph::definition(),
-        ];
+        let mut defs = Self::builtin_tool_definitions();
 
         // Try to get Synapse tools via the background worker.
         let (tx, rx) = mpsc::channel();
@@ -233,13 +229,32 @@ impl SynapseService {
         }
 
         // Fallback: legacy vault tools.
-        defs.extend([
+        defs.extend(Self::legacy_vault_tool_definitions());
+        Ok(defs)
+    }
+
+    /// Tools that are always offered, whether or not Synapse is running.
+    ///
+    /// `search_textbook` belongs here: the system prompt tells the model to use
+    /// it for projects with a textbook, and its executor is project-scoped and
+    /// independent of Synapse.
+    fn builtin_tool_definitions() -> Vec<ToolDefinition> {
+        vec![
+            tools::calculate::definition(),
+            tools::current_date::definition(),
+            tools::graph::definition(),
+            tools::textbook_search::definition(),
+        ]
+    }
+
+    /// Built-in vault tools, offered only when Synapse is unavailable.
+    fn legacy_vault_tool_definitions() -> Vec<ToolDefinition> {
+        vec![
             tools::vault_list::definition(),
             tools::vault_read::definition(),
             tools::vault_search::definition(),
             tools::vault_write::definition(),
-        ]);
-        Ok(defs)
+        ]
     }
 
     /// Execute a tool call, routing through Synapse if available and the tool
@@ -296,5 +311,54 @@ impl Drop for SynapseService {
         // thread to exit its recv loop and clean up the McpClient.
         // We don't join the thread here to avoid blocking the main thread
         // during shutdown — the OS will clean up.
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn names(defs: &[ToolDefinition]) -> Vec<String> {
+        defs.iter().map(|d| d.function.name.clone()).collect()
+    }
+
+    #[test]
+    fn builtin_tools_include_search_textbook() {
+        // The system prompt instructs the model to call `search_textbook`; it must
+        // be offered regardless of whether Synapse is running.
+        let n = names(&SynapseService::builtin_tool_definitions());
+        for expected in ["calculate", "get_current_date", "graph", "search_textbook"] {
+            assert!(n.contains(&expected.to_string()), "missing {expected}: {n:?}");
+        }
+    }
+
+    #[test]
+    fn every_builtin_tool_has_an_executor() {
+        // A tool that is offered but unknown to the executor would fail every call.
+        for def in SynapseService::builtin_tool_definitions()
+            .into_iter()
+            .chain(SynapseService::legacy_vault_tool_definitions())
+        {
+            let call = ToolCall {
+                call_id: "t".into(),
+                tool_name: def.function.name.clone(),
+                arguments: serde_json::json!({}),
+            };
+            let out = tools::execute_tool(&call, None, None);
+            let msg = format!("{:?}", out.result);
+            assert!(
+                !msg.to_lowercase().contains("unknown tool"),
+                "{} is offered but has no executor: {msg}",
+                def.function.name
+            );
+        }
+    }
+
+    #[test]
+    fn legacy_vault_tools_are_not_in_the_builtin_set() {
+        let builtin = names(&SynapseService::builtin_tool_definitions());
+        for v in names(&SynapseService::legacy_vault_tool_definitions()) {
+            assert!(!builtin.contains(&v), "{v} duplicated");
+        }
     }
 }

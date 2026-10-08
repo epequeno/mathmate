@@ -34,7 +34,7 @@ The webview calls model providers **directly** with `fetch`. The Rust side does 
 ## One turn, end to end
 
 1. **Send** (`stores/chatStore.ts`). The store moves its turn state machine from `idle` to `preparing` (`lib/turn/phase.ts`; a discriminated union that also holds the `AbortController`).
-2. **Assemble the prompt.** The store takes the system instructions, the project's tutor style (for example Socratic, or an olympiad override) and the retrieved memories. Memories come from a query to `memory.db` (the first 200 characters of the input, up to 8 results). They are wrapped by `wrapRetrievedMemories` into a delimited, size-capped block, with low-trust items placed in a separate block.
+2. **Assemble the prompt.** The store calls the pure `buildSystemPrompt` (`lib/turn/prompt.ts`, unit-tested) with the user's system prompt, the project's tutor style, the retrieved memories and whether the project has a textbook. Memories come from a query to `memory.db` (the first 200 characters of the input, up to 8 results). `buildSystemPrompt` wraps them with `wrapRetrievedMemories` into a delimited, size-capped block, with low-trust items in a separate block. In the olympiad tutor style the coach prompt replaces the user prompt and the memory blocks; only the textbook note is still appended.
 3. **Run the turn** (`lib/turn/orchestrator.ts`). A generator yields `TurnEvent`s that the store applies to UI state:
    - stream the response through `providers.streamChat` (30 s connection and 120 s total timeouts, an abort signal, and a 1 MB cap on accumulated text);
    - if the model requested tools, execute them through the backend (`executeTool` → Tauri → `tools::execute_tool`, 8 s timeout each), append the results, and stream again, for at most 3 tool rounds;
@@ -47,7 +47,7 @@ All I/O the orchestrator uses is passed in as `TurnDeps` (stream, append, load, 
 
 The set offered to the model is built in `src-tauri/src/services/synapse.rs`:
 
-- **Always:** `calculate`, `current_date`, `graph`.
+- **Always:** `calculate`, `get_current_date`, `graph` and `search_textbook` (project-scoped; it returns a clear error when the project has no indexed textbook).
 - **Vault tools:** if the external **`synapse`** binary can be started, its MCP tools (note list/read/create/search/backlinks) are added. `mcp_client.rs` spawns it as a child process and speaks newline-delimited JSON-RPC over stdio, with a 10 s timeout per call. If it can't be started, the app falls back to the built-in `vault_list`, `vault_read`, `vault_search` and `vault_write`.
 - Execution follows the same rule: try Synapse for tools it knows, otherwise use the built-in executor in `tools/mod.rs`.
 
@@ -85,8 +85,8 @@ See [`mathmate/SECURITY.md`](mathmate/SECURITY.md) for the CSP and threat model.
 
 These are real and are listed so a reader does not have to find them:
 
-- **Two copies of the system prompt.** `lib/turn/prompt.ts` exports a tested `buildSystemPrompt`, but `chatStore.ts` defines and uses its own `SYSTEM_INSTRUCTIONS`, so the extracted function is not on the live path and the two have to be edited together.
-- **Two copies of the session code.** The Rust service layer (`services/session.rs`) is the live path, but the older `session.rs` is still compiled and used by `project.rs` and `wrapup.rs`. The migration to the service layer is unfinished.
-- **`search_textbook` may not be offered to the model.** The tool exists and the prompt tells the model to use it for projects with a textbook, but the tool list built in `services/synapse.rs` does not include it (the registry in `tools/mod.rs` does, and is marked `dead_code`). I have not confirmed this at runtime.
+- **An unfinished migration to the service layer.** `src-tauri/src/` holds the older flat modules (`session.rs`, `project.rs`, `wrapup.rs`, `memory.rs`, `vault.rs`, ...) next to the newer `services/` equivalents. Some services are full implementations (`session`, `config`, `memory`) while others are thin wrappers that call the legacy module (`wrapup`, `vault`, `models`), and `project.rs` still has about 19 references from elsewhere. The two layers use different path handling (fixed `~/.mathmate` vs an injected base directory), so finishing the move needs care, not a rename.
+- **The graph instructions are not in the live prompt.** `GRAPH_INSTRUCTIONS` in `lib/turn/prompt.ts` describes how to embed a function graph inline with `<mathmate-viz>`. The live prompt has never included it, so the model is not told that syntax. Appending it enables inline graphs.
+- **Olympiad mode drops memories and the user's system prompt.** It is covered by a test so the behaviour is explicit, but it may not be what you want.
 - **API keys are not in the OS keychain** (see above).
 - **No CI.** Tests run locally: `npm run test` (Vitest) and `cargo test`.
