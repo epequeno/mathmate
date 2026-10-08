@@ -4,6 +4,25 @@ All notable changes to MathMate are tracked here.
 
 ---
 
+## 2026-10-08
+
+### Added
+- `docs/ARCHITECTURE.md`: component diagram, a turn walkthrough, the trust boundaries and known rough edges. README links it and `SECURITY.md`, and now has screenshots.
+- `docs/mathmate/Implementation_ServiceLayerCompletion.md`: plan to finish the Rust service-layer migration (proposed, not started).
+
+### Fixed
+- `search_textbook` is now offered to the model. The system prompt already told it to use the tool, but the tool list built by `SynapseService` omitted it.
+- README no longer claims "user-defined tool policies" (no such code) or lists tools that are not offered.
+
+### Changed
+- `lib/turn/prompt.ts` is now the single source of the system prompt; `chatStore` calls `buildSystemPrompt` instead of keeping a second copy. Output is identical to the previous inline assembly.
+- The PDF-import integration test reads its fixture from `MATHMATE_TEST_PDF` instead of a hard-coded home path.
+
+### Cleanup
+- Study citations in the README were reworded to match their sources.
+
+---
+
 ## 2026-09-01 — Pedagogical Research Review & Roadmap
 
 ### Added

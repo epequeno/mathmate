@@ -205,10 +205,11 @@ Quick, *no-behavior-change* cleanups surfaced by the review. Each item is an ind
 - [x] **`AppServices` container** managed by Tauri. Registered via `.manage()`. Path-using commands migrated: `read_file_as_base64`, `open_path`, `scan_vault`, `read_note`, `read_project_textbook` all now one-liners calling `svc.path.guard()`.
 - [x] **Channel-based `SynapseService` background task**: The MCP client I/O moves off the main task; the BufReader no longer holds a Tauri-wide mutex. ([`Implementation_Phase14C_RustServiceLayer.md`](../archive/Implementation_Phase14C_RustServiceLayer.md))
 - [x] **`r2d2_sqlite` connection pool**: Replaces `Mutex<Option<Connection>>`. Removes a latent contention bug between concurrent `query_memories` and `store_memory_with_safety`. ([`Implementation_Phase14C_RustServiceLayer.md`](../archive/Implementation_Phase14C_RustServiceLayer.md))
+- [ ] **Follow-up (2026-10-08):** the legacy flat modules were not removed and still overlap with `services/`; see [`Implementation_ServiceLayerCompletion.md`](../Implementation_ServiceLayerCompletion.md).
 
 ### 14B — Stream Turn Orchestrator
 - [x] **`lib/turn/orchestrator.ts`**: `runTurn()` async generator extracted from `chatStore.sendMessage`. Coordinates streaming + multi-round tool loop; yields `TurnEvent`s. `chatStore.ts`: 843→692 lines (−151).
-- [x] **`lib/turn/prompt.ts`**: `buildSystemPrompt()` pure function extracted from the 60-line system-prompt literal in `sendMessage`.
+- [x] **`lib/turn/prompt.ts`**: `buildSystemPrompt()` pure function extracted from the 60-line system-prompt literal in `sendMessage`. *(2026-10-08: extracted but not wired in at the time — `chatStore` kept a second copy. It is now the single source and is unit-tested.)*
 - [x] **`lib/turn/types.ts`**: `TurnEvent` discriminated union (10 variants), `TurnInput`, `TurnDeps` (injectable I/O).
 - [x] **Orchestrator unit tests** (13 tests): text-only, tool round (single + timeout + max-rounds), abort, network error, 1 MB overflow, memory storage, segment accumulation.
 - [x] **Move auto-store-memory out of the streaming loop** into a Zustand subscription. ([`Implementation_Phase14B_StreamTurnOrchestrator.md`](../archive/Implementation_Phase14B_StreamTurnOrchestrator.md))
@@ -272,6 +273,7 @@ Quick, *no-behavior-change* cleanups surfaced by the review. Each item is an ind
 
 Post-Phase-16 opportunities. No committed Phase 17 implementation docs yet; each item should get its own plan when prioritized.
 
+- [ ] **Finish the Rust service-layer migration** — remove or consolidate the legacy flat modules that coexist with `services/` (session logic is duplicated; several services are thin wrappers; three legacy modules are dead). Not an emergency. Plan: [`Implementation_ServiceLayerCompletion.md`](../Implementation_ServiceLayerCompletion.md).
 - [ ] **Code-generated `invoke_handler!` surface**: Specta supports this; ts-rs does not. Worth considering if/when the command surface grows.
 - [ ] **Store/library revisit (only if warranted by data)**: Zustand replacement is not currently planned; revisit only if post-15 evidence shows issues beyond state shape/responsibility.
 
