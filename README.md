@@ -45,9 +45,11 @@ The critical risk the research identifies is the **crutch effect**: students def
 The chat turn is an explicit, testable orchestrator rather than logic inside a UI store.
 
 - **Turn orchestrator** (`mathmate/src/lib/turn/orchestrator.ts`): streams a model response, runs requested tools, feeds results back, and repeats for at most 3 tool rounds. Each tool call has an 8 s timeout, streamed output is capped at 1 MB per accumulated string, and the abort signal is honoured between steps. All I/O is injected, so the loop is tested in isolation with mocks (unit plus end-to-end tests).
-- **Tools** (`mathmate/src-tauri/src/tools/`): calculate, current date, graph, textbook search, and vault list / read / search / write. Vault access goes through a path-scope guard that canonicalizes paths to block `..` traversal and symlink escapes (`pathscope.rs`).
+- **Tools** (`mathmate/src-tauri/src/tools/`): calculate, current date and graph, plus vault tools served by the optional [Synapse](docs/ARCHITECTURE.md#tools) MCP server, with built-in vault list / read / search / write as a fallback. Filesystem access goes through a path-scope guard that canonicalizes paths to block `..` traversal and symlink escapes (`pathscope.rs`).
 - **Memory isolation** (`mathmate/src/lib/memorySafety.ts`, Rust `memory.rs`): memory writes are scanned for injection and exfiltration patterns (reject or redact), and retrieved memories are wrapped in a delimited, size-capped context block with low-trust items demoted, so stored text cannot act as instructions.
 - **Audit log:** security events are written to `~/.mathmate/audit.log` with rotation at 1 MB.
+
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the component diagram, a turn walkthrough, the trust boundaries and the known rough edges, and [`docs/mathmate/SECURITY.md`](docs/mathmate/SECURITY.md) for the threat model and CSP.
 
 ## Tech Stack
 
@@ -114,11 +116,19 @@ cargo test
 
 ```
 mathmate/
-├── mathmate/          # Active app (Tauri v2 + React + Rust)
-│   ├── src/              # Frontend (React/TypeScript)
-│   ├── src-tauri/        # Backend (Rust, Tauri commands)
-│   └── package.json
-├── docs/                 # Design docs, roadmap, changelog, dev logs
+├── mathmate/                 # Active app (Tauri v2 + React + Rust)
+│   ├── src/
+│   │   ├── components/, pages/   # UI
+│   │   ├── stores/               # Zustand stores (chat, project, config, ...)
+│   │   └── lib/                  # providers, turn orchestrator, memory safety, rendering
+│   └── src-tauri/src/
+│       ├── lib.rs                # Tauri command registration
+│       ├── services/             # config, session, project, memory, vault, synapse, ...
+│       └── tools/                # tool definitions and executors
+├── docs/
+│   ├── ARCHITECTURE.md       # How the pieces fit together
+│   ├── mathmate/             # Roadmap, specs, changelog, dev logs, SECURITY.md
+│   └── screenshots/
 ├── AGENTS.md             # Guide for AI contributors
 ├── CONTRIBUTING.md       # Guide for human contributors
 └── LICENSE
