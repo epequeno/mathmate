@@ -313,6 +313,65 @@ Support for students preparing for olympiad-level competitions (AMC → AIME →
 - [ ] **LLM → Lean 4 translation pipeline**: informal proof → Lean 4 via DeepSeek-Prover or similar → type-check locally; cannot produce false positives ([`Implementation_CompetitiveMath_Phase4_ProofCritique.md`](../archive/Implementation_CompetitiveMath_Phase4_ProofCritique.md))
 - [ ] Prerequisites: affordable Lean translation model, local Lean 4 subprocess, user education on formal proof style
 
+
+---
+
+## Phase 17 — Pedagogical Guardrails
+
+Evidence-driven changes grounded in the 2024–2026 pedagogical research literature on AI in education. The central finding: unguarded AI access degrades learning — students complete tasks faster but perform worse without the tool, and don't perceive the decline ([Bastani et al., 2025](https://www.pnas.org/doi/10.1073/pnas.2422633122); [Lehmann et al., 2024](https://arxiv.org/abs/2409.09047); [Stanford SCALE, 2026](https://scale.stanford.edu/sites/default/files/The%20Evidence%20Base%20on%20AI%20in%20K-12%20Report.pdf)). The difference between harmful and helpful AI tutoring is design — guardrails that scaffold rather than substitute.
+
+> **Research basis:** Full review at `~/Dropbox/eapsoftware-research/MathMate/pedagogical-research/AI-LLMs-Education-Research-Review.md`. See also README § Pedagogical Foundation.
+
+### 17A — Default System Prompt Guardrails
+
+The main chat system prompt (`turn/prompt.ts`, `chatStore.ts`) now includes pedagogical guardrails that make the default path scaffold rather than substitute. Previously said only "Answer as a clear math tutor" — functionally equivalent to Bastani et al.'s harmful GPT Base arm.
+
+- [x] **Pedagogical instructions in `SYSTEM_INSTRUCTIONS`**: Added a `## Pedagogical approach` section directing the AI to (1) ask what the student has tried before helping, (2) prefer guiding questions over direct answers, (3) provide the next step rather than the full solution, (4) explain *why* a step works, not just *what* to do, (5) show each step explicitly and flag uncertainty, (6) answer conceptual questions directly (complement, not substitution). Applied to both `turn/prompt.ts` and the live copy in `chatStore.ts`.
+- [ ] **Attempt-aware response calibration**: When the system prompt or context indicates the student has already attempted the problem (hint ladder, practice session), provide more direct help; when no attempt is present, scaffold first. ([`Implementation_Phase17_SystemPromptGuardrails.md`](../archive/Implementation_Phase17_SystemPromptGuardrails.md))
+- [ ] **Guardrail A/B test harness**: Structured comparison of guarded vs. unguarded responses on a fixed problem set, measuring response type (full solution vs. hint/guide) and step visibility. ([`Implementation_Phase17_SystemPromptGuardrails.md`](../archive/Implementation_Phase17_SystemPromptGuardrails.md))
+
+**Research support:** Bastani et al. — guardrails that avoid giving answers "essentially eradicated" the crutch effect. Kakarla et al. — tutors should guide, not correct. Favero et al. — "intentional, transparent, and critically informed use" empowers rather than diminishes.
+
+### 17B — Hint Ladder as Default for Problem-Solving
+
+The hint ladder is currently opt-in (`/problem` command or `<mathmate-quiz>` tag). The research says the default mode of use matters most — make scaffolded problem-solving the path of least resistance.
+
+- [ ] **Problem detection + hint-ladder redirect**: When the AI detects a problem-solving request (a pasted problem, a "solve this" prompt), offer the hint ladder rather than a full solution. Soft redirect via system prompt instruction — not a hard gate. ([`Implementation_Phase17_HintLadderDefault.md`](../archive/Implementation_Phase17_HintLadderDefault.md))
+- [ ] **"Walk me through it" UI affordance**: Button in the chat input area that switches the next turn into hint-ladder mode for any problem the student pastes. ([`Implementation_Phase17_HintLadderDefault.md`](../archive/Implementation_Phase17_HintLadderDefault.md))
+- [ ] **Graduated hint withdrawal**: For repeat problems on the same topic, reduce hint verbosity based on prior mastery (depends on 17C). ([`Implementation_Phase17_HintLadderDefault.md`](../archive/Implementation_Phase17_HintLadderDefault.md))
+
+**Research support:** Bastani et al. — the default mode of use is what determines harm. Lehmann et al. — substitution (giving solutions) is the harmful mode; complement (explaining/hinting) is the beneficial mode. Stadler et al. — "easier doesn't mean better."
+
+### 17C — Mastery Tracking & Adaptive Scaffolding
+
+The memory DB (`memory.rs`) stores arbitrary text memories with FTS5 search and a flat `learner_profile` key-value table. It does not track per-topic mastery or struggle history. Add structured mastery tracking to enable adaptive scaffolding and surface the perception gap.
+
+- [ ] **Mastery table schema**: Add `mastery(topic TEXT, level REAL, last_assessed TEXT, attempts INTEGER, hints_needed INTEGER)` to the memory DB; migrate existing schema idempotently. ([`Implementation_Phase17_MasteryTracking.md`](../archive/Implementation_Phase17_MasteryTracking.md))
+- [ ] **Post-session mastery evaluation**: Extend `wrapup.rs` to score concepts from the session transcript and write back to the mastery table; upgrade the study log with mastery deltas. ([`Implementation_Phase17_MasteryTracking.md`](../archive/Implementation_Phase17_MasteryTracking.md))
+- [ ] **Adaptive hint ladder difficulty**: Feed mastery scores into the hint generation prompt — more scaffolding for low-mastery topics, less for mastered ones. ([`Implementation_Phase17_MasteryTracking.md`](../archive/Implementation_Phase17_MasteryTracking.md))
+- [ ] **Spaced repetition of helped problems**: Re-surface problems the student previously needed hints on, at increasing intervals (SM-2 or similar). Depends on the existing spaced-repetition roadmap item (Phase 11, Priority 5). ([`Implementation_Phase17_MasteryTracking.md`](../archive/Implementation_Phase17_MasteryTracking.md))
+
+**Research support:** Bastani et al. — low prior knowledge students are most at risk; adaptive scaffolding provides more structure for beginners. Lehmann et al. — AI widened achievement gaps for low prior knowledge. Stanford SCALE — "gains weaken or disappear when AI access is removed"; spaced repetition targets transfer.
+
+### 17D — Unassisted Check-Ins
+
+The perception gap (Bastani et al., Yu et al.) is one of the most dangerous findings: students don't know they're learning less. Periodic no-AI practice sessions would surface the gap between assisted and unassisted performance.
+
+- [ ] **"Practice without hints" mode**: Quiz/practice session where the hint ladder is disabled and the AI only verifies correctness after submission. Uses the existing quiz + problem bank infrastructure. ([`Implementation_Phase17_UnassessedCheckins.md`](../archive/Implementation_Phase17_UnassessedCheckins.md))
+- [ ] **Assisted vs. unassisted performance dashboard**: Track and display both "with AI" and "without AI" performance per topic, so students can see where their unassisted ability is lagging. Depends on 17C mastery tracking. ([`Implementation_Phase17_UnassessedCheckins.md`](../archive/Implementation_Phase17_UnassessedCheckins.md))
+- [ ] **Perception-gap nudge**: After a practice session, if unassisted performance is significantly below assisted performance on the same topic, surface a gentle prompt to practice that topic without hints. ([`Implementation_Phase17_UnassessedCheckins.md`](../archive/Implementation_Phase17_UnassessedCheckins.md))
+
+**Research support:** Bastani et al. — students were "overly optimistic" about how much they'd learned; the perception gap is invisible. Yu et al. — the "speedup illusion" creates a false sense of productivity. Stanford SCALE — "tools designed to foster independent reasoning are more likely to support durable learning."
+
+### 17E — AI Error Awareness
+
+Bastani et al. found GPT-4 made errors 49% of the time on math problems. The visible reasoning traces help — students *can* check each step — but there's no mechanism to flag potential errors or encourage verification.
+
+- [ ] **Step-by-step verification prompt**: System prompt instruction to show each step explicitly and flag uncertainty ("I'm not fully confident in this step — verify the algebra"). ([`Implementation_Phase17_ErrorAwareness.md`](../archive/Implementation_Phase17_ErrorAwareness.md))
+- [ ] **"Check my work" tool**: A tool the student can invoke that asks the AI to verify a specific step or the full solution, rather than trusting the initial output. ([`Implementation_Phase17_ErrorAwareness.md`](../archive/Implementation_Phase17_ErrorAwareness.md))
+
+**Research support:** Bastani et al. — GPT-4 gave wrong answers 49% of the time; students either couldn't detect errors or didn't bother checking. Favero et al. — over-reliance leads to "cognitive atrophy" and loss of agency.
+
 ---
 
 ## 📌 Deferred / Strategic

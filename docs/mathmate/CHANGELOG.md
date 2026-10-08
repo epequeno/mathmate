@@ -4,6 +4,24 @@ All notable changes to MathMate are tracked here.
 
 ---
 
+## 2026-09-01 — Pedagogical Research Review & Roadmap
+
+### Added
+- **Pedagogical Foundation section** in `README.md` — summarizes the 2024–2026 research consensus on AI in education and how MathMate's design (hint ladder, visible reasoning, local memory) aligns with what the evidence says mitigates harm. References Bastani et al. (2025), Lehmann et al. (2024), Stanford SCALE (2026), Kestin et al. (2025), and Yu et al. (2026).
+- **Phase 17 — Pedagogical Guardrails** in `docs/mathmate/00_Project_Management/Roadmap.md` — five evidence-driven roadmap items:
+  - 17A: Default system prompt guardrails (scaffold vs. substitute)
+  - 17B: Hint ladder as default for problem-solving interactions
+  - 17C: Mastery tracking & adaptive scaffolding in the memory DB
+  - 17D: Unassisted check-ins to surface the perception gap
+  - 17E: AI error awareness (step verification, uncertainty flagging)
+- **Dev log** at `docs/mathmate/03_Dev_Logs/2026-09-01.md` documenting the research review and roadmap rationale.
+
+### Changed
+- **System prompt pedagogical guardrails (Phase 17A)**: Added a `## Pedagogical approach` section to `SYSTEM_INSTRUCTIONS` in both `mathmate/src/lib/turn/prompt.ts` and `mathmate/src/stores/chatStore.ts`. The default system prompt now directs the AI to scaffold rather than substitute: ask what the student has tried before helping, prefer guiding questions and next-step hints over complete solutions, explain *why* steps work, show each step explicitly, and flag computational uncertainty. Conceptual questions ("what is...", "why does...") are explicitly exempted — these are complement use (learning), not substitution. Research basis: Bastani et al. (2025) — guardrails that avoid giving answers "essentially eradicated" the crutch effect; Kakarla et al. (2024) — tutors should guide, not correct.
+
+### Research basis
+Full review at `~/Dropbox/eapsoftware-research/MathMate/pedagogical-research/AI-LLMs-Education-Research-Review.md`.
+
 ## 2026-07-02 — Catalog Addition: Evans & Rosenthal + Calculus in Context
 
 ### Added
