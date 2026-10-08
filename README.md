@@ -2,8 +2,13 @@
 
 A desktop AI math tutoring app built with Tauri v2, React, and Rust. MathMate combines streaming AI responses, visible reasoning traces, KaTeX math rendering, Obsidian-style vault workflows, and a native desktop experience.
 
-<!-- TODO: add screenshots to docs/ or .github/ and reference here -->
-<!-- ![MathMate chat view](docs/screenshots/chat.png) -->
+![MathMate chat view: a Socratic tutor answering a calculus exercise with a worked first part and hints for the rest](docs/screenshots/main_chat.png)
+
+| New project | Free textbook catalog |
+|---|---|
+| ![Project setup with vault, textbook and tutor style](docs/screenshots/new_project.png) | ![Catalog of 61 open-source textbooks](docs/screenshots/textbook_library.png) |
+
+The chat is set to the Socratic tutor style: it works part (a) of the exercise as a model and leaves the remaining parts, with hints, for the student.
 
 ## Features
 
