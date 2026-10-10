@@ -1,6 +1,12 @@
 # MathMate
 
-A desktop AI math tutoring app built with Tauri v2, React, and Rust. MathMate combines streaming AI responses, visible reasoning traces, KaTeX math rendering, Obsidian-style vault workflows, and a native desktop experience.
+**A desktop AI math tutor built around one research finding: unguarded AI access degrades learning, and guardrail design is the difference.** Tauri v2 + React + Rust — streaming chat, a Socratic hint ladder, KaTeX rendering, Obsidian-style vaults, a textbook library, and local memory.
+
+The 2024–2026 education-AI literature (Bastani et al. 2025; Lehmann et al. 2024) finds that students with unguarded model access finish faster and perform *worse* without the tool — without perceiving the decline — and that guardrails which scaffold rather than substitute largely mitigate it. MathMate is the tutor designed around that finding: the Socratic style works part (a) as a model, escalating hints sit behind an attempt-first gate, and reasoning traces stay visible — substitution is structurally hard, the complement mode is easy. The design principles and citations: [Pedagogical Foundation](#pedagogical-foundation).
+
+**Status:** running macOS app — streaming chat, hint ladder, vault integration, PDF textbook reader (61 open textbooks), SQLite memory store, path-scoped tool loop. Anti-crutch hardening continues on the [roadmap](docs/mathmate/00_Project_Management/Roadmap.md).
+
+**Scope & limitations:** macOS via Tauri (Windows/Linux untested); bring-your-own API key (OpenRouter default, no bundled model); tool loop capped at 3 rounds with path-scope guards; memory writes are scanned for injection/exfiltration and retrieved memories are demoted to low-trust. Threat model and CSP: [SECURITY.md](docs/mathmate/SECURITY.md); known rough edges: [ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ![MathMate chat view: a Socratic tutor answering a calculus exercise with a worked first part and hints for the rest](docs/screenshots/main_chat.png)
 
